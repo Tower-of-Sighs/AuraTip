@@ -1,0 +1,50 @@
+{
+  "id": "winter_rescue_style_first_join",
+  "trigger": {
+    "type": "FIRST_JOIN_WORLD",  // 内置几个触发器，这个可以用kjs写
+    "mode": "once",
+    "cooldown": 0
+  },
+  "visual_settings": {
+    "animation_style": "fade_and_slide", // 动画风格：淡入并滑动，会加更多，但还没思路
+    "blur_background": true,             // 背景高斯模糊
+    "theme_color": "#A0D8EF",            // 侧边装饰条主颜色
+    "width": 280,
+    "height": 180
+  },
+  "behavior": {
+    "default_duration": 200,             // 默认停留时间(ticks)，-1 为永久停留直到手动关闭
+    "pause_timer_on_hover": true,        // 鼠标悬停时暂停倒计时
+    "closable_by_key": "key.keyboard.delete", // 快捷键关闭
+    "allow_paging": true                 // 是否允许翻页
+  },
+  "pages": [
+    {
+      // 这里除page_index都是可选
+      "page_index": 0, // 索引，有几个索引就代表有几页
+      "title": {
+        "text": { "translate": "tip.mod.welcome.title" },
+        "scale": 1.2
+      },
+      "subtitle": {
+        "text": { "translate": "tip.mod.welcome.subtitle" },
+        "scale": 0.9
+      },
+      "content": {
+        "text": { "translate": "tip.mod.welcome.content" },
+        "line_spacing": 2
+      },
+      "image": {
+        "path": "mod:textures/gui/tips/welcome_icon.png",
+        "position": "TOP_CENTER", // 图片位置，也可以改为具体坐标设置
+        "size": [64, 64]
+      }
+    },
+    {
+      "page_index": 1,
+      "title": { "text": { "translate": "tip.mod.page2.title" } },
+      "content": { "text": { "translate": "tip.mod.page2.content" } },
+      "image": { "path": "mod:textures/gui/tips/guide.png" }
+    }
+  ]
+}

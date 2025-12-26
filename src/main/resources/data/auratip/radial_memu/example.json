@@ -1,0 +1,28 @@
+{
+  "menu_settings": {
+    "inner_radius": 55,
+    "outer_radius": 100,
+    "animation_speed": 0.2
+  },
+  "slots": [
+    {
+      "name": "Inventory",
+      "icon": "minecraft:textures/item/apple.png",
+      "action": {
+        "type": "open_gui",
+        "class_path": "net.minecraft.client.gui.screens.inventory.InventoryScreen"
+      },
+      "text": { "text": "Open Inventory" },
+      "highlight_color": "#A0D8EF"
+    },
+    {
+      "name": "FTB Quests",
+      "icon": "ftbquests:textures/item/book.png",
+      "action": {
+        "type": "open_gui",
+        "class_path": "dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen"
+      },
+      "text": "Open Quest"
+    }
+  ]
+}
