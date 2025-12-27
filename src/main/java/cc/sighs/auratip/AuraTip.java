@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 @Mod(AuraTip.MODID)
 public class AuraTip {
     public static final String MODID = "auratip";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public AuraTip() {
         ActionRegistry.register();

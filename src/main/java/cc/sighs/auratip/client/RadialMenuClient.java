@@ -5,8 +5,6 @@ import cc.sighs.auratip.data.RadialMenuData;
 import com.mafuyu404.oelib.data.DataManagerBridge;
 import net.minecraft.client.Minecraft;
 
-import java.util.List;
-
 public class RadialMenuClient {
     public static void openMenu() {
         var minecraft = Minecraft.getInstance();

@@ -4,8 +4,6 @@ import cc.sighs.auratip.data.RadialMenuData;
 import com.mafuyu404.oelib.api.data.DataValidator;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.List;
-
 public class RadialMenuDataValidator implements DataValidator<RadialMenuData> {
     @Override
     public ValidationResult validate(RadialMenuData data, ResourceLocation source) {

@@ -4,9 +4,9 @@ import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.validator.TipDataValidator;
 import cc.sighs.auratip.util.ComponentSerialization;
 import com.mafuyu404.oelib.api.data.DataDriven;
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.Locale;
@@ -36,6 +36,30 @@ public record TipData(
             ).apply(instance, TipData::new)
     );
 
+    public record Position(String preset, int x, int y, boolean absolute) {
+        public static final Codec<Position> CODEC = Codec.either(
+                Codec.STRING,
+                Codec.INT.listOf()
+        ).xmap(
+                either -> {
+                    if (either.left().isPresent()) {
+                        String p = either.left().get();
+                        return new Position(p, 0, 0, false);
+                    }
+                    var list = either.right().orElse(List.of());
+                    int px = !list.isEmpty() ? list.get(0) : 0;
+                    int py = list.size() > 1 ? list.get(1) : 0;
+                    return new Position(null, px, py, true);
+                },
+                position -> {
+                    if (!position.absolute && position.preset != null) {
+                        return Either.left(position.preset);
+                    }
+                    return Either.right(List.of(position.x, position.y));
+                }
+        );
+    }
+
     public record Trigger(String type, Mode mode, int cooldown) {
         public static final Codec<Trigger> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
@@ -58,25 +82,65 @@ public record TipData(
 
     public record VisualSettings(
             String animationStyle,
-            boolean blurBackground,
-            String themeColor,
+            Background background,
+            Optional<String> themeColor,
             int width,
-            int height
+            int height,
+            Position position,
+            float animationSpeed,
+            Optional<Position> animationFrom,
+            Optional<Position> animationTo
     ) {
         public static final Codec<VisualSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.STRING.optionalFieldOf("animation_style", "fade_and_slide")
                                 .forGetter(VisualSettings::animationStyle),
-                        Codec.BOOL.optionalFieldOf("blur_background", true)
-                                .forGetter(VisualSettings::blurBackground),
-                        Codec.STRING.optionalFieldOf("theme_color", "#A0D8EF")
+                        Background.CODEC.optionalFieldOf("background", new Background(BackgroundType.GRADIENT, List.of("#FFE0F7FF", "#FFB3E5FC"), 8, true, Optional.empty()))
+                                .forGetter(VisualSettings::background),
+                        Codec.STRING.optionalFieldOf("theme_color")
                                 .forGetter(VisualSettings::themeColor),
                         Codec.INT.optionalFieldOf("width", 280)
                                 .forGetter(VisualSettings::width),
                         Codec.INT.optionalFieldOf("height", 180)
-                                .forGetter(VisualSettings::height)
+                                .forGetter(VisualSettings::height),
+                        Position.CODEC.optionalFieldOf("position", new Position("BOTTOM_CENTER", 0, 0, false))
+                                .forGetter(VisualSettings::position),
+                        Codec.FLOAT.optionalFieldOf("animation_speed", 1.0f)
+                                .forGetter(VisualSettings::animationSpeed),
+                        Position.CODEC.optionalFieldOf("animation_from")
+                                .forGetter(VisualSettings::animationFrom),
+                        Position.CODEC.optionalFieldOf("animation_to")
+                                .forGetter(VisualSettings::animationTo)
                 ).apply(inst, VisualSettings::new)
         );
+
+        public enum BackgroundType {
+            GRADIENT,
+            IMAGE;
+
+            public static final Codec<BackgroundType> CODEC = Codec.STRING.xmap(
+                    value -> BackgroundType.valueOf(value.toUpperCase(Locale.ROOT)),
+                    type -> type.name().toLowerCase(Locale.ROOT)
+            );
+        }
+
+        public record Background(
+                BackgroundType type,
+                List<String> colors,
+                int borderRadius,
+                boolean rounded,
+                Optional<String> imagePath
+        ) {
+            public static final Codec<Background> CODEC = RecordCodecBuilder.create(inst ->
+                    inst.group(
+                            BackgroundType.CODEC.optionalFieldOf("type", BackgroundType.GRADIENT).forGetter(Background::type),
+                            Codec.STRING.listOf().optionalFieldOf("colors", List.of("#FFE0F7FF", "#FFB3E5FC")).forGetter(Background::colors),
+                            Codec.INT.optionalFieldOf("border_radius", 8).forGetter(Background::borderRadius),
+                            Codec.BOOL.optionalFieldOf("rounded", true).forGetter(Background::rounded),
+                            Codec.STRING.optionalFieldOf("image_path").forGetter(Background::imagePath)
+                    ).apply(inst, Background::new)
+            );
+        }
     }
 
     public record Behavior(
@@ -101,42 +165,23 @@ public record TipData(
 
     public record Page(
             int pageIndex,
-            Optional<TextElement> title,
-            Optional<TextElement> subtitle,
-            Optional<TextElement> content,
+            Optional<ComponentSerialization.TextElement> title,
+            Optional<ComponentSerialization.TextElement> subtitle,
+            Optional<ComponentSerialization.TextElement> content,
             Optional<ImageElement> image
     ) {
         public static final Codec<Page> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.INT.fieldOf("page_index").forGetter(Page::pageIndex),
-                        TextElement.CODEC.optionalFieldOf("title").forGetter(Page::title),
-                        TextElement.CODEC.optionalFieldOf("subtitle").forGetter(Page::subtitle),
-                        TextElement.CODEC.optionalFieldOf("content").forGetter(Page::content),
+                        ComponentSerialization.TextElement.CODEC.optionalFieldOf("title").forGetter(Page::title),
+                        ComponentSerialization.TextElement.CODEC.optionalFieldOf("subtitle").forGetter(Page::subtitle),
+                        ComponentSerialization.TextElement.CODEC.optionalFieldOf("content").forGetter(Page::content),
                         ImageElement.CODEC.optionalFieldOf("image").forGetter(Page::image)
                 ).apply(inst, Page::new)
         );
     }
 
-    public record TextElement(Component text, float scale, int lineSpacing) {
-        public TextElement {
-            if (scale <= 0) {
-                scale = 1.0f;
-            }
-            if (lineSpacing < 0) {
-                lineSpacing = 0;
-            }
-        }
-
-        public static final Codec<TextElement> CODEC = RecordCodecBuilder.create(inst ->
-                inst.group(
-                        ComponentSerialization.COMPONENT_CODEC.fieldOf("text").forGetter(TextElement::text),
-                        Codec.FLOAT.optionalFieldOf("scale", 1.0f).forGetter(TextElement::scale),
-                        Codec.INT.optionalFieldOf("line_spacing", 0).forGetter(TextElement::lineSpacing)
-                ).apply(inst, TextElement::new)
-        );
-    }
-
-    public record ImageElement(String path, String position, int[] size) {
+    public record ImageElement(String path, Position position, int[] size) {
         public ImageElement {
             if (size == null || size.length != 2) {
                 size = new int[]{64, 64};
@@ -146,7 +191,7 @@ public record TipData(
         public static final Codec<ImageElement> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.STRING.fieldOf("path").forGetter(ImageElement::path),
-                        Codec.STRING.optionalFieldOf("position", "TOP_CENTER").forGetter(ImageElement::position),
+                        Position.CODEC.optionalFieldOf("position", new Position("TOP_CENTER", 0, 0, false)).forGetter(ImageElement::position),
                         Codec.INT.listOf()
                                 .optionalFieldOf("size", List.of(64, 64))
                                 .xmap(

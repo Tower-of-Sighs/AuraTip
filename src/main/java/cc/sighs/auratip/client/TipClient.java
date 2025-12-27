@@ -2,27 +2,19 @@ package cc.sighs.auratip.client;
 
 import cc.sighs.auratip.client.render.TipOverlay;
 import cc.sighs.auratip.data.TipData;
-import com.mafuyu404.oelib.data.DataManagerBridge;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 public class TipClient {
-    private static final Deque<TipData> QUEUE = new ArrayDeque<>();
+    private static final Deque<QueuedTip> QUEUE = new ArrayDeque<>();
 
-    public static void enqueueTipsById(List<String> ids) {
-        var tips = DataManagerBridge.getDataList(TipData.class);
+    public static void enqueueTips(List<TipData> tips, Map<String, String> variables) {
         if (tips == null || tips.isEmpty()) {
             return;
         }
-        for (String id : ids) {
-            for (TipData tip : tips) {
-                if (tip.id().equals(id)) {
-                    QUEUE.addLast(tip);
-                    break;
-                }
-            }
+        Map<String, String> vars = variables == null ? Map.of() : new HashMap<>(variables);
+        for (TipData tip : tips) {
+            QUEUE.addLast(new QueuedTip(tip, vars));
         }
         showNextIfIdle();
     }
@@ -33,8 +25,7 @@ public class TipClient {
 
     public static void closeCurrentTip() {
         if (TipOverlay.INSTANCE.isActive()) {
-            TipOverlay.INSTANCE.closeImmediately();
-            onTipClosed();
+            TipOverlay.INSTANCE.requestClose();
         }
     }
 
@@ -42,9 +33,12 @@ public class TipClient {
         if (TipOverlay.INSTANCE.isActive()) {
             return;
         }
-        var next = QUEUE.pollFirst();
+        QueuedTip next = QUEUE.pollFirst();
         if (next != null) {
-            TipOverlay.INSTANCE.show(next);
+            TipOverlay.INSTANCE.show(next.tip, next.variables);
         }
+    }
+
+    private record QueuedTip(TipData tip, Map<String, String> variables) {
     }
 }

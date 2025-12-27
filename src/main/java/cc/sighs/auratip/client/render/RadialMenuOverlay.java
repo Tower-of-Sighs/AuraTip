@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
-public final class RadialMenuOverlay {
+public class RadialMenuOverlay {
 
     public static final RadialMenuOverlay INSTANCE = new RadialMenuOverlay();
 
@@ -27,9 +27,9 @@ public final class RadialMenuOverlay {
     private float innerRadius;
     private float outerRadius;
 
-    private int ringBaseRgb;
-    private float ringAlphaFactor;
-
+    private int ringInnerArgb;
+    private int ringOuterArgb;
+    private int[] ringArgbStops;
     private boolean closing;
     private long animationStartMs;
     private static final int OPEN_MS = 200;
@@ -55,17 +55,30 @@ public final class RadialMenuOverlay {
         this.centerY = screenHeight / 2;
         this.innerRadius = menu.menuSettings().innerRadius();
         this.outerRadius = menu.menuSettings().outerRadius();
-        this.ringBaseRgb = 0x101622;
-        this.ringAlphaFactor = 1.0f;
-        menu.menuSettings().ringColor().ifPresent(color -> {
-            int argb = ColorUtil.parseArgb(color);
-            this.ringBaseRgb = argb & 0xFFFFFF;
-            int a = (argb >>> 24) & 0xFF;
-            if (a == 0) {
-                a = 255;
+
+        this.ringInnerArgb = 0xFF101622;
+        this.ringOuterArgb = 0xFF101622;
+        this.ringArgbStops = null;
+
+        var colorsOpt = menu.menuSettings().ringColors();
+        if (colorsOpt.isPresent() && !colorsOpt.get().isEmpty()) {
+            var list = colorsOpt.get();
+            int size = list.size();
+            ringArgbStops = new int[size];
+            for (int i = 0; i < size; i++) {
+                ringArgbStops[i] = ColorUtil.parseArgb(list.get(i));
             }
-            this.ringAlphaFactor = a / 255.0f;
-        });
+            this.ringInnerArgb = ringArgbStops[0];
+            this.ringOuterArgb = ringArgbStops[ringArgbStops.length - 1];
+        } else {
+            menu.menuSettings().ringColor().ifPresent(color -> {
+                int argb = ColorUtil.parseArgb(color);
+                this.ringInnerArgb = argb;
+                this.ringOuterArgb = argb;
+                this.ringArgbStops = new int[]{argb, argb};
+            });
+        }
+
         this.closing = false;
         this.animationStartMs = Util.getMillis();
         this.hoveredIndex = -1;
@@ -116,9 +129,21 @@ public final class RadialMenuOverlay {
         float ringInner = innerRadius * eased;
         float ringOuter = outerRadius * eased;
 
-        int bgInner = ColorUtil.withAlpha(ringBaseRgb, (int) (70 * ringAlphaFactor * eased));
-        int bgOuter = ColorUtil.withAlpha(ringBaseRgb, (int) (120 * ringAlphaFactor * eased));
-        RingRenderer.drawRing(graphics, centerX, centerY, ringInner, ringOuter, 0.0f, 360.0f, bgInner, bgOuter, 1.5f);
+        if (ringArgbStops == null || ringArgbStops.length < 2) {
+            int finalInner = ColorUtil.multiplyAlpha(ringInnerArgb, eased);
+            int finalOuter = ColorUtil.multiplyAlpha(ringOuterArgb, eased);
+            RingRenderer.drawRing(graphics, centerX, centerY, ringInner, ringOuter, 0.0f, 360.0f, finalInner, finalOuter, 1.5f);
+        } else {
+            int segments = ringArgbStops.length - 1;
+            float total = ringOuter - ringInner;
+            for (int i = 0; i < segments; i++) {
+                float segInner = ringInner + total * (i / (float) segments);
+                float segOuter = ringInner + total * ((i + 1) / (float) segments);
+                int c0 = ColorUtil.multiplyAlpha(ringArgbStops[i], eased);
+                int c1 = ColorUtil.multiplyAlpha(ringArgbStops[i + 1], eased);
+                RingRenderer.drawRing(graphics, centerX, centerY, segInner, segOuter, 0.0f, 360.0f, c0, c1, 1.5f);
+            }
+        }
 
         int count = slots.size();
         if (count == 0) {

@@ -2,15 +2,25 @@
   "id": "winter_rescue_style_first_join",
   "trigger": {
     "type": "FIRST_JOIN_WORLD",  // 内置几个触发器，这个可以用kjs写
-    "mode": "once",
+    "mode": "repeatable",
     "cooldown": 0
   },
   "visual_settings": {
-    "animation_style": "fade_and_slide", // 动画风格：淡入并滑动，会加更多，但还没思路
-    "blur_background": true,             // 背景高斯模糊
-    "theme_color": "#A0D8EF",            // 侧边装饰条主颜色
+    "animation_style": "fade_and_slide",
+    "background": {
+      "type": "gradient",
+      "colors": [
+        "#E0F7FF",
+        "#B3E5FC"
+      ],
+      "opacity": 0.9,
+      "border_radius": 8,
+      "rounded": true
+    },
+    "theme_color": "#A0D8EF",
     "width": 280,
-    "height": 180
+    "height": 180,
+    "position": "BOTTOM_CENTER"
   },
   "behavior": {
     "default_duration": 200,             // 默认停留时间(ticks)，-1 为永久停留直到手动关闭
@@ -36,7 +46,8 @@
       },
       "image": {
         "path": "mod:textures/gui/tips/welcome_icon.png",
-        "position": "TOP_CENTER", // 图片位置，也可以改为具体坐标设置
+        "position": "TOP_CENTER",
+        // 图片位置，也可以填坐标
         "size": [64, 64]
       }
     },

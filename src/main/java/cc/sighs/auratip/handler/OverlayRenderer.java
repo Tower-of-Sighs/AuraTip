@@ -6,7 +6,6 @@ import cc.sighs.auratip.client.render.TipOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiEvent;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -15,10 +14,16 @@ public class OverlayRenderer {
 
     @SubscribeEvent
     public static void onRenderOverlay(RenderGuiEvent.Post event) {
-        Minecraft minecraft = Minecraft.getInstance();
+        var minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.level == null) {
             return;
         }
+
+        var gg = event.getGuiGraphics();
+        var pose = gg.pose();
+
+        pose.pushPose();
+        pose.translate(0, 0, 500);
 
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
@@ -33,6 +38,7 @@ public class OverlayRenderer {
         if (RadialMenuOverlay.INSTANCE.isActive()) {
             RadialMenuOverlay.INSTANCE.render(event.getGuiGraphics(), event.getPartialTick(), (int) mouseX, (int) mouseY, width, height);
         }
+        pose.popPose();
     }
 }
 

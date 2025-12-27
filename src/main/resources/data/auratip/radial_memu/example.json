@@ -3,7 +3,10 @@
     "inner_radius": 55,
     "outer_radius": 100,
     "animation_speed": 0.2,
-    "ring_color": "#FF101622"
+    "ring_colors": [
+      "#1A050A10",
+      "#D9102030"
+    ]
   },
   "slots": [
     {
@@ -39,7 +42,7 @@
       "highlight_color": "#FFD700"
     },
     {
-      "name": "白天",
+      "name": "Set Day",
       "icon": "minecraft:textures/item/clock_06.png",
       "action": {
         "type": "run_command",
@@ -55,7 +58,7 @@
       "highlight_color": "#FFFACD"
     },
     {
-      "name": "治疗",
+      "name": "Health",
       "icon": "minecraft:textures/item/golden_apple.png",
       "action": {
         "type": "run_command",

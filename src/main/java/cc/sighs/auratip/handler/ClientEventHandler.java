@@ -1,7 +1,8 @@
 package cc.sighs.auratip.handler;
 
 import cc.sighs.auratip.AuraTip;
-import cc.sighs.auratip.client.*;
+import cc.sighs.auratip.client.RadialMenuClient;
+import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.client.render.TipOverlay;
 import net.minecraft.client.Minecraft;

@@ -2,8 +2,14 @@ package cc.sighs.auratip.client.render;
 
 import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.data.TipData;
+import cc.sighs.auratip.data.TipData.VisualSettings;
+import cc.sighs.auratip.data.animation.Animation;
+import cc.sighs.auratip.data.animation.AnimationType;
+import cc.sighs.auratip.util.ColorUtil;
+import cc.sighs.auratip.util.ComponentSerialization;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -12,27 +18,36 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-public final class TipOverlay {
+public class TipOverlay {
     public static final TipOverlay INSTANCE = new TipOverlay();
 
     private TipData tip;
     private List<TipData.Page> pages;
+    private static final int OPEN_MS_BASE = 200;
+    private static final int CLOSE_MS_BASE = 140;
     private int themeColor;
+    private VisualSettings visualSettings;
     private int currentPage;
     private int remainingTicks;
     private int maxDuration;
-    private float animationProgress;
+    private TipData.VisualSettings.Background background;
+    private boolean hasThemeColor;
+    private Animation animation;
+    private AnimationType animationType;
+    private long animationStartMs;
+    private int openDurationMs;
+    private int closeDurationMs;
     private boolean closing;
     private boolean hoveringInteractiveArea;
     private int panelWidth;
     private int panelHeight;
     private int panelX;
     private int panelY;
+    private TipData.Position position;
     private InputConstants.Key closeKey;
+    private Map<String, String> variables;
 
     private TipOverlay() {
     }
@@ -41,20 +56,38 @@ public final class TipOverlay {
         return tip != null;
     }
 
-    public void show(TipData data) {
+    public void show(TipData data, Map<String, String> vars) {
         this.tip = data;
         this.pages = data.pages().stream()
                 .sorted(Comparator.comparingInt(TipData.Page::pageIndex))
                 .toList();
-        this.themeColor = parseColor(data.visualSettings().themeColor());
+        this.visualSettings = data.visualSettings();
+        this.background = visualSettings.background();
+        this.hasThemeColor = false;
+        this.themeColor = 0;
+        Optional<String> theme = visualSettings.themeColor();
+        if (theme.isPresent() && !theme.get().isBlank()) {
+            this.themeColor = ColorUtil.parseArgb(theme.get());
+            this.hasThemeColor = true;
+        }
         this.currentPage = 0;
         this.maxDuration = data.behavior().defaultDuration();
         this.remainingTicks = this.maxDuration;
-        this.animationProgress = 0.0f;
+        this.animationType = AnimationType.resolve(visualSettings.animationStyle());
+        this.animation = animationType.animation();
+        float speed = visualSettings.animationSpeed();
+        if (speed <= 0.0f) {
+            speed = 1.0f;
+        }
+        this.openDurationMs = (int) (OPEN_MS_BASE / speed);
+        this.closeDurationMs = (int) (CLOSE_MS_BASE / speed);
+        this.animationStartMs = Util.getMillis();
         this.closing = false;
         this.hoveringInteractiveArea = false;
-        this.panelWidth = data.visualSettings().width();
-        this.panelHeight = data.visualSettings().height();
+        this.panelWidth = visualSettings.width();
+        this.panelHeight = visualSettings.height();
+        this.position = visualSettings.position();
+        this.variables = vars == null ? Map.of() : new HashMap<>(vars);
         this.closeKey = null;
         Optional<String> keyId = data.behavior().closableByKey();
         if (keyId.isPresent()) {
@@ -70,21 +103,10 @@ public final class TipOverlay {
         if (tip == null) {
             return;
         }
-        this.panelX = (screenWidth - panelWidth) / 2;
-        this.panelY = (screenHeight - panelHeight) / 2;
 
-        if (closing) {
-            animationProgress = Mth.clamp(animationProgress - 0.15f, 0.0f, 1.0f);
-            if (animationProgress <= 0.0f) {
-                tip = null;
-                TipClient.onTipClosed();
-            }
-            return;
-        }
+        updatePanelBounds(screenWidth, screenHeight);
 
-        animationProgress = Mth.clamp(animationProgress + 0.08f, 0.0f, 1.0f);
-
-        if (maxDuration > 0 && remainingTicks > 0) {
+        if (!closing && maxDuration > 0 && remainingTicks > 0) {
             boolean pause = tip.behavior().pauseTimerOnHover() && hoveringInteractiveArea;
             if (!pause) {
                 remainingTicks--;
@@ -102,15 +124,24 @@ public final class TipOverlay {
 
         hoveringInteractiveArea = false;
 
-        if (tip.visualSettings().blurBackground()) {
-            renderBlurredBackground(graphics);
+        if (animation == null) {
+            animationType = AnimationType.DEFAULT;
+            animation = animationType.animation();
+            animationStartMs = Util.getMillis();
+            openDurationMs = OPEN_MS_BASE;
+            closeDurationMs = CLOSE_MS_BASE;
         }
 
-        float progress = animationProgress;
-        if (closing) {
-            progress = Mth.clamp(progress - partialTick * 0.15f, 0.0f, 1.0f);
-        } else {
-            progress = Mth.clamp(progress + partialTick * 0.08f, 0.0f, 1.0f);
+        long now = Util.getMillis();
+        float eased = animation.easedProgress(now, animationStartMs, closing, openDurationMs, closeDurationMs);
+
+        if (closing && eased <= 0.001f) {
+            tip = null;
+            closing = false;
+            hoveringInteractiveArea = false;
+            variables = Map.of();
+            TipClient.onTipClosed();
+            return;
         }
 
         int x = panelX;
@@ -118,53 +149,77 @@ public final class TipOverlay {
         int w = panelWidth;
         int h = panelHeight;
 
-        int slideOffset = (int) (18 * (1.0f - progress));
-        int alpha = (int) (progress * 255.0f);
-        int backgroundColor = (alpha << 24) | (themeColor & 0x00FFFFFF);
-        int shadowColor = (alpha << 24) | 0x000000;
+        int drawX;
+        int drawY;
 
-        graphics.fill(x + 2, y + slideOffset + 2, x + w + 2, y + h + slideOffset + 2, shadowColor);
-        graphics.fill(x, y + slideOffset, x + w, y + h + slideOffset, backgroundColor);
+        Optional<TipData.Position> from = visualSettings.animationFrom();
+        Optional<TipData.Position> to = visualSettings.animationTo();
+        if (from.isPresent()) {
+            TipData.Position startPos = from.get();
+            TipData.Position endPos = to.orElse(position);
+            int[] start = resolvePanelPosition(startPos, screenWidth, screenHeight);
+            int[] end = resolvePanelPosition(endPos, screenWidth, screenHeight);
+            float fx = Mth.lerp(eased, start[0], end[0]);
+            float fy = Mth.lerp(eased, start[1], end[1]);
+            drawX = Mth.floor(fx);
+            drawY = Mth.floor(fy);
+        } else {
+            int offsetX = animation.offsetX(eased, panelWidth, panelHeight);
+            int offsetY = animation.offsetY(eased, panelWidth, panelHeight);
+            drawX = x + offsetX;
+            drawY = y + offsetY;
+        }
+
+        renderPanelShadow(graphics, drawX, drawY, w, h, eased);
+        renderPanelBackground(graphics, drawX, drawY, w, h, eased);
 
         TipData.Page page = pages.get(currentPage);
 
-        int contentX = x + 12;
-        int contentY = y + 12 + slideOffset;
+        int contentX = drawX + 12;
+        int contentY = drawY + 12;
 
         if (page.title().isPresent()) {
-            contentY = drawTextElement(graphics, page.title().get(), contentX, contentY);
+            ComponentSerialization.TextElement title = page.title().get();
+            contentY = drawTextElement(graphics, title, contentX, contentY);
+            if (title.divider().isPresent()) {
+                contentY = drawDivider(graphics, title.divider().get(), contentX, drawX + w - 12, contentY);
+            }
         }
         if (page.subtitle().isPresent()) {
-            contentY = drawTextElement(graphics, page.subtitle().get(), contentX, contentY + 4);
+            ComponentSerialization.TextElement subtitle = page.subtitle().get();
+            contentY = drawTextElement(graphics, subtitle, contentX, contentY + 4);
+            if (page.title().isEmpty() && subtitle.divider().isPresent()) {
+                contentY = drawDivider(graphics, subtitle.divider().get(), contentX, drawX + w - 12, contentY);
+            }
         }
         if (page.content().isPresent()) {
             contentY = drawTextElement(graphics, page.content().get(), contentX, contentY + 8);
         }
 
         if (page.image().isPresent()) {
-            drawImage(graphics, page.image().get(), x, y + slideOffset, w);
+            drawImage(graphics, page.image().get(), drawX, drawY, w);
         }
 
         int closeSize = 10;
-        int closeX = x + w - closeSize - 4;
-        int closeY = y + 4 + slideOffset;
+        int closeX = drawX + w - closeSize - 4;
+        int closeY = drawY + 4;
         graphics.drawString(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
 
-        int indicatorY = y + h - 12 + slideOffset;
+        int indicatorY = drawY + h - 12;
         String pageInfo = (currentPage + 1) + "/" + pages.size();
         int pageInfoWidth = Minecraft.getInstance().font.width(pageInfo);
-        graphics.drawString(Minecraft.getInstance().font, pageInfo, x + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
+        graphics.drawString(Minecraft.getInstance().font, pageInfo, drawX + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
 
         if (tip.behavior().allowPaging() && pages.size() > 1) {
             String left = "<";
             String right = ">";
-            graphics.drawString(Minecraft.getInstance().font, left, x + 8, indicatorY, 0xFFFFFFFF);
-            graphics.drawString(Minecraft.getInstance().font, right, x + w - 8 - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, left, drawX + 8, indicatorY, 0xFFFFFFFF);
+            graphics.drawString(Minecraft.getInstance().font, right, drawX + w - 8 - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
         }
 
-        if (mouseX >= x && mouseX <= x + w && mouseY >= y + slideOffset && mouseY <= y + h + slideOffset) {
-            hoveringInteractiveArea = true;
-        }
+        Minecraft mc = Minecraft.getInstance();
+        boolean cursorVisible = mc.screen != null;
+        hoveringInteractiveArea = cursorVisible && mouseX >= drawX && mouseX <= drawX + w && mouseY >= drawY && mouseY <= drawY + h;
     }
 
     public boolean keyPressed(int keyCode) {
@@ -199,9 +254,21 @@ public final class TipOverlay {
         if (button != 0) {
             return false;
         }
-        int slideOffset = (int) (18 * (1.0f - animationProgress));
-        int x = panelX;
-        int y = panelY + slideOffset;
+        if (animation == null) {
+            animationType = AnimationType.DEFAULT;
+            animation = animationType.animation();
+            animationStartMs = Util.getMillis();
+            openDurationMs = OPEN_MS_BASE;
+            closeDurationMs = CLOSE_MS_BASE;
+        }
+        long now = Util.getMillis();
+        float eased = animation.easedProgress(now, animationStartMs, closing, openDurationMs, closeDurationMs);
+
+        int offsetX = animation.offsetX(eased, panelWidth, panelHeight);
+        int offsetY = animation.offsetY(eased, panelWidth, panelHeight);
+
+        int x = panelX + offsetX;
+        int y = panelY + offsetY;
         int w = panelWidth;
 
         int closeSize = 10;
@@ -238,8 +305,150 @@ public final class TipOverlay {
     public void closeImmediately() {
         tip = null;
         closing = false;
-        animationProgress = 0.0f;
         hoveringInteractiveArea = false;
+    }
+
+    public void requestClose() {
+        startClosing();
+    }
+
+    private void updatePanelBounds(int screenWidth, int screenHeight) {
+        if (panelWidth <= 0 || panelHeight <= 0) {
+            return;
+        }
+        TipData.Position pos = position;
+        if (pos == null && visualSettings != null) {
+            pos = visualSettings.position();
+        }
+        int[] resolved = resolvePanelPosition(pos, screenWidth, screenHeight);
+        this.panelX = resolved[0];
+        this.panelY = resolved[1];
+    }
+
+    private int[] resolvePanelPosition(TipData.Position pos, int screenWidth, int screenHeight) {
+        if (pos != null && pos.absolute()) {
+            return new int[]{pos.x(), pos.y()};
+        }
+        String preset = pos != null && pos.preset() != null ? pos.preset() : "CENTER";
+        String normalized = preset.toUpperCase(Locale.ROOT);
+        int margin = 16;
+        int x;
+        int y;
+        switch (normalized) {
+            case "TOP_LEFT" -> {
+                x = margin;
+                y = margin;
+            }
+            case "TOP_RIGHT" -> {
+                x = screenWidth - panelWidth - margin;
+                y = margin;
+            }
+            case "BOTTOM_LEFT" -> {
+                x = margin;
+                y = screenHeight - panelHeight - margin;
+            }
+            case "BOTTOM_CENTER" -> {
+                x = (screenWidth - panelWidth) / 2;
+                y = screenHeight - panelHeight - margin;
+            }
+            case "BOTTOM_RIGHT" -> {
+                x = screenWidth - panelWidth - margin;
+                y = screenHeight - panelHeight - margin;
+            }
+            default -> {
+                x = (screenWidth - panelWidth) / 2;
+                y = (screenHeight - panelHeight) / 2;
+            }
+        }
+        return new int[]{x, y};
+    }
+
+    private void renderPanelShadow(GuiGraphics graphics, int x, int y, int w, int h, float eased) {
+        int alpha = (int) (eased * 140.0f);
+        if (alpha <= 0) {
+            return;
+        }
+        int shadowColor = (alpha << 24);
+//        graphics.fill(x + 2, y + 2, x + w + 2, y + h + 2, shadowColor);
+    }
+
+    private void renderPanelBackground(GuiGraphics graphics, int x, int y, int w, int h, float eased) {
+        int radius = 0;
+        VisualSettings.BackgroundType type = null;
+        boolean rounded = true;
+
+        if (background != null) {
+            radius = Math.max(0, background.borderRadius());
+            type = background.type();
+            rounded = background.rounded();
+        }
+
+        float alphaFactor = eased;
+        int alpha = (int) (alphaFactor * 255.0f);
+        if (alpha <= 0) {
+            return;
+        }
+
+        int topColor;
+        int bottomColor;
+        if (type == TipData.VisualSettings.BackgroundType.GRADIENT && background.colors() != null && !background.colors().isEmpty()) {
+            var colors = background.colors();
+            String fromHex = colors.get(0);
+            String toHex = colors.get(colors.size() - 1);
+            topColor = ColorUtil.parseArgb(fromHex);
+            bottomColor = ColorUtil.parseArgb(toHex);
+        } else {
+            if (hasThemeColor) {
+                topColor = themeColor;
+                bottomColor = themeColor;
+            } else {
+                topColor = ColorUtil.parseArgb(null);
+                bottomColor = topColor;
+            }
+        }
+
+        float radiusPixels = rounded ? radius : 0.0f;
+        PanelRenderer.drawRoundedPanel(graphics, x, y, w, h, topColor, bottomColor, radiusPixels, 2.0f, alpha / 255.0f);
+
+        if (hasThemeColor) {
+            int stripeWidth = 4;
+            int stripeBase = themeColor;
+            int stripeColor = ColorUtil.multiplyAlpha(stripeBase, alphaFactor);
+            int stripeTop = y + Math.round(radiusPixels);
+            int stripeBottom = y + h - Math.round(radiusPixels);
+            if (stripeBottom > stripeTop) {
+                graphics.fill(x, stripeTop, x + stripeWidth, stripeBottom, stripeColor);
+            }
+        }
+    }
+
+    private Component resolveVariables(Component component) {
+        if (variables == null || variables.isEmpty()) {
+            return component;
+        }
+        String raw = component.getString();
+        if (raw.isEmpty()) {
+            return component;
+        }
+        StringBuilder out = new StringBuilder();
+        int length = raw.length();
+        int i = 0;
+        while (i < length) {
+            char c = raw.charAt(i);
+            if (c == '$' && i + 1 < length && raw.charAt(i + 1) == '{') {
+                int end = raw.indexOf('}', i + 2);
+                if (end > i + 2) {
+                    String key = raw.substring(i + 2, end);
+                    String value = variables.getOrDefault(key, "");
+                    out.append(value);
+                    i = end + 1;
+                    continue;
+                }
+            }
+            out.append(c);
+            i++;
+        }
+        return Component.literal(out.toString());
     }
 
     private void previousPage() {
@@ -270,19 +479,79 @@ public final class TipOverlay {
         }
     }
 
-    private int drawTextElement(GuiGraphics graphics, TipData.TextElement element, int x, int y) {
+    private int drawTextElement(GuiGraphics graphics, ComponentSerialization.TextElement element, int x, int y) {
         float scale = element.scale();
-        Component text = element.text();
+        Component text = resolveVariables(element.text());
         int lineSpacing = element.lineSpacing();
+
+        String raw = text.getString();
+        if (raw.isEmpty()) {
+            return y;
+        }
+
+        var font = Minecraft.getInstance().font;
+        int baseLineHeight = font.lineHeight + lineSpacing;
 
         graphics.pose().pushPose();
         graphics.pose().translate(x, y, 0);
         graphics.pose().scale(scale, scale, 1.0f);
-        graphics.drawString(Minecraft.getInstance().font, text, 0, 0, 0xFFFFFFFF);
+
+        int drawY = 0;
+        int lines = 0;
+        int length = raw.length();
+        int start = 0;
+        while (start <= length) {
+            int end = start;
+            while (end < length && raw.charAt(end) != '\n') {
+                end++;
+            }
+            String lineStr = raw.substring(start, end);
+            if (!lineStr.isEmpty()) {
+                Component lineComp = Component.literal(lineStr).withStyle(text.getStyle());
+                graphics.drawString(font, lineComp, 0, drawY, 0xFFFFFFFF);
+            }
+            lines++;
+            drawY += baseLineHeight;
+            if (end >= length) {
+                break;
+            }
+            start = end + 1;
+        }
+
         graphics.pose().popPose();
 
-        int lineHeight = Minecraft.getInstance().font.lineHeight + lineSpacing;
-        return y + (int) (lineHeight * scale);
+        return y + (int) (lines * baseLineHeight * scale);
+    }
+
+    private int drawDivider(GuiGraphics graphics, ComponentSerialization.Divider divider, int leftX, int rightX, int y) {
+        int thickness = divider.thickness();
+        int marginTop = divider.marginTop();
+        int marginBottom = divider.marginBottom();
+        float length = divider.length();
+
+        int lineY = y + marginTop;
+        int x1 = leftX;
+        int x2 = Math.max(leftX, rightX);
+        int span = x2 - x1;
+        if (span <= 0) {
+            return y;
+        }
+        float clamped = Mth.clamp(length, 0.0f, 1.0f);
+        int lineWidth = Math.max(1, (int) (span * clamped));
+        int startX = x1;
+        int endX = x1 + lineWidth;
+
+        int argb;
+        if (divider.color().isPresent() && !divider.color().get().isBlank()) {
+            argb = ColorUtil.parseArgb(divider.color().get());
+        } else if (hasThemeColor) {
+            argb = ColorUtil.multiplyAlpha(themeColor, 0.8f);
+        } else {
+            argb = 0x60FFFFFF;
+        }
+
+        graphics.fill(startX, lineY, endX, lineY + thickness, argb);
+        return lineY + thickness + marginBottom;
     }
 
     private void drawImage(GuiGraphics graphics, TipData.ImageElement image, int panelX, int panelY, int panelWidth) {
@@ -290,9 +559,43 @@ public final class TipOverlay {
         int[] size = image.size();
         int imgW = size.length > 0 ? size[0] : 64;
         int imgH = size.length > 1 ? size[1] : 64;
+        int x;
+        int y;
 
-        int x = panelX + (panelWidth - imgW) / 2;
-        int y = panelY + 8;
+        TipData.Position pos = image.position();
+        if (pos != null && pos.absolute()) {
+            x = panelX + pos.x();
+            y = panelY + pos.y();
+        } else {
+            String preset = pos != null && pos.preset() != null ? pos.preset() : "TOP_CENTER";
+            String normalized = preset.toUpperCase(Locale.ROOT);
+            switch (normalized) {
+                case "TOP_LEFT" -> {
+                    x = panelX;
+                    y = panelY;
+                }
+                case "TOP_RIGHT" -> {
+                    x = panelX + panelWidth - imgW;
+                    y = panelY;
+                }
+                case "BOTTOM_LEFT" -> {
+                    x = panelX;
+                    y = panelY + panelHeight - imgH;
+                }
+                case "BOTTOM_RIGHT" -> {
+                    x = panelX + panelWidth - imgW;
+                    y = panelY + panelHeight - imgH;
+                }
+                case "CENTER", "MIDDLE" -> {
+                    x = panelX + (panelWidth - imgW) / 2;
+                    y = panelY + (panelHeight - imgH) / 2;
+                }
+                default -> {
+                    x = panelX + (panelWidth - imgW) / 2;
+                    y = panelY + 8;
+                }
+            }
+        }
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, texture);
@@ -303,27 +606,7 @@ public final class TipOverlay {
     private void startClosing() {
         if (!closing) {
             closing = true;
+            animationStartMs = Util.getMillis();
         }
-    }
-
-    private static int parseColor(String hex) {
-        if (hex == null || hex.isBlank()) {
-            return 0xA0D8EF;
-        }
-        String value = hex.startsWith("#") ? hex.substring(1) : hex;
-        try {
-            int rgb = Integer.parseInt(value, 16);
-            if (value.length() <= 6) {
-                return rgb;
-            }
-            return rgb & 0x00FFFFFF;
-        } catch (NumberFormatException e) {
-            return 0xA0D8EF;
-        }
-    }
-
-    private void renderBlurredBackground(GuiGraphics graphics) {
-        graphics.fill(0, 0, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight(), 0x40000000);
     }
 }
-

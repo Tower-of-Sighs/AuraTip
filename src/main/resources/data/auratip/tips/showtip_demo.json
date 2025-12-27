@@ -1,0 +1,121 @@
+{
+  "id": "showtip_demo_intro",
+  "trigger": {
+    "type": "SHOWTIP_COMMAND",
+    "mode": "repeatable",
+    "cooldown": 0
+  },
+  "visual_settings": {
+    "animation_style": "SLIDE_IN_LEFT",
+    "background": {
+      "type": "gradient",
+      "colors": [
+        "#EE1A1A2E",
+        "#DD12121F"
+      ],
+      "border_radius": 6,
+      "rounded": true
+    },
+    "theme_color": "#5C6BC0",
+    "width": 180,
+    "height": 55,
+    "position": [
+      10,
+      200
+    ],
+    "animation_speed": 1.2,
+    "animation_from": [
+      0,
+      200
+    ],
+    "animation_to": [
+      10,
+      200
+    ]
+  },
+  "behavior": {
+    "default_duration": 200,
+    "pause_timer_on_hover": true,
+    "closable_by_key": "key.keyboard.delete",
+    "allow_paging": true
+  },
+  "pages": [
+    {
+      "page_index": 0,
+      "title": {
+        "text": {
+          "text": "AuraTip · 测试",
+          "color": "aqua",
+          "bold": true
+        },
+        "scale": 0.8
+      },
+      "subtitle": {
+        "text": {
+          "text": "指令触发演示",
+          "color": "gray"
+        },
+        "scale": 0.7,
+        "line_spacing": 0
+      },
+      "content": {
+        "text": "● 样式丰富 ● 动画丝滑",
+        "scale": 0.65,
+        "line_spacing": 1
+      },
+      "image": {
+        "path": "minecraft:textures/item/clock_00.png",
+        "position": "LEFT_CENTER",
+        "size": [
+          20,
+          20
+        ]
+      }
+    },
+    {
+      "page_index": 1,
+      "title": {
+        "text": {
+          "text": "实时变量",
+          "color": "yellow",
+          "bold": true
+        },
+        "scale": 0.8
+      },
+      "divider": {
+        "thickness": 1,
+        "margin_top": 2,
+        "margin_bottom": 2
+      },
+      "content": {
+        "text": "玩家: ${player}\n坐标: ${x}, ${z}",
+        "scale": 0.7,
+        "line_spacing": 1
+      },
+      "image": {
+        "path": "minecraft:textures/item/compass_05.png",
+        "position": "LEFT_CENTER",
+        "size": [
+          18,
+          18
+        ]
+      }
+    },
+    {
+      "page_index": 2,
+      "title": {
+        "text": {
+          "text": "主题边缘",
+          "color": "light_purple",
+          "bold": true
+        },
+        "scale": 0.8
+      },
+      "content": {
+        "text": "左侧竖条自动渐变\n适配小比例面板",
+        "scale": 0.65,
+        "line_spacing": 1
+      }
+    }
+  ]
+}

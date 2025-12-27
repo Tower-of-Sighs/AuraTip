@@ -22,11 +22,14 @@ public class AuraShaders {
 
     @SubscribeEvent
     public static void onRegisterShaders(RegisterShadersEvent event) throws IOException {
-        event.registerShader(new ShaderInstance(
+        event.registerShader(
+                new ShaderInstance(
                         event.getResourceProvider(),
                         new ResourceLocation(AuraTip.MODID, "radial_ring"),
-                        DefaultVertexFormat.POSITION_TEX),
+                        DefaultVertexFormat.POSITION_TEX
+                ),
                 shader -> radialRing = shader
         );
+
     }
 }
