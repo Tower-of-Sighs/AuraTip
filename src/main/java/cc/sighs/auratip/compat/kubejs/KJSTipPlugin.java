@@ -21,6 +21,7 @@ public class KJSTipPlugin extends KubeJSPlugin {
     public void registerBindings(BindingsEvent event) {
         event.add("TipVars", TipVariables.class);
         event.add("TipTriggers", TipTriggers.class);
+        event.add("TipText", TipText.class);
     }
 
     @Override

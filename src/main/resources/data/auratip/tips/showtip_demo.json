@@ -80,12 +80,13 @@
           "color": "yellow",
           "bold": true
         },
-        "scale": 0.8
-      },
-      "divider": {
-        "thickness": 1,
-        "margin_top": 2,
-        "margin_bottom": 2
+        "scale": 0.8,
+        "divider": {
+          "thickness": 1,
+          "margin_top": 2,
+          "margin_bottom": 4,
+          "length": 0.38
+        }
       },
       "content": {
         "text": "玩家: ${player}\n坐标: ${x}, ${z}",

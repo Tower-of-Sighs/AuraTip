@@ -116,6 +116,7 @@ public record TipData(
 
         public enum BackgroundType {
             GRADIENT,
+            SOLID,
             IMAGE;
 
             public static final Codec<BackgroundType> CODEC = Codec.STRING.xmap(
@@ -181,13 +182,7 @@ public record TipData(
         );
     }
 
-    public record ImageElement(String path, Position position, int[] size) {
-        public ImageElement {
-            if (size == null || size.length != 2) {
-                size = new int[]{64, 64};
-            }
-        }
-
+    public record ImageElement(String path, Position position, int[] size, float scale) {
         public static final Codec<ImageElement> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.STRING.fieldOf("path").forGetter(ImageElement::path),
@@ -198,8 +193,18 @@ public record TipData(
                                         list -> list.stream().mapToInt(Integer::intValue).toArray(),
                                         arr -> List.of(arr[0], arr[1])
                                 )
-                                .forGetter(ImageElement::size)
+                                .forGetter(ImageElement::size),
+                        Codec.FLOAT.optionalFieldOf("scale", 1.0f).forGetter(ImageElement::scale)
                 ).apply(inst, ImageElement::new)
         );
+
+        public ImageElement {
+            if (size == null || size.length != 2) {
+                size = new int[]{64, 64};
+            }
+            if (scale <= 0.0f) {
+                scale = 1.0f;
+            }
+        }
     }
 }

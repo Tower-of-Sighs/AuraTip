@@ -152,7 +152,7 @@ public class TipBuilder {
                     data.title != null ? data.title.text() : Component.empty(),
                     data.title != null ? data.title.scale() : 1.0f,
                     data.title != null ? data.title.lineSpacing() : 0,
-                    Optional.of(new ComponentSerialization.Divider(thickness, marginTop, marginBottom, length, Optional.ofNullable(colorHex)))
+                    Optional.of(new ComponentSerialization.Divider(thickness, marginTop, marginBottom, length, colorHex == null ? "" : colorHex))
             );
             return this;
         }
@@ -167,13 +167,25 @@ public class TipBuilder {
 
         public PageBuilder image(String path, String position, int width, int height) {
             TipData.Position pos = new TipData.Position(position, 0, 0, false);
-            data.image = new TipData.ImageElement(path, pos, new int[]{width, height});
+            data.image = new TipData.ImageElement(path, pos, new int[]{width, height}, 1.0f);
             return this;
         }
 
         public PageBuilder image(String path, int x, int y, int width, int height) {
             TipData.Position pos = new TipData.Position(null, x, y, true);
-            data.image = new TipData.ImageElement(path, pos, new int[]{width, height});
+            data.image = new TipData.ImageElement(path, pos, new int[]{width, height}, 1.0f);
+            return this;
+        }
+
+        public PageBuilder imageScaled(String path, String position, int width, int height, float scale) {
+            TipData.Position pos = new TipData.Position(position, 0, 0, false);
+            data.image = new TipData.ImageElement(path, pos, new int[]{width, height}, scale);
+            return this;
+        }
+
+        public PageBuilder imageScaled(String path, int x, int y, int width, int height, float scale) {
+            TipData.Position pos = new TipData.Position(null, x, y, true);
+            data.image = new TipData.ImageElement(path, pos, new int[]{width, height}, scale);
             return this;
         }
     }

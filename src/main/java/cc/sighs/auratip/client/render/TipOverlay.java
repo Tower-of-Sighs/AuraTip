@@ -334,14 +334,27 @@ public class TipOverlay {
         int margin = 16;
         int x;
         int y;
+
         switch (normalized) {
             case "TOP_LEFT" -> {
                 x = margin;
                 y = margin;
             }
+            case "TOP_CENTER" -> {
+                x = (screenWidth - panelWidth) / 2;
+                y = margin;
+            }
             case "TOP_RIGHT" -> {
                 x = screenWidth - panelWidth - margin;
                 y = margin;
+            }
+            case "LEFT_CENTER" -> {
+                x = margin;
+                y = (screenHeight - panelHeight) / 2;
+            }
+            case "RIGHT_CENTER" -> {
+                x = screenWidth - panelWidth - margin;
+                y = (screenHeight - panelHeight) / 2;
             }
             case "BOTTOM_LEFT" -> {
                 x = margin;
@@ -397,6 +410,10 @@ public class TipOverlay {
             String toHex = colors.get(colors.size() - 1);
             topColor = ColorUtil.parseArgb(fromHex);
             bottomColor = ColorUtil.parseArgb(toHex);
+        } else if (type == TipData.VisualSettings.BackgroundType.SOLID && background.colors() != null && !background.colors().isEmpty()) {
+            String hex = background.colors().get(0);
+            topColor = ColorUtil.parseArgb(hex);
+            bottomColor = topColor;
         } else {
             if (hasThemeColor) {
                 topColor = themeColor;
@@ -427,7 +444,7 @@ public class TipOverlay {
             return component;
         }
         String raw = component.getString();
-        if (raw.isEmpty()) {
+        if (raw.isEmpty() || !raw.contains("${")) {
             return component;
         }
         StringBuilder out = new StringBuilder();
@@ -484,12 +501,12 @@ public class TipOverlay {
         Component text = resolveVariables(element.text());
         int lineSpacing = element.lineSpacing();
 
-        String raw = text.getString();
-        if (raw.isEmpty()) {
+        var font = Minecraft.getInstance().font;
+        var lines = font.split(text, Integer.MAX_VALUE);
+        if (lines.isEmpty()) {
             return y;
         }
 
-        var font = Minecraft.getInstance().font;
         int baseLineHeight = font.lineHeight + lineSpacing;
 
         graphics.pose().pushPose();
@@ -497,30 +514,14 @@ public class TipOverlay {
         graphics.pose().scale(scale, scale, 1.0f);
 
         int drawY = 0;
-        int lines = 0;
-        int length = raw.length();
-        int start = 0;
-        while (start <= length) {
-            int end = start;
-            while (end < length && raw.charAt(end) != '\n') {
-                end++;
-            }
-            String lineStr = raw.substring(start, end);
-            if (!lineStr.isEmpty()) {
-                Component lineComp = Component.literal(lineStr).withStyle(text.getStyle());
-                graphics.drawString(font, lineComp, 0, drawY, 0xFFFFFFFF);
-            }
-            lines++;
+        for (var line : lines) {
+            graphics.drawString(font, line, 0, drawY, 0xFFFFFFFF);
             drawY += baseLineHeight;
-            if (end >= length) {
-                break;
-            }
-            start = end + 1;
         }
 
         graphics.pose().popPose();
 
-        return y + (int) (lines * baseLineHeight * scale);
+        return y + (int) (lines.size() * baseLineHeight * scale);
     }
 
     private int drawDivider(GuiGraphics graphics, ComponentSerialization.Divider divider, int leftX, int rightX, int y) {
@@ -542,8 +543,9 @@ public class TipOverlay {
         int endX = x1 + lineWidth;
 
         int argb;
-        if (divider.color().isPresent() && !divider.color().get().isBlank()) {
-            argb = ColorUtil.parseArgb(divider.color().get());
+        String colorHex = divider.color();
+        if (colorHex != null && !colorHex.isBlank()) {
+            argb = ColorUtil.parseArgb(colorHex);
         } else if (hasThemeColor) {
             argb = ColorUtil.multiplyAlpha(themeColor, 0.8f);
         } else {
@@ -559,6 +561,11 @@ public class TipOverlay {
         int[] size = image.size();
         int imgW = size.length > 0 ? size[0] : 64;
         int imgH = size.length > 1 ? size[1] : 64;
+        float scale = image.scale();
+        if (scale > 0.0f && scale != 1.0f) {
+            imgW = Math.max(1, Math.round(imgW * scale));
+            imgH = Math.max(1, Math.round(imgH * scale));
+        }
         int x;
         int y;
 
@@ -585,6 +592,10 @@ public class TipOverlay {
                 case "BOTTOM_RIGHT" -> {
                     x = panelX + panelWidth - imgW;
                     y = panelY + panelHeight - imgH;
+                }
+                case "BOTTOM_CENTER" -> {
+                    x = panelX + (panelWidth - imgW) / 2;
+                    y = panelY + panelHeight - imgH - 4;
                 }
                 case "CENTER", "MIDDLE" -> {
                     x = panelX + (panelWidth - imgW) / 2;

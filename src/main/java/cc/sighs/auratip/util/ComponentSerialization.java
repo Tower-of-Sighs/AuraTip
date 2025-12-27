@@ -41,14 +41,19 @@ public final class ComponentSerialization {
         }
     }
 
-    public record Divider(int thickness, int marginTop, int marginBottom, float length, Optional<String> color) {
+    public record Divider(int thickness, int marginTop, int marginBottom, float length, String color) {
         public static final Codec<Divider> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.INT.optionalFieldOf("thickness", 1).forGetter(Divider::thickness),
                         Codec.INT.optionalFieldOf("margin_top", 4).forGetter(Divider::marginTop),
                         Codec.INT.optionalFieldOf("margin_bottom", 4).forGetter(Divider::marginBottom),
                         Codec.FLOAT.optionalFieldOf("length", 1.0f).forGetter(Divider::length),
-                        Codec.STRING.optionalFieldOf("color").forGetter(Divider::color)
+                        Codec.STRING.optionalFieldOf("color")
+                                .xmap(
+                                        opt -> opt.orElse(""),
+                                        value -> value == null || value.isBlank() ? Optional.empty() : Optional.of(value)
+                                )
+                                .forGetter(Divider::color)
                 ).apply(inst, Divider::new)
         );
 
@@ -64,6 +69,9 @@ public final class ComponentSerialization {
             }
             if (length <= 0.0f) {
                 length = 1.0f;
+            }
+            if (color == null) {
+                color = "";
             }
         }
     }

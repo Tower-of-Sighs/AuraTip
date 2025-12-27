@@ -5,6 +5,7 @@ import com.mafuyu404.oelib.api.data.DataValidator;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class TipDataValidator implements DataValidator<TipData> {
@@ -45,10 +46,11 @@ public class TipDataValidator implements DataValidator<TipData> {
             if (background.borderRadius() < 0) {
                 return ValidationResult.failure("background.border_radius must be >= 0 in tip " + data.id() + " at " + source);
             }
-            if (background.type() == TipData.VisualSettings.BackgroundType.GRADIENT) {
+            if (background.type() == TipData.VisualSettings.BackgroundType.GRADIENT
+                    || background.type() == TipData.VisualSettings.BackgroundType.SOLID) {
                 var colors = background.colors();
                 if (colors == null || colors.isEmpty()) {
-                    return ValidationResult.failure("gradient background requires at least one color in tip " + data.id() + " at " + source);
+                    return ValidationResult.failure(background.type().name().toLowerCase(Locale.ROOT) + " background requires at least one color in tip " + data.id() + " at " + source);
                 }
             }
         }
