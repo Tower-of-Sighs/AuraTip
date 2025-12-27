@@ -25,7 +25,7 @@ public final class ActionRegistry {
         return Codec.STRING.dispatch(
                 "type",
                 action -> {
-                    String id = IDS.get(action.getClass());
+                    var id = IDS.get(action.getClass());
                     if (id != null) {
                         return id;
                     }
@@ -37,7 +37,7 @@ public final class ActionRegistry {
                     throw new IllegalStateException("Unregistered Action: " + action);
                 },
                 type -> {
-                    Codec<? extends Action> codec = TYPES.get(type);
+                    var codec = TYPES.get(type);
                     if (codec == null) {
                         throw new IllegalArgumentException("Unknown action type: " + type);
                     }

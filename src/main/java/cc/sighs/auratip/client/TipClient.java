@@ -12,7 +12,7 @@ public class TipClient {
     private static final Deque<TipData> QUEUE = new ArrayDeque<>();
 
     public static void enqueueTipsById(List<String> ids) {
-        List<TipData> tips = DataManagerBridge.getDataList(TipData.class);
+        var tips = DataManagerBridge.getDataList(TipData.class);
         if (tips == null || tips.isEmpty()) {
             return;
         }
@@ -42,7 +42,7 @@ public class TipClient {
         if (TipOverlay.INSTANCE.isActive()) {
             return;
         }
-        TipData next = QUEUE.pollFirst();
+        var next = QUEUE.pollFirst();
         if (next != null) {
             TipOverlay.INSTANCE.show(next);
         }

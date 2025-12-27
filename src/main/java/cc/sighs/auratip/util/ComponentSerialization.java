@@ -1,4 +1,4 @@
-package cc.sighs.auratip.data;
+package cc.sighs.auratip.util;
 
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;

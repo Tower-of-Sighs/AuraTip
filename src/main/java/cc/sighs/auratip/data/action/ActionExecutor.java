@@ -12,12 +12,12 @@ public enum ActionExecutor implements Action.ActionVisitor<Void> {
 
     @Override
     public Void visitOpenGui(Action.OpenGui action) {
-        Minecraft minecraft = Minecraft.getInstance();
+        var minecraft = Minecraft.getInstance();
         if (minecraft.player == null) {
             return null;
         }
 
-        String classPath = action.classPath();
+        var classPath = action.classPath();
         if ("net.minecraft.client.gui.screens.inventory.InventoryScreen".equals(classPath)) {
             Screen screen = new InventoryScreen(minecraft.player);
             minecraft.setScreen(screen);
@@ -32,7 +32,7 @@ public enum ActionExecutor implements Action.ActionVisitor<Void> {
         }
 
         try {
-            Class<?> clazz = Class.forName(classPath);
+            var clazz = Class.forName(classPath);
             if (Screen.class.isAssignableFrom(clazz)) {
                 try {
                     Screen screen = (Screen) clazz.getDeclaredConstructor().newInstance();
@@ -51,9 +51,9 @@ public enum ActionExecutor implements Action.ActionVisitor<Void> {
 
     @Override
     public Void visitRunCommand(Action.RunCommand action) {
-        Minecraft minecraft = Minecraft.getInstance();
+        var minecraft = Minecraft.getInstance();
         if (minecraft.player != null) {
-            String command = action.command();
+            var command = action.command();
             if (command.startsWith("/")) {
                 command = command.substring(1);
             }
@@ -65,7 +65,7 @@ public enum ActionExecutor implements Action.ActionVisitor<Void> {
     @Override
     public Void visitSimulateKey(Action.SimulateKey action) {
         int keyCode = action.keyCode();
-        Minecraft minecraft = Minecraft.getInstance();
+        var minecraft = Minecraft.getInstance();
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             minecraft.setScreen(null);
         }

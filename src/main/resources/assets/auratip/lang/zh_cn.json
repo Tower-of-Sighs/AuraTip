@@ -1,0 +1,10 @@
+{
+  "key.categories.auratip": "灵光提示",
+  "key.auratip.open_radial": "唤出轮盘",
+  "key.auratip.close_tip": "关闭提示",
+
+  "tip.auratip.open_inventory": "打开背包",
+  "tip.auratip.open_quests": "打开任务",
+  "tip.auratip.set_day": "白天",
+  "tip.auratip.heal": "治疗"
+}

@@ -27,18 +27,18 @@ public class CommonEventHandler {
             return;
         }
 
-        List<TipData> tips = DataManagerBridge.getDataList(TipData.class);
+        var tips = DataManagerBridge.getDataList(TipData.class);
         if (tips == null || tips.isEmpty()) {
             return;
         }
 
-        CompoundTag persistent = player.getPersistentData();
-        CompoundTag shown = persistent.getCompound(SHOWN_TIPS_TAG);
+        var persistent = player.getPersistentData();
+        var shown = persistent.getCompound(SHOWN_TIPS_TAG);
 
         List<String> toShow = new ArrayList<>();
 
         for (TipData tip : tips) {
-            Trigger trigger = tip.trigger();
+            var trigger = tip.trigger();
             if (trigger == null) {
                 continue;
             }
@@ -46,8 +46,8 @@ public class CommonEventHandler {
                 continue;
             }
 
-            String id = tip.id();
-            Mode mode = trigger.mode();
+            var id = tip.id();
+            var mode = trigger.mode();
             boolean alreadyShown = shown.getBoolean(id);
 
             if (mode == Mode.ONCE && alreadyShown) {

@@ -2,6 +2,7 @@ package cc.sighs.auratip.data;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.validator.TipDataValidator;
+import cc.sighs.auratip.util.ComponentSerialization;
 import com.mafuyu404.oelib.api.data.DataDriven;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

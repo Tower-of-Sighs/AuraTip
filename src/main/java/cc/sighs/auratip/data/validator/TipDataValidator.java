@@ -15,7 +15,7 @@ public class TipDataValidator implements DataValidator<TipData> {
             return ValidationResult.failure("Tip id is empty in " + source);
         }
 
-        List<TipData.Page> pages = data.pages();
+        var pages = data.pages();
         if (pages == null || pages.isEmpty()) {
             return ValidationResult.failure("Tip " + data.id() + " has no pages in " + source);
         }
@@ -34,7 +34,7 @@ public class TipDataValidator implements DataValidator<TipData> {
             }
         }
 
-        TipData.Behavior behavior = data.behavior();
+        var behavior = data.behavior();
         if (behavior.defaultDuration() < -1) {
             return ValidationResult.failure("default_duration must be >= -1 in tip " + data.id() + " at " + source);
         }

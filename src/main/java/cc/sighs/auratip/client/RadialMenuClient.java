@@ -9,7 +9,7 @@ import java.util.List;
 
 public class RadialMenuClient {
     public static void openMenu() {
-        Minecraft minecraft = Minecraft.getInstance();
+        var minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.level == null) {
             return;
         }
@@ -18,14 +18,14 @@ public class RadialMenuClient {
             return;
         }
 
-        List<RadialMenuData> menus = DataManagerBridge.getDataList(RadialMenuData.class);
+        var menus = DataManagerBridge.getDataList(RadialMenuData.class);
         if (menus == null || menus.isEmpty()) {
             return;
         }
 
-        RadialMenuData menu = menus.get(0);
+        var menu = menus.get(0);
         int width = minecraft.getWindow().getGuiScaledWidth();
         int height = minecraft.getWindow().getGuiScaledHeight();
-        RadialMenuOverlay.INSTANCE.open(menu, width, height);
+        RadialMenuOverlay.INSTANCE.open(menu, width, height, minecraft);
     }
 }

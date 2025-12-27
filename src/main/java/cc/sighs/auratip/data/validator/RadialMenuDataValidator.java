@@ -13,7 +13,7 @@ public class RadialMenuDataValidator implements DataValidator<RadialMenuData> {
             return ValidationResult.failure("Radial menu has no menu_settings in " + source);
         }
 
-        RadialMenuData.MenuSettings settings = data.menuSettings();
+        var settings = data.menuSettings();
         if (settings.innerRadius() <= 0 || settings.outerRadius() <= 0) {
             return ValidationResult.failure("inner_radius and outer_radius must be > 0 in " + source);
         }
@@ -24,13 +24,13 @@ public class RadialMenuDataValidator implements DataValidator<RadialMenuData> {
             return ValidationResult.failure("animation_speed must be > 0 in " + source);
         }
 
-        List<RadialMenuData.Slot> slots = data.slots();
+        var slots = data.slots();
         if (slots == null || slots.isEmpty()) {
             return ValidationResult.failure("Radial menu has no slots in " + source);
         }
 
         for (int i = 0; i < slots.size(); i++) {
-            RadialMenuData.Slot slot = slots.get(i);
+            var slot = slots.get(i);
             if (slot.name() == null || slot.name().isBlank()) {
                 return ValidationResult.failure("Slot " + i + " has empty name in " + source);
             }

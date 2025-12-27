@@ -27,7 +27,7 @@ public class ClientEventHandler {
             TipClient.closeCurrentTip();
         }
 
-        Minecraft mc = Minecraft.getInstance();
+        var mc = Minecraft.getInstance();
         int width = mc.getWindow().getGuiScaledWidth();
         int height = mc.getWindow().getGuiScaledHeight();
 

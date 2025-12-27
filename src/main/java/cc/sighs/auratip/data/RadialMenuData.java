@@ -3,6 +3,7 @@ package cc.sighs.auratip.data;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.validator.RadialMenuDataValidator;
+import cc.sighs.auratip.util.ComponentSerialization;
 import com.mafuyu404.oelib.api.data.DataDriven;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -52,14 +53,16 @@ public record RadialMenuData(
             int innerRadius,
             int outerRadius,
             float animationSpeed,
-            Optional<ResourceLocation> centerIcon
+            Optional<ResourceLocation> centerIcon,
+            Optional<String> ringColor
     ) {
         public static final Codec<MenuSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.INT.fieldOf("inner_radius").forGetter(MenuSettings::innerRadius),
                         Codec.INT.fieldOf("outer_radius").forGetter(MenuSettings::outerRadius),
                         Codec.FLOAT.fieldOf("animation_speed").forGetter(MenuSettings::animationSpeed),
-                        ResourceLocation.CODEC.optionalFieldOf("center_icon").forGetter(MenuSettings::centerIcon)
+                        ResourceLocation.CODEC.optionalFieldOf("center_icon").forGetter(MenuSettings::centerIcon),
+                        Codec.STRING.optionalFieldOf("ring_color").forGetter(MenuSettings::ringColor)
                 ).apply(inst, MenuSettings::new)
         );
     }

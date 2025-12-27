@@ -14,7 +14,7 @@ public record ShowTipsPacket(List<String> tipIds) {
     }
 
     public static ShowTipsPacket decode(FriendlyByteBuf buf) {
-        List<String> ids = buf.readList(FriendlyByteBuf::readUtf);
+        var ids = buf.readList(FriendlyByteBuf::readUtf);
         return new ShowTipsPacket(new ArrayList<>(ids));
     }
 
