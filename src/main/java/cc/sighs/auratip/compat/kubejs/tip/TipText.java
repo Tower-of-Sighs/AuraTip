@@ -9,15 +9,16 @@ import net.minecraft.network.chat.TextColor;
 
 import java.util.Locale;
 
-public final class TipText {
-    private TipText() {
-    }
-
+public class TipText {
     public static Builder of(Object base) {
         if (base instanceof Component component) {
             return new Builder(component);
         }
         return new Builder(Component.literal(String.valueOf(base)));
+    }
+
+    public static Builder translatable(String key, Object... args) {
+        return new Builder(Component.translatable(key, args));
     }
 
     public static Component join(Object... parts) {

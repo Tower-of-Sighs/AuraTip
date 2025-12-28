@@ -10,38 +10,6 @@
   },
   "slots": [
     {
-      "name": "Inventory",
-      "icon": "minecraft:textures/item/apple.png",
-      "action": {
-        "type": "open_gui",
-        "class_path": "net.minecraft.client.gui.screens.inventory.InventoryScreen"
-      },
-      "text": {
-        "translate": "tip.auratip.open_inventory",
-        "color": "#55FFFF",
-        "bold": true,
-        "italic": false,
-        "underlined": true
-      },
-      "highlight_color": "#EEEEEE"
-    },
-    {
-      "name": "FTB Quests",
-      "icon": "ftbquests:textures/item/book.png",
-      "action": {
-        "type": "open_gui",
-        "class_path": "dev.ftb.mods.ftbquests.client.gui.quests.QuestScreen"
-      },
-      "text": {
-        "translate": "tip.auratip.open_quests",
-        "color": "#55FFFF",
-        "bold": true,
-        "italic": false,
-        "underlined": true
-      },
-      "highlight_color": "#FFD700"
-    },
-    {
       "name": "Set Day",
       "icon": "minecraft:textures/item/clock_06.png",
       "action": {

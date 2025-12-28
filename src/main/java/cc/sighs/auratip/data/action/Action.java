@@ -1,7 +1,10 @@
 package cc.sighs.auratip.data.action;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import java.util.Map;
 
 public interface Action {
     <T> T accept(ActionVisitor<T> visitor);
@@ -9,24 +12,14 @@ public interface Action {
     Codec<Action> CODEC = ActionRegistry.codec();
 
     interface ActionVisitor<T> {
-        T visitOpenGui(OpenGui action);
 
         T visitRunCommand(RunCommand action);
 
         T visitSimulateKey(SimulateKey action);
-    }
 
-    record OpenGui(String classPath) implements Action {
-        @Override
-        public <T> T accept(ActionVisitor<T> visitor) {
-            return visitor.visitOpenGui(this);
+        default T visitScript(ScriptAction action) {
+            return null;
         }
-
-        public static final Codec<OpenGui> CODEC = RecordCodecBuilder.create(inst ->
-                inst.group(
-                        Codec.STRING.fieldOf("class_path").forGetter(OpenGui::classPath)
-                ).apply(inst, OpenGui::new)
-        );
     }
 
     record RunCommand(String command) implements Action {
@@ -53,5 +46,12 @@ public interface Action {
                         Codec.INT.fieldOf("key_code").forGetter(SimulateKey::keyCode)
                 ).apply(inst, SimulateKey::new)
         );
+    }
+
+    record ScriptAction(String type, Map<String, Dynamic<?>> params) implements Action {
+        @Override
+        public <T> T accept(ActionVisitor<T> visitor) {
+            return visitor.visitScript(this);
+        }
     }
 }

@@ -1,54 +1,78 @@
 package cc.sighs.auratip.data.action;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.Dynamic;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ActionRegistry {
+import static cc.sighs.auratip.util.SerializationUtil.dynamicOf;
 
-    private static final Map<String, Codec<? extends Action>> TYPES = new HashMap<>();
-    private static final Map<Class<?>, String> IDS = new HashMap<>();
+public final class ActionRegistry {
 
     private ActionRegistry() {
     }
 
-    public static <T extends Action> void register(String id, Codec<T> codec, Class<T> type) {
-        if (TYPES.containsKey(id)) {
-            throw new IllegalStateException("Duplicate action type: " + id);
-        }
-        TYPES.put(id, codec);
-        IDS.put(type, id);
-    }
-
     public static Codec<Action> codec() {
-        return Codec.STRING.dispatch(
-                "type",
-                action -> {
-                    var id = IDS.get(action.getClass());
-                    if (id != null) {
-                        return id;
-                    }
-                    for (Map.Entry<Class<?>, String> entry : IDS.entrySet()) {
-                        if (entry.getKey().isInstance(action)) {
-                            return entry.getValue();
-                        }
-                    }
-                    throw new IllegalStateException("Unregistered Action: " + action);
-                },
-                type -> {
-                    var codec = TYPES.get(type);
-                    if (codec == null) {
-                        throw new IllegalArgumentException("Unknown action type: " + type);
-                    }
-                    return codec;
-                }
-        );
+        Codec<Map<String, Dynamic<?>>> mapCodec = Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH);
+        return mapCodec.xmap(ActionRegistry::decode, ActionRegistry::encode);
     }
 
-    public static void register() {
-        register("open_gui", Action.OpenGui.CODEC, Action.OpenGui.class);
-        register("run_command", Action.RunCommand.CODEC, Action.RunCommand.class);
-        register("simulate_key", Action.SimulateKey.CODEC, Action.SimulateKey.class);
+    private static Action decode(Map<String, Dynamic<?>> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return new Action.ScriptAction("", Map.of());
+        }
+
+        Dynamic<?> typeDyn = raw.get("type");
+        String type = typeDyn == null ? "" : typeDyn.asString("");
+
+        switch (type) {
+            case "" -> {
+                if (raw.containsKey("command")) {
+                    String command = raw.get("command").asString("");
+                    return new Action.RunCommand(command);
+                }
+                if (raw.containsKey("key_code")) {
+                    int key = raw.get("key_code").asInt(0);
+                    return new Action.SimulateKey(key);
+                }
+                return new Action.ScriptAction("", Map.of());
+            }
+            case "run_command" -> {
+                String command = raw.getOrDefault("command", dynamicOf("")).asString("");
+                return new Action.RunCommand(command);
+            }
+            case "simulate_key" -> {
+                int key = raw.getOrDefault("key_code", dynamicOf(0)).asInt(0);
+                return new Action.SimulateKey(key);
+            }
+        }
+
+        Map<String, Dynamic<?>> params = new HashMap<>(raw);
+        params.remove("type");
+        return new Action.ScriptAction(type, params);
+    }
+
+    private static Map<String, Dynamic<?>> encode(Action action) {
+        Map<String, Dynamic<?>> out = new HashMap<>();
+        if (action instanceof Action.RunCommand rc) {
+            out.put("type", dynamicOf("run_command"));
+            out.put("command", dynamicOf(rc.command()));
+            return out;
+        }
+        if (action instanceof Action.SimulateKey sk) {
+            out.put("type", dynamicOf("simulate_key"));
+            out.put("key_code", dynamicOf(sk.keyCode()));
+            return out;
+        }
+        if (action instanceof Action.ScriptAction sa) {
+            out.put("type", dynamicOf(sa.type()));
+            if (sa.params() != null && !sa.params().isEmpty()) {
+                out.putAll(sa.params());
+            }
+            return out;
+        }
+        out.put("type", dynamicOf(""));
+        return out;
     }
 }

@@ -23,6 +23,8 @@ public class TipBuilder {
     private String hoverAnimationStyle = "none";
     private float hoverAnimationSpeed = 1.0f;
     private boolean hoverOnlyOnHover;
+    private int stripeWidth = 4;
+    private float stripeLengthFactor = 1.0f;
     private String themeColor;
     private int width = 280;
     private int height = 180;
@@ -106,6 +108,8 @@ public class TipBuilder {
                 hoverAnimationStyle,
                 hoverAnimationSpeed,
                 hoverOnlyOnHover,
+                stripeWidth,
+                stripeLengthFactor,
                 convertedAnimParams,
                 convertedHoverParams
         );
@@ -228,6 +232,16 @@ public class TipBuilder {
 
         public VisualBuilder hoverOnlyOnHover(boolean value) {
             hoverOnlyOnHover = value;
+            return this;
+        }
+
+        public VisualBuilder stripeWidth(int width) {
+            stripeWidth = width;
+            return this;
+        }
+
+        public VisualBuilder stripeLengthFactor(float factor) {
+            stripeLengthFactor = factor;
             return this;
         }
 

@@ -30,6 +30,7 @@ public final class AnimationType {
         registerHoverInternal("hover_float", FloatHoverAnimation::create);
         registerHoverInternal("hover_shake", ShakeHoverAnimation::create);
     }
+
     private AnimationType() {
     }
 

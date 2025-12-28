@@ -486,13 +486,25 @@ public class TipOverlay {
         PanelRenderer.drawRoundedPanel(graphics, x, y, w, h, topColor, bottomColor, radiusPixels, 2.0f, alpha / 255.0f);
 
         if (hasThemeColor) {
-            int stripeWidth = 4;
-            int stripeBase = themeColor;
-            int stripeColor = ColorUtil.multiplyAlpha(stripeBase, alphaFactor);
-            int stripeTop = y + Math.round(radiusPixels);
-            int stripeBottom = y + h - Math.round(radiusPixels);
-            if (stripeBottom > stripeTop) {
-                graphics.fill(x, stripeTop, x + stripeWidth, stripeBottom, stripeColor);
+            int configuredWidth = visualSettings.stripeWidth();
+            if (configuredWidth > 0) {
+                int stripeBase = themeColor;
+                int stripeColor = ColorUtil.multiplyAlpha(stripeBase, alphaFactor);
+                int stripeTop = y + Math.round(radiusPixels);
+                int stripeBottom = y + h - Math.round(radiusPixels);
+                float lengthFactor = visualSettings.stripeLengthFactor();
+                if (lengthFactor < 0.0f) {
+                    lengthFactor = 0.0f;
+                }
+                if (lengthFactor > 1.0f) {
+                    lengthFactor = 1.0f;
+                }
+                int available = stripeBottom - stripeTop;
+                int actual = Math.round(available * lengthFactor);
+                stripeBottom = stripeTop + actual;
+                if (stripeBottom > stripeTop) {
+                    graphics.fill(x, stripeTop, x + configuredWidth, stripeBottom, stripeColor);
+                }
             }
         }
     }

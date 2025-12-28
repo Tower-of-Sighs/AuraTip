@@ -95,6 +95,8 @@ public record TipData(
             String hoverAnimationStyle,
             float hoverAnimationSpeed,
             boolean hoverOnlyOnHover,
+            int stripeWidth,
+            float stripeLengthFactor,
             Map<String, Dynamic<?>> animationParams,
             Map<String, Dynamic<?>> hoverAnimationParams
     ) {
@@ -124,6 +126,10 @@ public record TipData(
                                 .forGetter(VisualSettings::hoverAnimationSpeed),
                         Codec.BOOL.optionalFieldOf("hover_only_on_hover", false)
                                 .forGetter(VisualSettings::hoverOnlyOnHover),
+                        Codec.INT.optionalFieldOf("stripe_width", 4)
+                                .forGetter(VisualSettings::stripeWidth),
+                        Codec.FLOAT.optionalFieldOf("stripe_length_factor", 1.0f)
+                                .forGetter(VisualSettings::stripeLengthFactor),
                         Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
                                 .optionalFieldOf("animation_params", Map.of())
                                 .forGetter(VisualSettings::animationParams),
