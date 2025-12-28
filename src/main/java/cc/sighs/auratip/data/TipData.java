@@ -6,10 +6,12 @@ import cc.sighs.auratip.util.ComponentSerialization;
 import com.mafuyu404.oelib.api.data.DataDriven;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @DataDriven(
@@ -89,7 +91,12 @@ public record TipData(
             Position position,
             float animationSpeed,
             Optional<Position> animationFrom,
-            Optional<Position> animationTo
+            Optional<Position> animationTo,
+            String hoverAnimationStyle,
+            float hoverAnimationSpeed,
+            boolean hoverOnlyOnHover,
+            Map<String, Dynamic<?>> animationParams,
+            Map<String, Dynamic<?>> hoverAnimationParams
     ) {
         public static final Codec<VisualSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
@@ -110,7 +117,19 @@ public record TipData(
                         Position.CODEC.optionalFieldOf("animation_from")
                                 .forGetter(VisualSettings::animationFrom),
                         Position.CODEC.optionalFieldOf("animation_to")
-                                .forGetter(VisualSettings::animationTo)
+                                .forGetter(VisualSettings::animationTo),
+                        Codec.STRING.optionalFieldOf("hover_animation_style", "none")
+                                .forGetter(VisualSettings::hoverAnimationStyle),
+                        Codec.FLOAT.optionalFieldOf("hover_animation_speed", 1.0f)
+                                .forGetter(VisualSettings::hoverAnimationSpeed),
+                        Codec.BOOL.optionalFieldOf("hover_only_on_hover", false)
+                                .forGetter(VisualSettings::hoverOnlyOnHover),
+                        Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
+                                .optionalFieldOf("animation_params", Map.of())
+                                .forGetter(VisualSettings::animationParams),
+                        Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
+                                .optionalFieldOf("hover_animation_params", Map.of())
+                                .forGetter(VisualSettings::hoverAnimationParams)
                 ).apply(inst, VisualSettings::new)
         );
 

@@ -7,6 +7,14 @@
   },
   "visual_settings": {
     "animation_style": "SLIDE_IN_LEFT",
+    "animation_params": {
+      "extra_padding": 100.0
+    },
+    "hover_animation_style": "hover_float",
+    "hover_animation_params": {
+      "amplitude": 5.0,
+      "ramp_duration": 0.2
+    },
     "background": {
       "type": "gradient",
       "colors": [

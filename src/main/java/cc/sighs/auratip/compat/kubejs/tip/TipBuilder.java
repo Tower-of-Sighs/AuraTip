@@ -1,7 +1,9 @@
-package cc.sighs.auratip.compat.kubejs;
+package cc.sighs.auratip.compat.kubejs.tip;
 
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.SerializationUtil;
+import com.mojang.serialization.Dynamic;
 import net.minecraft.network.chat.Component;
 
 import java.util.*;
@@ -16,6 +18,11 @@ public class TipBuilder {
     private int triggerCooldown;
     private String animationStyle = "fade_and_slide";
     private float animationSpeed = 1.0f;
+    private final Map<String, Object> animationParams = new HashMap<>();
+    private final Map<String, Object> hoverAnimationParams = new HashMap<>();
+    private String hoverAnimationStyle = "none";
+    private float hoverAnimationSpeed = 1.0f;
+    private boolean hoverOnlyOnHover;
     private String themeColor;
     private int width = 280;
     private int height = 180;
@@ -83,6 +90,9 @@ public class TipBuilder {
                 Optional.ofNullable(backgroundImagePath)
         );
 
+        Map<String, Dynamic<?>> convertedAnimParams = SerializationUtil.convertMapToDynamic(animationParams);
+        Map<String, Dynamic<?>> convertedHoverParams = SerializationUtil.convertMapToDynamic(hoverAnimationParams);
+
         TipData.VisualSettings visual = new TipData.VisualSettings(
                 animationStyle,
                 bg,
@@ -92,7 +102,12 @@ public class TipBuilder {
                 position,
                 animationSpeed,
                 Optional.ofNullable(animationFrom),
-                Optional.ofNullable(animationTo)
+                Optional.ofNullable(animationTo),
+                hoverAnimationStyle,
+                hoverAnimationSpeed,
+                hoverOnlyOnHover,
+                convertedAnimParams,
+                convertedHoverParams
         );
 
         TipData.Behavior behavior = new TipData.Behavior(
@@ -198,6 +213,41 @@ public class TipBuilder {
 
         public VisualBuilder animationSpeed(float speed) {
             animationSpeed = speed;
+            return this;
+        }
+
+        public VisualBuilder hoverAnimationStyle(String style) {
+            hoverAnimationStyle = style;
+            return this;
+        }
+
+        public VisualBuilder hoverAnimationSpeed(float speed) {
+            hoverAnimationSpeed = speed;
+            return this;
+        }
+
+        public VisualBuilder hoverOnlyOnHover(boolean value) {
+            hoverOnlyOnHover = value;
+            return this;
+        }
+
+        public VisualBuilder animParam(String key, Object value) {
+            animationParams.put(key, value);
+            return this;
+        }
+
+        public VisualBuilder animParams(Map<String, Object> params) {
+            animationParams.putAll(params);
+            return this;
+        }
+
+        public VisualBuilder hoverParam(String key, Object value) {
+            hoverAnimationParams.put(key, value);
+            return this;
+        }
+
+        public VisualBuilder hoverParams(Map<String, Object> params) {
+            hoverAnimationParams.putAll(params);
             return this;
         }
 

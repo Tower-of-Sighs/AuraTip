@@ -1,6 +1,6 @@
 package cc.sighs.auratip.command;
 
-import cc.sighs.auratip.compat.kubejs.TipVariables;
+import cc.sighs.auratip.compat.kubejs.tip.TipVariables;
 import cc.sighs.auratip.data.trigger.TipTriggerManager;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;

@@ -1,7 +1,7 @@
 package cc.sighs.auratip.data.trigger;
 
-import cc.sighs.auratip.compat.kubejs.TipScriptRegistry;
-import cc.sighs.auratip.compat.kubejs.TipVariables;
+import cc.sighs.auratip.compat.kubejs.tip.TipScriptRegistry;
+import cc.sighs.auratip.compat.kubejs.tip.TipVariables;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.TipData.Trigger.Mode;
 import cc.sighs.auratip.network.NetworkHandler;

@@ -1,11 +1,11 @@
 package cc.sighs.auratip.client.render;
 
-import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.TipData.VisualSettings;
-import cc.sighs.auratip.data.animation.Animation;
 import cc.sighs.auratip.data.animation.AnimationType;
+import cc.sighs.auratip.data.animation.ha.HoverAnimation;
+import cc.sighs.auratip.data.animation.ta.TransitionAnimation;
 import cc.sighs.auratip.util.ColorUtil;
 import cc.sighs.auratip.util.ComponentSerialization;
 import cc.sighs.auratip.util.ResolveUtil;
@@ -36,8 +36,12 @@ public class TipOverlay {
     private int maxDuration;
     private TipData.VisualSettings.Background background;
     private boolean hasThemeColor;
-    private Animation animation;
-    private AnimationType animationType;
+    private TransitionAnimation transitionAnimation;
+    private HoverAnimation hoverAnimation;
+    private float hoverAnimationSpeed;
+    private boolean hoverOnlyOnHover;
+    private long hoverStartMs;
+    private boolean hoverActive;
     private long animationStartMs;
     private int openDurationMs;
     private int closeDurationMs;
@@ -75,8 +79,7 @@ public class TipOverlay {
         this.currentPage = 0;
         this.maxDuration = data.behavior().defaultDuration();
         this.remainingTicks = this.maxDuration;
-        this.animationType = AnimationType.resolve(visualSettings.animationStyle());
-        this.animation = animationType.animation();
+        this.transitionAnimation = AnimationType.resolve(visualSettings.animationStyle(), visualSettings.animationParams());
         float speed = visualSettings.animationSpeed();
         if (speed <= 0.0f) {
             speed = 1.0f;
@@ -99,6 +102,16 @@ public class TipOverlay {
                 this.closeKey = null;
             }
         }
+
+        this.hoverAnimation = AnimationType.resolveHover(visualSettings.hoverAnimationStyle(), visualSettings.hoverAnimationParams());
+        float hoverSpeed = visualSettings.hoverAnimationSpeed();
+        if (hoverSpeed <= 0.0f) {
+            hoverSpeed = 1.0f;
+        }
+        this.hoverAnimationSpeed = hoverSpeed;
+        this.hoverOnlyOnHover = visualSettings.hoverOnlyOnHover();
+        this.hoverStartMs = -1L;
+        this.hoverActive = false;
     }
 
     public void tick(int screenWidth, int screenHeight) {
@@ -126,16 +139,19 @@ public class TipOverlay {
 
         hoveringInteractiveArea = false;
 
-        if (animation == null) {
-            animationType = AnimationType.DEFAULT;
-            animation = animationType.animation();
+        if (transitionAnimation == null) {
+            transitionAnimation = AnimationType.resolve(null);
             animationStartMs = Util.getMillis();
             openDurationMs = OPEN_MS_BASE;
             closeDurationMs = CLOSE_MS_BASE;
         }
 
+        if (hoverAnimation == null) {
+            hoverAnimation = AnimationType.resolveHover(null);
+        }
+
         long now = Util.getMillis();
-        float eased = animation.easedProgress(now, animationStartMs, closing, openDurationMs, closeDurationMs);
+        float eased = transitionAnimation.easedProgress(now, animationStartMs, closing, openDurationMs, closeDurationMs);
 
         if (closing && eased <= 0.001f) {
             tip = null;
@@ -166,11 +182,47 @@ public class TipOverlay {
             drawX = Mth.floor(fx);
             drawY = Mth.floor(fy);
         } else {
-            int offsetX = animation.offsetX(eased, panelWidth, panelHeight);
-            int offsetY = animation.offsetY(eased, panelWidth, panelHeight);
+            int offsetX = transitionAnimation.offsetX(eased, panelWidth, panelHeight);
+            int offsetY = transitionAnimation.offsetY(eased, panelWidth, panelHeight);
             drawX = x + offsetX;
             drawY = y + offsetY;
         }
+
+        Minecraft mc = Minecraft.getInstance();
+        boolean cursorVisible = mc.screen != null;
+        boolean pointerInBaseArea = cursorVisible && mouseX >= drawX && mouseX <= drawX + w && mouseY >= drawY && mouseY <= drawY + h;
+
+        boolean entryDone = !closing && eased >= 0.999f;
+        if (!entryDone || closing) {
+            hoverActive = false;
+            hoverStartMs = -1L;
+        } else {
+            if (hoverOnlyOnHover) {
+                if (pointerInBaseArea) {
+                    if (!hoverActive) {
+                        hoverActive = true;
+                        hoverStartMs = now;
+                    }
+                } else {
+                    hoverActive = false;
+                }
+            } else {
+                if (!hoverActive) {
+                    hoverActive = true;
+                    hoverStartMs = now;
+                }
+            }
+        }
+
+        int hoverOffsetX = 0;
+        int hoverOffsetY = 0;
+        if (hoverActive && hoverAnimation != null && hoverStartMs >= 0L) {
+            hoverOffsetX = hoverAnimation.offsetX(now, hoverStartMs, w, h, hoverAnimationSpeed);
+            hoverOffsetY = hoverAnimation.offsetY(now, hoverStartMs, w, h, hoverAnimationSpeed);
+        }
+
+        drawX += hoverOffsetX;
+        drawY += hoverOffsetY;
 
         renderPanelShadow(graphics, drawX, drawY, w, h, eased);
         renderPanelBackground(graphics, drawX, drawY, w, h, eased);
@@ -219,8 +271,6 @@ public class TipOverlay {
             graphics.drawString(Minecraft.getInstance().font, right, drawX + w - 8 - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        boolean cursorVisible = mc.screen != null;
         hoveringInteractiveArea = cursorVisible && mouseX >= drawX && mouseX <= drawX + w && mouseY >= drawY && mouseY <= drawY + h;
     }
 
@@ -256,21 +306,27 @@ public class TipOverlay {
         if (button != 0) {
             return false;
         }
-        if (animation == null) {
-            animationType = AnimationType.DEFAULT;
-            animation = animationType.animation();
+        if (transitionAnimation == null) {
+            transitionAnimation = AnimationType.resolve(null);
             animationStartMs = Util.getMillis();
             openDurationMs = OPEN_MS_BASE;
             closeDurationMs = CLOSE_MS_BASE;
         }
         long now = Util.getMillis();
-        float eased = animation.easedProgress(now, animationStartMs, closing, openDurationMs, closeDurationMs);
+        float eased = transitionAnimation.easedProgress(now, animationStartMs, closing, openDurationMs, closeDurationMs);
 
-        int offsetX = animation.offsetX(eased, panelWidth, panelHeight);
-        int offsetY = animation.offsetY(eased, panelWidth, panelHeight);
+        int offsetX = transitionAnimation.offsetX(eased, panelWidth, panelHeight);
+        int offsetY = transitionAnimation.offsetY(eased, panelWidth, panelHeight);
 
-        int x = panelX + offsetX;
-        int y = panelY + offsetY;
+        int hoverOffsetX = 0;
+        int hoverOffsetY = 0;
+        if (hoverActive && hoverAnimation != null && hoverStartMs >= 0L) {
+            hoverOffsetX = hoverAnimation.offsetX(now, hoverStartMs, panelWidth, panelHeight, hoverAnimationSpeed);
+            hoverOffsetY = hoverAnimation.offsetY(now, hoverStartMs, panelWidth, panelHeight, hoverAnimationSpeed);
+        }
+
+        int x = panelX + offsetX + hoverOffsetX;
+        int y = panelY + offsetY + hoverOffsetY;
         int w = panelWidth;
 
         int closeSize = 10;
@@ -479,16 +535,6 @@ public class TipOverlay {
         if (lines.isEmpty()) {
             return y;
         }
-
-        // ====== 添加日志：打印原始 Component 和 split 后的每一行 ======
-        AuraTip.LOGGER.info("[DEBUG] Original Component: {}", Component.Serializer.toJson(text));
-        for (int i = 0; i < lines.size(); i++) {
-            String lineStr = lines.get(i).toString(); // 注意：FormattedCharSequence.toString() 返回内部字符数组的字符串
-            AuraTip.LOGGER.info("[DEBUG] Line {} as String: '{}'", i, lineStr);
-            // 如果你想看更底层的格式，也可以用：
-            // AuraTip.LOGGER.info("[DEBUG] Line {} raw chars: {}", i, Arrays.toString(lines.get(i).toArray()));
-        }
-        // ============================================================
 
         int baseLineHeight = font.lineHeight + lineSpacing;
 

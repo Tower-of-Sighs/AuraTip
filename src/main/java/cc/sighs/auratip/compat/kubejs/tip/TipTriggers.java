@@ -1,4 +1,4 @@
-package cc.sighs.auratip.compat.kubejs;
+package cc.sighs.auratip.compat.kubejs.tip;
 
 import cc.sighs.auratip.data.trigger.TipTriggerManager;
 import net.minecraft.server.level.ServerPlayer;

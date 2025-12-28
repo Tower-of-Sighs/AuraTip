@@ -1,12 +1,13 @@
 package cc.sighs.auratip.compat.kubejs;
 
 import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.compat.kubejs.tip.*;
 import dev.latvian.mods.kubejs.KubeJSPlugin;
 import dev.latvian.mods.kubejs.event.EventGroup;
 import dev.latvian.mods.kubejs.event.EventHandler;
 import dev.latvian.mods.kubejs.script.BindingsEvent;
 
-public class KJSTipPlugin extends KubeJSPlugin {
+public class KJSAuraTipPlugin extends KubeJSPlugin {
     public static final EventGroup TIP_EVENTS = EventGroup.of("TipEvents");
 
     public static final EventHandler REGISTER_TIPS = TIP_EVENTS.server("register",
@@ -22,6 +23,7 @@ public class KJSTipPlugin extends KubeJSPlugin {
         event.add("TipVars", TipVariables.class);
         event.add("TipTriggers", TipTriggers.class);
         event.add("TipText", TipText.class);
+        event.add("TipAnimations", TipAnimations.class);
     }
 
     @Override

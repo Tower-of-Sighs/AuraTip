@@ -1,1 +1,1 @@
-cc.sighs.auratip.compat.kubejs.KJSTipPlugin
+cc.sighs.auratip.compat.kubejs.KJSAuraTipPlugin

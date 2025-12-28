@@ -1,6 +1,5 @@
 package cc.sighs.auratip.util;
 
-import cc.sighs.auratip.AuraTip;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
@@ -17,14 +16,9 @@ public final class ComponentSerialization {
     public static final Codec<Component> COMPONENT_CODEC = Codec.PASSTHROUGH.xmap(
             dynamic -> {
                 JsonElement element = dynamic.convert(JsonOps.INSTANCE).getValue();
-                AuraTip.LOGGER.info("[DEBUG] Deserializing Component from JSON: {}", element);
                 return Component.Serializer.fromJson(element);
             },
-            component -> {
-                String jsonStr = Component.Serializer.toJson(component);
-                AuraTip.LOGGER.info("[DEBUG] Serializing Component to JSON: {}", jsonStr);
-                return new Dynamic<>(JsonOps.INSTANCE, Component.Serializer.toJsonTree(component));
-            }
+            component -> new Dynamic<>(JsonOps.INSTANCE, Component.Serializer.toJsonTree(component))
     );
 
     public record TextElement(Component text, float scale, int lineSpacing, Optional<Divider> divider) {

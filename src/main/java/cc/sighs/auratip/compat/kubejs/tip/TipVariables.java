@@ -1,4 +1,4 @@
-package cc.sighs.auratip.compat.kubejs;
+package cc.sighs.auratip.compat.kubejs.tip;
 
 import net.minecraft.network.chat.Component;
 

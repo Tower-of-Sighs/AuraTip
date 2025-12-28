@@ -78,6 +78,10 @@ public class TipDataValidator implements DataValidator<TipData> {
             }
         }
 
+        if (visual.hoverAnimationSpeed() < 0.0f) {
+            return ValidationResult.failure("hover_animation_speed must be >= 0 in tip " + data.id() + " at " + source);
+        }
+
         var behavior = data.behavior();
         if (behavior.defaultDuration() < -1) {
             return ValidationResult.failure("default_duration must be >= -1 in tip " + data.id() + " at " + source);

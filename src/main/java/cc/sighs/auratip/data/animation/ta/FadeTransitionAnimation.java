@@ -1,23 +1,27 @@
-package cc.sighs.auratip.data.animation;
+package cc.sighs.auratip.data.animation.ta;
 
+import com.mojang.serialization.Dynamic;
 import net.minecraft.util.Mth;
 
-public class SlideInRightAnimation implements Animation {
+import java.util.Map;
+
+public class FadeTransitionAnimation implements TransitionAnimation {
+    public static TransitionAnimation create(Map<String, Dynamic<?>> params) {
+        return new FadeTransitionAnimation();
+    }
+
     @Override
     public float easedProgress(long nowMs, long startMs, boolean closing, int openMs, int closeMs) {
         int duration = closing ? closeMs : openMs;
-        if (duration <= 0) {
-            return closing ? 0.0f : 1.0f;
-        }
+        if (duration <= 0) return closing ? 0.0f : 1.0f;
         float elapsed = (nowMs - startMs) / (float) duration;
         float t = Mth.clamp(elapsed, 0.0f, 1.0f);
-        float progress = closing ? 1.0f - t : t;
-        return progress * progress * (3.0f - 2.0f * progress);
+        return closing ? 1.0f - t : t;
     }
 
     @Override
     public int offsetX(float eased, int panelWidth, int panelHeight) {
-        return (int) (-(panelWidth + 24.0f) * (1.0f - eased));
+        return 0;
     }
 
     @Override
@@ -25,4 +29,3 @@ public class SlideInRightAnimation implements Animation {
         return 0;
     }
 }
-
