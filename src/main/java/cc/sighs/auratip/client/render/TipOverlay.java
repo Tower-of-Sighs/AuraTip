@@ -1,5 +1,6 @@
 package cc.sighs.auratip.client.render;
 
+import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.TipData.VisualSettings;
@@ -7,6 +8,7 @@ import cc.sighs.auratip.data.animation.Animation;
 import cc.sighs.auratip.data.animation.AnimationType;
 import cc.sighs.auratip.util.ColorUtil;
 import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.ResolveUtil;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.Util;
@@ -47,7 +49,7 @@ public class TipOverlay {
     private int panelY;
     private TipData.Position position;
     private InputConstants.Key closeKey;
-    private Map<String, String> variables;
+    private Map<String, Component> variables;
 
     private TipOverlay() {
     }
@@ -56,7 +58,7 @@ public class TipOverlay {
         return tip != null;
     }
 
-    public void show(TipData data, Map<String, String> vars) {
+    public void show(TipData data, Map<String, Component> vars) {
         this.tip = data;
         this.pages = data.pages().stream()
                 .sorted(Comparator.comparingInt(TipData.Page::pageIndex))
@@ -439,35 +441,6 @@ public class TipOverlay {
         }
     }
 
-    private Component resolveVariables(Component component) {
-        if (variables == null || variables.isEmpty()) {
-            return component;
-        }
-        String raw = component.getString();
-        if (raw.isEmpty() || !raw.contains("${")) {
-            return component;
-        }
-        StringBuilder out = new StringBuilder();
-        int length = raw.length();
-        int i = 0;
-        while (i < length) {
-            char c = raw.charAt(i);
-            if (c == '$' && i + 1 < length && raw.charAt(i + 1) == '{') {
-                int end = raw.indexOf('}', i + 2);
-                if (end > i + 2) {
-                    String key = raw.substring(i + 2, end);
-                    String value = variables.getOrDefault(key, "");
-                    out.append(value);
-                    i = end + 1;
-                    continue;
-                }
-            }
-            out.append(c);
-            i++;
-        }
-        return Component.literal(out.toString());
-    }
-
     private void previousPage() {
         if (pages.size() <= 1) {
             return;
@@ -498,7 +471,7 @@ public class TipOverlay {
 
     private int drawTextElement(GuiGraphics graphics, ComponentSerialization.TextElement element, int x, int y) {
         float scale = element.scale();
-        Component text = resolveVariables(element.text());
+        var text = ResolveUtil.resolveVariables(element.text(), this.variables);
         int lineSpacing = element.lineSpacing();
 
         var font = Minecraft.getInstance().font;
@@ -506,6 +479,16 @@ public class TipOverlay {
         if (lines.isEmpty()) {
             return y;
         }
+
+        // ====== 添加日志：打印原始 Component 和 split 后的每一行 ======
+        AuraTip.LOGGER.info("[DEBUG] Original Component: {}", Component.Serializer.toJson(text));
+        for (int i = 0; i < lines.size(); i++) {
+            String lineStr = lines.get(i).toString(); // 注意：FormattedCharSequence.toString() 返回内部字符数组的字符串
+            AuraTip.LOGGER.info("[DEBUG] Line {} as String: '{}'", i, lineStr);
+            // 如果你想看更底层的格式，也可以用：
+            // AuraTip.LOGGER.info("[DEBUG] Line {} raw chars: {}", i, Arrays.toString(lines.get(i).toArray()));
+        }
+        // ============================================================
 
         int baseLineHeight = font.lineHeight + lineSpacing;
 

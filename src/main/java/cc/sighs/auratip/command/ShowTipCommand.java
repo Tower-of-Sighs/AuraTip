@@ -1,7 +1,7 @@
 package cc.sighs.auratip.command;
 
-import cc.sighs.auratip.compat.kubejs.TipTriggers;
 import cc.sighs.auratip.compat.kubejs.TipVariables;
+import cc.sighs.auratip.data.trigger.TipTriggerManager;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -18,7 +18,7 @@ public class ShowTipCommand {
 
                     updateVariables(player);
 
-                    TipTriggers.trigger("SHOWTIP_COMMAND", player);
+                    TipTriggerManager.trigger("SHOWTIP_COMMAND", player);
 
                     context.getSource().sendSuccess(() -> Component.literal("已尝试触发 Tip 演示案例"), true);
 
@@ -29,7 +29,6 @@ public class ShowTipCommand {
 
     private static void updateVariables(ServerPlayer player) {
         TipVariables.register("player", player.getScoreboardName());
-
         TipVariables.register("x", String.valueOf(player.getBlockX()));
         TipVariables.register("y", String.valueOf(player.getBlockY()));
         TipVariables.register("z", String.valueOf(player.getBlockZ()));

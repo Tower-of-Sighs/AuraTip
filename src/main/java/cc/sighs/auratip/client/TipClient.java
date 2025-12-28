@@ -2,17 +2,18 @@ package cc.sighs.auratip.client;
 
 import cc.sighs.auratip.client.render.TipOverlay;
 import cc.sighs.auratip.data.TipData;
+import net.minecraft.network.chat.Component;
 
 import java.util.*;
 
 public class TipClient {
     private static final Deque<QueuedTip> QUEUE = new ArrayDeque<>();
 
-    public static void enqueueTips(List<TipData> tips, Map<String, String> variables) {
+    public static void enqueueTips(List<TipData> tips, Map<String, Component> variables) {
         if (tips == null || tips.isEmpty()) {
             return;
         }
-        Map<String, String> vars = variables == null ? Map.of() : new HashMap<>(variables);
+        Map<String, Component> vars = variables == null ? Map.of() : new HashMap<>(variables);
         for (TipData tip : tips) {
             QUEUE.addLast(new QueuedTip(tip, vars));
         }
@@ -39,6 +40,6 @@ public class TipClient {
         }
     }
 
-    private record QueuedTip(TipData tip, Map<String, String> variables) {
+    private record QueuedTip(TipData tip, Map<String, Component> variables) {
     }
 }
