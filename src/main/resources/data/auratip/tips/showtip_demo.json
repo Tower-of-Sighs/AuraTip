@@ -10,10 +10,10 @@
     "animation_params": {
       "extra_padding": 100.0
     },
-    "hover_animation_style": "hover_float",
+    "hover_animation_style": "kjs_float_hover",
     "hover_animation_params": {
-      "amplitude": 5.0,
-      "ramp_duration": 0.2
+      "kjs_amplitude": 5.0,
+      "kjs_ramp_duration": 0.2
     },
     "background": {
       "type": "gradient",

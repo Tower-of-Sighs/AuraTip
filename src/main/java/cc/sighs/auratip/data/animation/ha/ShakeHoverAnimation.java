@@ -5,6 +5,8 @@ import net.minecraft.util.Mth;
 
 import java.util.Map;
 
+import static cc.sighs.auratip.util.SerializationUtil.getDouble;
+
 public class ShakeHoverAnimation implements HoverAnimation {
 
     public static final HoverAnimation INSTANCE =
@@ -53,12 +55,6 @@ public class ShakeHoverAnimation implements HoverAnimation {
                 (float) ramp
         );
     }
-
-    private static double getDouble(Map<String, Dynamic<?>> params, String key, double fallback) {
-        Dynamic<?> dynamic = params.get(key);
-        return dynamic == null ? fallback : dynamic.asDouble(fallback);
-    }
-
 
     private float ramp(float seconds) {
         if (seconds >= rampDuration) return 1.0f;

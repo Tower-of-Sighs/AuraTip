@@ -37,4 +37,33 @@ public final class SerializationUtil {
         return new Dynamic<>(JsonOps.INSTANCE, element);
     }
 
+    public static double getDouble(Map<String, Dynamic<?>> params, String key, double fallback) {
+        Dynamic<?> dynamic = params.get(key);
+        return dynamic == null ? fallback : dynamic.asDouble(fallback);
+    }
+
+    public static float getFloat(Map<String, Dynamic<?>> params, String key, float fallback) {
+        Dynamic<?> d = params.get(key);
+        return d == null ? fallback : d.asFloat(fallback);
+    }
+
+    public static int getInt(Map<String, Dynamic<?>> params, String key, int fallback) {
+        Dynamic<?> d = params.get(key);
+        return d == null ? fallback : d.asInt(fallback);
+    }
+
+    public static long getLong(Map<String, Dynamic<?>> params, String key, long fallback) {
+        Dynamic<?> d = params.get(key);
+        return d == null ? fallback : d.asLong(fallback);
+    }
+
+    public static boolean getBoolean(Map<String, Dynamic<?>> params, String key, boolean fallback) {
+        Dynamic<?> d = params.get(key);
+        return d == null ? fallback : d.asBoolean(fallback);
+    }
+
+    public static String getString(Map<String, Dynamic<?>> params, String key, String fallback) {
+        Dynamic<?> d = params.get(key);
+        return d == null ? fallback : d.asString(fallback);
+    }
 }

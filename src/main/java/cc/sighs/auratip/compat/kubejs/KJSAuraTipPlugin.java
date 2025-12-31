@@ -6,6 +6,7 @@ import cc.sighs.auratip.compat.kubejs.radiamenu.action.ActionsKJS;
 import cc.sighs.auratip.compat.kubejs.radiamenu.slot.RadialMenuExtraSlotRegistry;
 import cc.sighs.auratip.compat.kubejs.radiamenu.slot.RadialMenusKJS;
 import cc.sighs.auratip.compat.kubejs.tip.*;
+import cc.sighs.auratip.compat.kubejs.tip.animation.TipAnimations;
 import dev.latvian.mods.kubejs.KubeJSPlugin;
 import dev.latvian.mods.kubejs.event.EventGroup;
 import dev.latvian.mods.kubejs.event.EventHandler;

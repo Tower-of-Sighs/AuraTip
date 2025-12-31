@@ -5,6 +5,8 @@ import net.minecraft.util.Mth;
 
 import java.util.Map;
 
+import static cc.sighs.auratip.util.SerializationUtil.getDouble;
+
 public class FloatHoverAnimation implements HoverAnimation {
     public static final HoverAnimation INSTANCE = new FloatHoverAnimation(3.0, 0.6f);
 
@@ -22,14 +24,6 @@ public class FloatHoverAnimation implements HoverAnimation {
         double amplitude = getDouble(params, "amplitude", 3.0);
         double ramp = getDouble(params, "ramp_duration", 0.6);
         return new FloatHoverAnimation(amplitude, (float) ramp);
-    }
-
-    private static double getDouble(Map<String, Dynamic<?>> params, String key, double fallback) {
-        Dynamic<?> dynamic = params.get(key);
-        if (dynamic == null) {
-            return fallback;
-        }
-        return dynamic.asDouble(fallback);
     }
 
     @Override
