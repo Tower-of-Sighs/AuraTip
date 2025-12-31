@@ -26,4 +26,14 @@ replay_pid*
 .gradle
 .idea
 build
-run
+run/*
+
+!run/kubejs/
+
+run/kubejs/*
+
+!run/kubejs/client_scripts/
+!run/kubejs/server_scripts/
+
+run/kubejs/client_scripts/jsconfig.json
+run/kubejs/server_scripts/jsconfig.json
