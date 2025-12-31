@@ -47,7 +47,7 @@ TipAnimations.registerHover('kjs_jelly', params => {
     };
 });
 
-TipAnimations.registerHover('kjs_float_hover', params => {
+TipAnimations.registerHover('kjs_hover_float', params => {
     const amplitude = $SerializationUtil.getDouble(params, 'kjs_amplitude', 3.0);
     const rampDuration = $SerializationUtil.getDouble(params, 'kjs_ramp_duration', 0.6);
 

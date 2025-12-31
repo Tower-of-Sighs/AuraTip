@@ -6,6 +6,7 @@ import cc.sighs.auratip.data.trigger.TipTriggerManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
@@ -21,6 +22,8 @@ public class CommonEventHandler {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        ShowTipCommand.register(event.getDispatcher());
+        if (!FMLEnvironment.production) {
+            ShowTipCommand.register(event.getDispatcher());
+        }
     }
 }
