@@ -1,0 +1,45 @@
+{
+  "menu_settings": {
+    "inner_radius": 55,
+    "outer_radius": 100,
+    "animation_speed": 0.2,
+    "ring_colors": [
+      "#1A050A10",
+      "#D9102030"
+    ]
+  },
+  "slots": [
+    {
+      "name": "Set Day",
+      "icon": "minecraft:textures/item/clock_06.png",
+      "action": {
+        "type": "run_command",
+        "command": "time set day"
+      },
+      "text": {
+        "translate": "tip.auratip.set_day",
+        "color": "#55FFFF",
+        "bold": true,
+        "italic": false,
+        "underlined": true
+      },
+      "highlight_color": "#FFFACD"
+    },
+    {
+      "name": "Health",
+      "icon": "minecraft:textures/item/golden_apple.png",
+      "action": {
+        "type": "run_command",
+        "command": "effect give @p minecraft:instant_health 1 1"
+      },
+      "text": {
+        "translate": "tip.auratip.heal",
+        "color": "#55FFFF",
+        "bold": true,
+        "italic": false,
+        "underlined": true
+      },
+      "highlight_color": "#FF69B4"
+    }
+  ]
+}
