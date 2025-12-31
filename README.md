@@ -210,25 +210,14 @@ AuraTip 是一个“可数据包配置 + 可 KubeJS 扩展”的提示面板（T
 
 **KubeJS 事件与 API** （作者 KubeJS 经验尚浅，欢迎纠错）
 
-- TipEvents.register：脚本构建
-  Tip（[TipRegistrationEvent.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipRegistrationEvent.java)）
--
-
-RadialMenuEvents.register：脚本构建轮盘（[RadialMenuRegistrationEvent.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/radiamenu/RadialMenuRegistrationEvent.java)）
--
-TipVars（TipVariables）：注册/快照变量（[TipVariables.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipVariables.java)）
-
-- TipTriggers：主动触发
-  tip（[TipTriggers.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipTriggers.java)）
--
-
-TipText：构造富文本（[TipText.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipText.java)）
--
-TipAnimations：注册动画工厂（[TipAnimations.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipAnimations.java)）
--
-Actions：注册动作与构建动作对象（[ActionsKJS.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/radiamenu/action/ActionsKJS.java)）
--
-RadialMenus：运行时追加轮盘槽位（[RadialMenusKJS.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/radiamenu/slot/RadialMenusKJS.java)）
+- TipEvents.register：脚本构建 Tip（[TipRegistrationEvent.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipRegistrationEvent.java)）
+- RadialMenuEvents.register：脚本构建轮盘（[RadialMenuRegistrationEvent.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/radiamenu/RadialMenuRegistrationEvent.java)）
+- TipVars（TipVariables）：注册/快照变量（[TipVariables.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipVariables.java)）
+- TipTriggers：主动触发 tip（[TipTriggers.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipTriggers.java)）
+- TipText：构造富文本（[TipText.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipText.java)）
+- TipAnimations：注册动画工厂（[TipAnimations.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/tip/TipAnimations.java)）
+- Actions：注册动作与构建动作对象（[ActionsKJS.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/radiamenu/action/ActionsKJS.java)）
+- RadialMenus：运行时追加轮盘槽位（[RadialMenusKJS.java](https://github.com/Tower-of-Sighs/AuraTip/blob/master/src/main/java/cc/sighs/auratip/compat/kubejs/radiamenu/slot/RadialMenusKJS.java)）
 
 示例（Tip，完整链路）
 
@@ -459,10 +448,14 @@ TipTriggers.trigger('SHOWTIP_COMMAND', player);
 
 - easedProgress：动画走到哪一步（0~1）
 - offsetX / offsetY：当前位置要偏移多少像素
-  悬浮动画
+
+悬浮动画
 - offsetX / offsetY：当前位置要偏移多少像素
 
 ```javascript
+const PI = 3.141592653589793;
+const TWO_PI = PI * 2.0;
+
 TipAnimations.register('kjs_bounce_left', params => {
     // 这里和上述 Action 部分一样，这样写就代表该动画的参数有 overshoot 和 extra_distance
     // 数据类型是 double，出错时 fallback 到 1.70158 和 50
@@ -503,9 +496,7 @@ TipAnimations.registerHover('kjs_jelly', params => {
     const freqX = getDouble(params, 'frequency_x', 1.2);
     const freqY = getDouble(params, 'frequency_y', 0.8);
     const rampDuration = getDouble(params, 'ramp_duration', 1.0);
-
-    const TWO_PI = Math.PI * 2.0;
-
+    
     return {
         offsetX: (now, start, w, h, speed) => {
             const seconds = Math.max(0, now - start) / 1000.0;
