@@ -2,12 +2,7 @@ TipEvents.register(event => {
     event.create('winter_rescue_body_temp')
         .trigger('FIRST_JOIN_WORLD', 'repeatable', 0)
         .visual(v => {
-            v.animationStyle('kjs_bounce_left')
-            v.animParams({
-                "overshoot": 2.4,
-                "extra_distance": 80
-            })
-            // v.animationStyle('fade_and_slide')
+            v.animationStyle('fade_and_slide')
             v.animationSpeed(0.6)
             v.animationFrom('BOTTOM_CENTER')
             v.animationTo('BOTTOM_CENTER')
