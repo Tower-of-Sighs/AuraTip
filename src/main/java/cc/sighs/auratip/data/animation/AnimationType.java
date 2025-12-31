@@ -7,7 +7,9 @@ import cc.sighs.auratip.data.animation.ha.ShakeHoverAnimation;
 import cc.sighs.auratip.data.animation.ta.*;
 import com.mojang.serialization.Dynamic;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public final class AnimationType {
     private static final Map<String, AnimationFactory> ANIMATIONS = new HashMap<>();

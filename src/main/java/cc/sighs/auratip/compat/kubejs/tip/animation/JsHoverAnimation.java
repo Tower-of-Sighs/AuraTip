@@ -20,7 +20,7 @@ public class JsHoverAnimation implements HoverAnimation {
 
     @Override
     public int offsetY(long now, long start, int w, int h, float speed) {
-        return callInt(Context.enter(),"offsetY", now, start, w, h, speed);
+        return callInt(Context.enter(), "offsetY", now, start, w, h, speed);
     }
 
     private int callInt(Context context, String name, Object... args) {

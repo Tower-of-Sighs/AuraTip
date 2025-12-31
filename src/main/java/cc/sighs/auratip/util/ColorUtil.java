@@ -13,7 +13,7 @@ public final class ColorUtil {
      * @param c1 起始颜色（ARGB 格式）
      * @param c2 目标颜色（ARGB 格式）
      * @param t  插值因子，范围 [0.0, 1.0]；0.0 返回 c1，1.0 返回 c2
-     * @return   插值后的 ARGB 颜色值
+     * @return 插值后的 ARGB 颜色值
      */
     public static int lerpColor(int c1, int c2, float t) {
         t = Mth.clamp(t, 0.0f, 1.0f);
@@ -38,7 +38,7 @@ public final class ColorUtil {
      * 若输入无效，则返回白色（0xFFFFFF）。
      *
      * @param hex 十六进制颜色字符串（可为 null 或空白）
-     * @return    RGB 颜色值
+     * @return RGB 颜色值
      */
     public static int parseRgb(String hex) {
         if (hex == null || hex.isBlank()) {
@@ -61,7 +61,7 @@ public final class ColorUtil {
      * 若输入无效，则返回默认深色（0xFF101622）。
      *
      * @param hex 十六进制颜色字符串（可为 null 或空白）
-     * @return    ARGB 颜色值
+     * @return ARGB 颜色值
      */
     public static int parseArgb(String hex) {
         if (hex == null || hex.isBlank()) {
@@ -85,7 +85,7 @@ public final class ColorUtil {
      *
      * @param rgb   RGB 颜色值（低 24 位有效）
      * @param alpha Alpha 通道值，范围 [0, 255]
-     * @return      ARGB 颜色值
+     * @return ARGB 颜色值
      */
     public static int withAlpha(int rgb, int alpha) {
         alpha = Mth.clamp(alpha, 0, 255);
@@ -97,7 +97,7 @@ public final class ColorUtil {
      *
      * @param argb   输入的 ARGB 颜色值
      * @param factor 缩放因子，建议范围 [0.0, 1.0]（超出会 clamp 到 [0,255]）
-     * @return       Alpha 被缩放后的 ARGB 颜色值
+     * @return Alpha 被缩放后的 ARGB 颜色值
      */
     public static int multiplyAlpha(int argb, float factor) {
         int a = (int) (((argb >>> 24) & 0xFF) * factor);

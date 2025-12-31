@@ -2,7 +2,6 @@ package cc.sighs.auratip.data.animation.ta;
 
 import cc.sighs.auratip.util.AnimationUtil;
 import com.mojang.serialization.Dynamic;
-import net.minecraft.util.Mth;
 
 import java.util.Map;
 
