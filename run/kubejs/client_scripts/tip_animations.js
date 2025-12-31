@@ -1,3 +1,4 @@
+const PI = 3.14159265358979323846
 const $SerializationUtil = Java.loadClass('cc.sighs.auratip.util.SerializationUtil')
 
 TipAnimations.register('kjs_bounce_left', params => {
@@ -30,7 +31,6 @@ TipAnimations.registerHover('kjs_jelly', params => {
     const ampX = $SerializationUtil.getDouble(params, 'amplitude_x', 2.0);
     const ampY = $SerializationUtil.getDouble(params, 'amplitude_y', 4.0);
     const freq = $SerializationUtil.getDouble(params, 'frequency_x', 1.0);
-    const PI = KMath.PI
 
     return {
         offsetX: (now, start, w, h, speed) => {
@@ -51,7 +51,7 @@ TipAnimations.registerHover('kjs_float_hover', params => {
     const amplitude = $SerializationUtil.getDouble(params, 'kjs_amplitude', 3.0);
     const rampDuration = $SerializationUtil.getDouble(params, 'kjs_ramp_duration', 0.6);
 
-    const TWO_PI = KMath.PI * 2.0;
+    const TWO_PI = PI * 2.0;
 
     return {
         offsetX: (now, start, w, h, speed) => {
