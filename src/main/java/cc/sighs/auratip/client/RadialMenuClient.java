@@ -66,7 +66,6 @@ public class RadialMenuClient {
 
         return new RadialMenuData(baseMenu.menuSettings(), combinedSlots);
     }
-
     private static void openMenuAtCenter(Minecraft minecraft, RadialMenuData menuData) {
         var window = minecraft.getWindow();
         RadialMenuOverlay.INSTANCE.open(
