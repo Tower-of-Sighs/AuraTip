@@ -1,11 +1,8 @@
 package cc.sighs.auratip.data.animation.ta;
 
 import com.mojang.serialization.Dynamic;
-import net.minecraft.util.Mth;
 
 import java.util.Map;
-
-import static cc.sighs.auratip.util.SerializationUtil.getDouble;
 
 public class SlideInLeftTransitionAnimation extends BaseSlideTransitionAnimation {
     public SlideInLeftTransitionAnimation(float extraPadding) {

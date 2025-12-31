@@ -15,6 +15,7 @@ public abstract class BaseSlideTransitionAnimation implements TransitionAnimatio
     protected BaseSlideTransitionAnimation(float extraPadding) {
         this.extraPadding = extraPadding;
     }
+
     public static TransitionAnimation create(
             Map<String, Dynamic<?>> params,
             Function<Float, TransitionAnimation> constructor
