@@ -3,9 +3,9 @@ package cc.sighs.auratip.util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 
 public final class ResolveUtil {
@@ -13,7 +13,7 @@ public final class ResolveUtil {
     private ResolveUtil() {
     }
 
-    public static @NotNull Component resolveVariables(@Nullable Component component, @Nullable Map<String, ?> variables) {
+    public static @Nonnull Component resolveVariables(@Nullable Component component, @Nullable Map<String, ?> variables) {
         if (component == null || variables == null || variables.isEmpty()) {
             return Objects.requireNonNullElse(component, Component.empty());
         }
@@ -36,7 +36,7 @@ public final class ResolveUtil {
         return resolveVariablesInternal(component, componentVars);
     }
 
-    private static @NotNull Component resolveVariablesInternal(Component component, Map<String, Component> variables) {
+    private static @Nonnull Component resolveVariablesInternal(Component component, Map<String, Component> variables) {
         List<Component> flat = component.toFlatList();
         boolean hasPlaceholder = false;
         for (Component part : flat) {

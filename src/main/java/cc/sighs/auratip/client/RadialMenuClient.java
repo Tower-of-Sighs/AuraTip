@@ -4,7 +4,7 @@ import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.compat.kubejs.radiamenu.RadialMenuScriptRegistry;
 import cc.sighs.auratip.compat.kubejs.radiamenu.slot.RadialMenuExtraSlotRegistry;
 import cc.sighs.auratip.data.RadialMenuData;
-import com.mafuyu404.oelib.data.DataManagerBridge;
+import cc.sighs.oelib.data.DataManager;
 import net.minecraft.client.Minecraft;
 
 import java.util.*;
@@ -38,7 +38,7 @@ public class RadialMenuClient {
         return Optional.ofNullable(RadialMenuScriptRegistry.getMenus())
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.get(0))
-                .orElseGet(() -> Optional.ofNullable(DataManagerBridge.getDataList(RadialMenuData.class))
+                .orElseGet(() -> Optional.ofNullable(DataManager.getDataList(RadialMenuData.class))
                         .filter(list -> !list.isEmpty())
                         .map(list -> list.get(0))
                         .orElse(null));

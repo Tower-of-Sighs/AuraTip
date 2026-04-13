@@ -1,19 +1,17 @@
 package cc.sighs.auratip.handler;
 
-import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.client.RadialMenuClient;
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.client.render.TipOverlay;
+import cc.sighs.oelib.event.Subscribe;
+import cc.sighs.oelib.event.events.InputEvent;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
-@Mod.EventBusSubscriber(modid = AuraTip.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClientInputHandler {
 
-    @SubscribeEvent
+    @Subscribe
     public static void onKeyInput(InputEvent.Key event) {
         if (event.getAction() != GLFW.GLFW_PRESS) {
             return;
@@ -27,8 +25,8 @@ public class ClientInputHandler {
         }
     }
 
-    @SubscribeEvent
-    public static void onMouseInput(InputEvent.MouseButton event) {
+    @Subscribe
+    public static void onMouseInput(InputEvent.MouseButton.Pre event) {
         if (event.getAction() != GLFW.GLFW_PRESS) {
             return;
         }
@@ -45,6 +43,22 @@ public class ClientInputHandler {
         }
         if (RadialMenuOverlay.INSTANCE.isActive() && RadialMenuOverlay.INSTANCE.mouseClicked(guiX, guiY, event.getButton())) {
             event.setCanceled(true);
+        }
+    }
+
+    @Subscribe
+    public static void onRadialMenuKey(InputEvent.Key event) {
+        if (event.getAction() != GLFW.GLFW_PRESS) {
+            return;
+        }
+        var mc = Minecraft.getInstance();
+        if (mc.screen != null) {
+            return;
+        }
+
+        InputConstants.Key key = InputConstants.getKey(event.getKey(), event.getScanCode());
+        if (ClientKeyMappings.OPEN_RADIAL.isActiveAndMatches(key)) {
+            RadialMenuClient.openMenu();
         }
     }
 }

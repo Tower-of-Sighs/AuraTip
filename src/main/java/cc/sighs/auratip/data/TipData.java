@@ -3,7 +3,7 @@ package cc.sighs.auratip.data;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.validator.TipDataValidator;
 import cc.sighs.auratip.util.ComponentSerialization;
-import com.mafuyu404.oelib.api.data.DataDriven;
+import cc.sighs.oelib.data.api.DataDriven;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;

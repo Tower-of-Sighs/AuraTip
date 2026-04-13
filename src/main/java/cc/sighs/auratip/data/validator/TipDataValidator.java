@@ -1,7 +1,7 @@
 package cc.sighs.auratip.data.validator;
 
 import cc.sighs.auratip.data.TipData;
-import com.mafuyu404.oelib.api.data.DataValidator;
+import cc.sighs.oelib.data.api.DataValidator;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashSet;
