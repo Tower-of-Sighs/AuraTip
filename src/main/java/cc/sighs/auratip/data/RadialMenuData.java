@@ -4,7 +4,7 @@ import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.validator.RadialMenuDataValidator;
 import cc.sighs.auratip.util.ComponentSerialization;
-import com.mafuyu404.oelib.api.data.DataDriven;
+import cc.sighs.oelib.data.api.DataDriven;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.chat.Component;

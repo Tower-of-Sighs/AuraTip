@@ -5,7 +5,7 @@ import cc.sighs.auratip.compat.kubejs.tip.TipVariables;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.TipData.Trigger.Mode;
 import cc.sighs.auratip.network.ShowTipsPacket;
-import com.mafuyu404.oelib.data.DataManagerBridge;
+import cc.sighs.oelib.data.DataManager;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public final class TipTriggerManager {
     }
 
     public static void trigger(String type, ServerPlayer player) {
-        var dataTips = DataManagerBridge.getDataList(TipData.class);
+        var dataTips = DataManager.getDataList(TipData.class);
         var scriptTips = TipScriptRegistry.getTips();
         boolean hasDataTips = dataTips != null && !dataTips.isEmpty();
         boolean hasScriptTips = scriptTips != null && !scriptTips.isEmpty();
@@ -87,6 +87,7 @@ public final class TipTriggerManager {
         persistent.put(SHOWN_TIPS_TAG, shown);
 
         var vars = TipVariables.snapshot();
-        player.connection.send(new ShowTipsPacket(toShow, vars));
+        var payloadTips = toShow.stream().map(ShowTipsPacket.TipEntry::new).toList();
+        new ShowTipsPacket(payloadTips, vars).sendTo(player);
     }
 }

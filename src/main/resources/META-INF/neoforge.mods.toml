@@ -29,7 +29,7 @@ side = "BOTH"
 [[dependencies."${mod_id}"]]
 modId = "oelib"
 type = "required"
-versionRange = "[${oelib_version},)"
+versionRange = "[0.2.3,)"
 ordering = "NONE"
 side = "BOTH"
 

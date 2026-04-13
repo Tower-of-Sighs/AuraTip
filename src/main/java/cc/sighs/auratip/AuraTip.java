@@ -1,8 +1,10 @@
 package cc.sighs.auratip;
 
+import cc.sighs.auratip.command.ShowTipCommand;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.TipData;
-import com.mafuyu404.oelib.data.DataRegistry;
+import cc.sighs.oelib.data.DataRegistry;
+import cc.sighs.oelib.network.api.NetworkAutoRegistration;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +23,11 @@ public class AuraTip {
     public AuraTip(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         DataRegistry.register(TipData.class, TipData.CODEC);
         DataRegistry.register(RadialMenuData.class, RadialMenuData.CODEC);
+        NetworkAutoRegistration.registerBasePackage("cc.sighs.auratip.network");
+        ShowTipCommand.register();
+        if (dist == Dist.CLIENT) {
+            AuraTipClient.init();
+        }
     }
 
     public static ResourceLocation id(String path) {

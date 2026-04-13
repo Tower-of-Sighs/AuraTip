@@ -2,10 +2,12 @@ package cc.sighs.auratip.compat.kubejs.tip.animation;
 
 import cc.sighs.auratip.data.animation.ta.TransitionAnimation;
 import dev.latvian.mods.rhino.Context;
+import dev.latvian.mods.rhino.ContextFactory;
 import dev.latvian.mods.rhino.Function;
 import dev.latvian.mods.rhino.Scriptable;
 
 public class JsTransitionAnimation implements TransitionAnimation {
+    private static final ContextFactory CONTEXT_FACTORY = new ContextFactory();
 
     private final Scriptable jsObj;
 
@@ -15,17 +17,17 @@ public class JsTransitionAnimation implements TransitionAnimation {
 
     @Override
     public float easedProgress(long now, long start, boolean closing, int openMs, int closeMs) {
-        return callFloat(Context.enter(), "easedProgress", now, start, closing, openMs, closeMs);
+        return callFloat(CONTEXT_FACTORY.enter(), "easedProgress", now, start, closing, openMs, closeMs);
     }
 
     @Override
     public int offsetX(float eased, int w, int h) {
-        return callInt(Context.enter(), "offsetX", eased, w, h);
+        return callInt(CONTEXT_FACTORY.enter(), "offsetX", eased, w, h);
     }
 
     @Override
     public int offsetY(float eased, int w, int h) {
-        return callInt(Context.enter(), "offsetY", eased, w, h);
+        return callInt(CONTEXT_FACTORY.enter(), "offsetY", eased, w, h);
     }
 
     private int callInt(Context context, String name, Object... args) {
