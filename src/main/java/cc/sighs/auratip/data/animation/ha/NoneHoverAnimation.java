@@ -1,5 +1,7 @@
 package cc.sighs.auratip.data.animation.ha;
 
+import cc.sighs.auratip.api.animation.HoverAnimation;
+
 public class NoneHoverAnimation implements HoverAnimation {
     public static final HoverAnimation INSTANCE = new NoneHoverAnimation();
 

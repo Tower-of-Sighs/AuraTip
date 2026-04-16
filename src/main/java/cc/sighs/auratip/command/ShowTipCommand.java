@@ -1,7 +1,8 @@
 package cc.sighs.auratip.command;
 
-import cc.sighs.auratip.compat.kubejs.tip.TipVariables;
-import cc.sighs.auratip.data.trigger.TipTriggerManager;
+import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.api.tip.TipServer;
+import cc.sighs.auratip.dev.DevEnvironment;
 import cc.sighs.oelib.registry.extra.CommandRegister;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandBuildContext;
@@ -10,9 +11,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.Map;
+
 public class ShowTipCommand {
     public static void register() {
-        CommandRegister.registerServer(ShowTipCommand::registerCommand);
+        if (DevEnvironment.isDev()) {
+            CommandRegister.registerServer(ShowTipCommand::registerCommand);
+        }
     }
 
     public static void registerCommand(CommandDispatcher<CommandSourceStack> dispatcher,
@@ -24,9 +29,11 @@ public class ShowTipCommand {
                 .executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
 
-                    updateVariables(player);
-
-                    TipTriggerManager.trigger("SHOWTIP_COMMAND", player);
+                    TipServer.trigger(
+                            AuraTip.id("showtip_command"),
+                            player,
+                            buildVariables(player)
+                    );
 
                     ctx.getSource().sendSuccess(() -> Component.literal("已尝试触发 Tip 演示案例"), true);
 
@@ -35,10 +42,12 @@ public class ShowTipCommand {
         );
     }
 
-    private static void updateVariables(ServerPlayer player) {
-        TipVariables.register("player", player.getScoreboardName());
-        TipVariables.register("x", String.valueOf(player.getBlockX()));
-        TipVariables.register("y", String.valueOf(player.getBlockY()));
-        TipVariables.register("z", String.valueOf(player.getBlockZ()));
+    private static Map<String, Object> buildVariables(ServerPlayer player) {
+        return Map.of(
+                "player", player.getDisplayName(),
+                "x", player.getBlockX(),
+                "y", player.getBlockY(),
+                "z", player.getBlockZ()
+        );
     }
 }

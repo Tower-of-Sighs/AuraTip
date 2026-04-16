@@ -1,6 +1,7 @@
 package cc.sighs.auratip.data.action;
 
-import cc.sighs.auratip.compat.kubejs.radiamenu.action.ActionScriptRegistry;
+import cc.sighs.auratip.api.action.ActionHandlers;
+import cc.sighs.auratip.api.action.Actions;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
@@ -10,6 +11,25 @@ import java.util.Map;
 
 public enum ActionExecutor implements Action.ActionVisitor<Void> {
     INSTANCE;
+
+    public static void execute(Action action) {
+        if (action == null) {
+            return;
+        }
+        if (action instanceof Action.RunCommand rc) {
+            INSTANCE.visitRunCommand(rc);
+            return;
+        }
+        if (action instanceof Action.SimulateKey sk) {
+            INSTANCE.visitSimulateKey(sk);
+            return;
+        }
+        if (action instanceof Action.ScriptAction sa) {
+            INSTANCE.visitScript(sa);
+            return;
+        }
+        Actions.executeTyped(action);
+    }
 
     @Override
     public Void visitRunCommand(Action.RunCommand action) {
@@ -40,7 +60,7 @@ public enum ActionExecutor implements Action.ActionVisitor<Void> {
         if (action.params() != null) {
             params.putAll(action.params());
         }
-        ActionScriptRegistry.execute(action.type(), params);
+        ActionHandlers.execute(action.type(), params);
         return null;
     }
 }

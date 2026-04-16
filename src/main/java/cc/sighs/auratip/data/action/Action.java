@@ -3,11 +3,15 @@ package cc.sighs.auratip.data.action;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
 
 public interface Action {
-    <T> T accept(ActionVisitor<T> visitor);
+
+    default <T> T accept(ActionVisitor<T> visitor) {
+        return visitor.visitCustom(this);
+    }
 
     Codec<Action> CODEC = ActionRegistry.codec();
 
@@ -18,6 +22,10 @@ public interface Action {
         T visitSimulateKey(SimulateKey action);
 
         default T visitScript(ScriptAction action) {
+            return null;
+        }
+
+        default T visitCustom(Action action) {
             return null;
         }
     }
@@ -48,7 +56,7 @@ public interface Action {
         );
     }
 
-    record ScriptAction(String type, Map<String, Dynamic<?>> params) implements Action {
+    record ScriptAction(ResourceLocation type, Map<String, Dynamic<?>> params) implements Action {
         @Override
         public <T> T accept(ActionVisitor<T> visitor) {
             return visitor.visitScript(this);

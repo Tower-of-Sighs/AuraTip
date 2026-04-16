@@ -1,7 +1,6 @@
 package cc.sighs.auratip.handler;
 
 import cc.sighs.auratip.AuraTip;
-import cc.sighs.auratip.client.RadialMenuClient;
 import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.client.render.TipOverlay;
@@ -16,10 +15,6 @@ public class ClientEventHandler {
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
-        while (ClientKeyMappings.OPEN_RADIAL.consumeClick()) {
-            RadialMenuClient.openMenu();
-        }
-
         while (ClientKeyMappings.CLOSE_TIP.consumeClick()) {
             TipClient.closeCurrentTip();
         }

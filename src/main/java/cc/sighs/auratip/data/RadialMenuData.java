@@ -15,17 +15,19 @@ import java.util.Optional;
 
 @DataDriven(
         modid = AuraTip.MOD_ID,
-        folder = "radial_memu",
+        folder = "radial_menu",
         syncToClient = true,
         supportArray = true,
         validator = RadialMenuDataValidator.class
 )
 public record RadialMenuData(
+        ResourceLocation id,
         MenuSettings menuSettings,
         List<Slot> slots
 ) {
     public static final Codec<RadialMenuData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
+                    ResourceLocation.CODEC.fieldOf("id").forGetter(RadialMenuData::id),
                     MenuSettings.CODEC.fieldOf("menu_settings").forGetter(RadialMenuData::menuSettings),
                     Slot.CODEC.listOf().fieldOf("slots").forGetter(RadialMenuData::slots)
             ).apply(instance, RadialMenuData::new)

@@ -1,11 +1,11 @@
 package cc.sighs.auratip.client;
 
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
-import cc.sighs.auratip.compat.kubejs.radiamenu.RadialMenuScriptRegistry;
-import cc.sighs.auratip.compat.kubejs.radiamenu.slot.RadialMenuExtraSlotRegistry;
+import cc.sighs.auratip.api.radiamenu.RadialMenuExtraSlots;
+import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
 import cc.sighs.auratip.data.RadialMenuData;
-import cc.sighs.oelib.data.DataManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RadialMenuClient {
-    public static void openMenu() {
+
+    public static void openMenu(ResourceLocation menuId) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.level == null) return;
 
@@ -23,31 +24,25 @@ public class RadialMenuClient {
             return;
         }
 
-        RadialMenuData menuData = buildMenuData();
+        RadialMenuData menuData = buildMenuData(menuId);
         if (menuData != null) {
             openMenuAtCenter(minecraft, menuData);
         }
     }
 
-    private static RadialMenuData buildMenuData() {
-        RadialMenuData baseMenu = getFirstAvailableMenu();
+    private static RadialMenuData buildMenuData(ResourceLocation menuId) {
+        RadialMenuData baseMenu = getBaseMenu(menuId);
         if (baseMenu == null) return null;
 
         return enhanceWithExtraSlots(baseMenu);
     }
 
-    private static RadialMenuData getFirstAvailableMenu() {
-        return Optional.ofNullable(RadialMenuScriptRegistry.getMenus())
-                .filter(list -> !list.isEmpty())
-                .map(list -> list.get(0))
-                .orElseGet(() -> Optional.ofNullable(DataManager.getDataList(RadialMenuData.class))
-                        .filter(list -> !list.isEmpty())
-                        .map(list -> list.get(0))
-                        .orElse(null));
+    private static RadialMenuData getBaseMenu(ResourceLocation menuId) {
+        return RadialMenuRegistry.resolveMenuToOpen(menuId);
     }
 
     private static RadialMenuData enhanceWithExtraSlots(RadialMenuData baseMenu) {
-        List<RadialMenuData.Slot> extraSlots = RadialMenuExtraSlotRegistry.getSlots();
+        List<RadialMenuData.Slot> extraSlots = RadialMenuExtraSlots.getSlotsForMenu(baseMenu.id());
         if (extraSlots.isEmpty()) return baseMenu;
 
         List<RadialMenuData.Slot> combinedSlots = Stream.concat(
@@ -64,7 +59,7 @@ public class RadialMenuClient {
                 .stream()
                 .toList();
 
-        return new RadialMenuData(baseMenu.menuSettings(), combinedSlots);
+        return new RadialMenuData(baseMenu.id(), baseMenu.menuSettings(), combinedSlots);
     }
     private static void openMenuAtCenter(Minecraft minecraft, RadialMenuData menuData) {
         var window = minecraft.getWindow();

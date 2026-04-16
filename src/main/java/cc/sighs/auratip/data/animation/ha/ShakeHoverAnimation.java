@@ -1,5 +1,6 @@
 package cc.sighs.auratip.data.animation.ha;
 
+import cc.sighs.auratip.api.animation.HoverAnimation;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.util.Mth;
 

@@ -1,20 +1,20 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu;
 
+import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
 import cc.sighs.auratip.data.RadialMenuData;
-import lombok.Getter;
 
-import java.util.Collections;
+import javax.annotation.Nullable;
 import java.util.List;
 
-public class RadialMenuScriptRegistry {
-    @Getter
-    private static volatile List<RadialMenuData> menus = Collections.emptyList();
+public final class RadialMenuScriptRegistry {
+    private RadialMenuScriptRegistry() {
+    }
 
-    public static void setMenus(List<RadialMenuData> newMenus) {
-        if (newMenus == null || newMenus.isEmpty()) {
-            menus = Collections.emptyList();
-            return;
-        }
-        menus = List.copyOf(newMenus);
+    public static List<RadialMenuData> getMenus() {
+        return List.copyOf(RadialMenuRegistry.getMenus(RadialMenuRegistry.ownerKubejs()));
+    }
+
+    public static void setMenus(@Nullable List<RadialMenuData> menus) {
+        RadialMenuRegistry.setMenus(RadialMenuRegistry.ownerKubejs(), menus);
     }
 }

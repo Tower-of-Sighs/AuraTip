@@ -11,7 +11,7 @@ import java.util.Set;
 public class TipDataValidator implements DataValidator<TipData> {
     @Override
     public ValidationResult validate(TipData data, ResourceLocation source) {
-        if (data.id() == null || data.id().isBlank()) {
+        if (data.id() == null) {
             return ValidationResult.failure("Tip id is empty in " + source);
         }
 

@@ -1,6 +1,6 @@
 package cc.sighs.auratip.compat.kubejs.tip.animation;
 
-import cc.sighs.auratip.data.animation.ha.HoverAnimation;
+import cc.sighs.auratip.api.animation.HoverAnimation;
 import dev.latvian.mods.rhino.Context;
 import dev.latvian.mods.rhino.ContextFactory;
 import dev.latvian.mods.rhino.Function;

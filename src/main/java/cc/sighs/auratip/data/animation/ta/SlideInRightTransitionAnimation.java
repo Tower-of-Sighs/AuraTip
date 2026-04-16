@@ -1,5 +1,6 @@
 package cc.sighs.auratip.data.animation.ta;
 
+import cc.sighs.auratip.api.animation.TransitionAnimation;
 import com.mojang.serialization.Dynamic;
 
 import java.util.Map;
@@ -23,4 +24,3 @@ public class SlideInRightTransitionAnimation extends BaseSlideTransitionAnimatio
         return 0;
     }
 }
-

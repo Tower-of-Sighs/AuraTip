@@ -48,6 +48,8 @@ public class RadialMenuOverlay {
     }
 
     public void open(RadialMenuData menu, int screenWidth, int screenHeight, Minecraft mc) {
+        // Rendering note: this overlay is a singleton. If you try to open another radial menu while one is already
+        // active, the caller should close the current overlay first to avoid overlap.
         this.mc = mc;
         this.menu = menu;
         this.slots = menu.slots();
@@ -238,9 +240,7 @@ public class RadialMenuOverlay {
         }
         RadialMenuData.Slot slot = slots.get(hoveredIndex);
         Action action = slot.action();
-        if (action != null) {
-            action.accept(ActionExecutor.INSTANCE);
-        }
+        ActionExecutor.execute(action);
         close();
         return true;
     }

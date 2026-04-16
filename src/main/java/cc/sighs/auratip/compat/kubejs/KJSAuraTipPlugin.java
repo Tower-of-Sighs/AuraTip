@@ -19,9 +19,11 @@ public class KJSAuraTipPlugin implements KubeJSPlugin {
     public static final EventGroup TIP_EVENTS = EventGroup.of("TipEvents");
     public static final EventGroup RADIAL_EVENTS = EventGroup.of("RadialMenuEvents");
 
-    public static final EventHandler REGISTER_TIPS = TIP_EVENTS.server("register",
+    public static final EventHandler REGISTER_TIPS_SERVER = TIP_EVENTS.server("register",
             () -> TipRegistrationEvent.class);
-    public static final EventHandler REGISTER_RADIAL = RADIAL_EVENTS.server("register",
+    public static final EventHandler REGISTER_TIPS_CLIENT = TIP_EVENTS.client("register",
+            () -> TipRegistrationEvent.class);
+    public static final EventHandler REGISTER_RADIAL = RADIAL_EVENTS.client("register",
             () -> RadialMenuRegistrationEvent.class);
 
     @Override
@@ -43,17 +45,22 @@ public class KJSAuraTipPlugin implements KubeJSPlugin {
     @Override
     public void afterScriptsLoaded(ScriptManager manager) {
         if (manager.scriptType.equals(ScriptType.SERVER)) {
+            TipRegistrationEvent tipEvent = new TipRegistrationEvent();
+            REGISTER_TIPS_SERVER.post(tipEvent);
+            TipScriptRegistry.setTips(tipEvent.buildAll());
+            return;
+        }
+
+        if (manager.scriptType.equals(ScriptType.CLIENT)) {
             RadialMenuExtraSlotRegistry.clear();
 
             TipRegistrationEvent tipEvent = new TipRegistrationEvent();
-            REGISTER_TIPS.post(tipEvent);
-            var tips = tipEvent.buildAll();
-            TipScriptRegistry.setTips(tips);
+            REGISTER_TIPS_CLIENT.post(tipEvent);
+            TipScriptRegistry.setTips(tipEvent.buildAll());
 
             RadialMenuRegistrationEvent radialEvent = new RadialMenuRegistrationEvent();
             REGISTER_RADIAL.post(radialEvent);
-            var menus = radialEvent.buildAll();
-            RadialMenuScriptRegistry.setMenus(menus);
+            RadialMenuScriptRegistry.setMenus(radialEvent.buildAll());
         }
     }
 }
