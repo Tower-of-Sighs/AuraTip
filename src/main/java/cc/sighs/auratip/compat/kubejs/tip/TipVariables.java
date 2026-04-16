@@ -1,5 +1,6 @@
 package cc.sighs.auratip.compat.kubejs.tip;
 
+import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.network.chat.Component;
 
 import java.util.Collections;
@@ -11,6 +12,7 @@ public class TipVariables {
 
     private static final Map<String, ComponentSupplier> SUPPLIERS = new ConcurrentHashMap<>();
 
+    @Info("Register/update a Tip variable as a plain string. If value is null, the variable is cleared.")
     public static void register(String key, String value) {
         if (key == null || key.isEmpty()) {
             return;
@@ -22,6 +24,7 @@ public class TipVariables {
         }
     }
 
+    @Info("Register/update a Tip variable as a Component. If value is null, the variable is cleared.")
     public static void registerComponent(String key, Component value) {
         if (key == null || key.isEmpty()) {
             return;
@@ -33,6 +36,7 @@ public class TipVariables {
         }
     }
 
+    @Info("Register a dynamic Tip variable (string). The supplier is called each time a Tip is triggered.")
     public static void registerDynamic(String key, StringSupplier supplier) {
         if (key == null || key.isEmpty() || supplier == null) {
             return;
@@ -46,6 +50,7 @@ public class TipVariables {
         });
     }
 
+    @Info("Register a dynamic Tip variable (Component). The supplier is called each time a Tip is triggered.")
     public static void registerDynamicComponent(String key, ComponentSupplier supplier) {
         if (key == null || key.isEmpty() || supplier == null) {
             return;
@@ -53,10 +58,12 @@ public class TipVariables {
         SUPPLIERS.put(key, supplier);
     }
 
+    @Info("Clear the Tip variable for the given key.")
     public static void clear(String key) {
         SUPPLIERS.remove(key);
     }
 
+    @Info("Internal: snapshot of current variables (passed to the server when triggering).")
     public static Map<String, Component> snapshot() {
         if (SUPPLIERS.isEmpty()) {
             return Collections.emptyMap();

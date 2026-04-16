@@ -7,6 +7,9 @@ import net.minecraft.resources.ResourceLocation;
 public class RadialMenuDataValidator implements DataValidator<RadialMenuData> {
     @Override
     public ValidationResult validate(RadialMenuData data, ResourceLocation source) {
+        if (data.id() == null) {
+            return ValidationResult.failure("Radial menu has no id in " + source);
+        }
         if (data.menuSettings() == null) {
             return ValidationResult.failure("Radial menu has no menu_settings in " + source);
         }
@@ -43,4 +46,3 @@ public class RadialMenuDataValidator implements DataValidator<RadialMenuData> {
         return ValidationResult.success();
     }
 }
-

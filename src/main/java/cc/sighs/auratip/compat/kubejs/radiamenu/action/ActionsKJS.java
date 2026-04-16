@@ -1,27 +1,61 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu.action;
 
 import cc.sighs.auratip.data.action.Action;
+import cc.sighs.auratip.AuraTip;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
+import dev.latvian.mods.kubejs.typings.Info;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ActionsKJS {
+    private static final ResourceLocation RUN_COMMAND = new ResourceLocation(AuraTip.MODID, "run_command");
+    private static final ResourceLocation SIMULATE_KEY = new ResourceLocation(AuraTip.MODID, "simulate_key");
+
+    @Info("Register a script-backed action handler. The type can then be used as a radial menu slot action to invoke the callback.")
     public static void register(String type, ActionScriptRegistry.ScriptHandler handler) {
         ActionScriptRegistry.register(type, handler);
     }
 
+    @Info("Create an Action without params. Built-in run_command / simulate_key create the matching Action; other types create a script action.")
     public static Action of(String type) {
-        return new Action.ScriptAction(type, Map.of());
+        if ("run_command".equals(type) || RUN_COMMAND.toString().equals(type)) {
+            return new Action.RunCommand("");
+        }
+        if ("simulate_key".equals(type) || SIMULATE_KEY.toString().equals(type)) {
+            return new Action.SimulateKey(0);
+        }
+        return new Action.ScriptAction(normalizeType(type), Map.of());
     }
 
+    @Info("Create an Action with params. run_command uses params.command; simulate_key uses params.key_code; other types pass params as dynamic values.")
     public static Action of(String type, Map<?, ?> params) {
+        if ("run_command".equals(type) || RUN_COMMAND.toString().equals(type)) {
+            Object cmd = params == null ? null : params.get("command");
+            return new Action.RunCommand(cmd == null ? "" : String.valueOf(cmd));
+        }
+        if ("simulate_key".equals(type) || SIMULATE_KEY.toString().equals(type)) {
+            Object code = params == null ? null : params.get("key_code");
+            int keyCode;
+            if (code instanceof Number n) {
+                keyCode = n.intValue();
+            } else {
+                try {
+                    keyCode = code == null ? 0 : Integer.parseInt(String.valueOf(code));
+                } catch (NumberFormatException ignored) {
+                    keyCode = 0;
+                }
+            }
+            return new Action.SimulateKey(keyCode);
+        }
+
         if (params == null || params.isEmpty()) {
-            return new Action.ScriptAction(type, Map.of());
+            return new Action.ScriptAction(normalizeType(type), Map.of());
         }
         Map<String, Dynamic<?>> result = new HashMap<>();
         for (Map.Entry<?, ?> entry : params.entrySet()) {
@@ -36,7 +70,7 @@ public class ActionsKJS {
             }
             result.put(key, wrap(valueObj));
         }
-        return new Action.ScriptAction(type, result);
+        return new Action.ScriptAction(normalizeType(type), result);
     }
 
     private static Dynamic<?> wrap(Object value) {
@@ -51,5 +85,15 @@ public class ActionsKJS {
             element = new JsonPrimitive(String.valueOf(value));
         }
         return new Dynamic<>(JsonOps.INSTANCE, element);
+    }
+
+    private static ResourceLocation normalizeType(String type) {
+        if (type == null || type.isEmpty()) {
+            return new ResourceLocation("kubejs", "action");
+        }
+        if (type.indexOf(':') < 0) {
+            return new ResourceLocation("kubejs", type);
+        }
+        return new ResourceLocation(type);
     }
 }

@@ -63,16 +63,16 @@ legacyForge {
     }
 }
 
-mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-    config "${mod_id}.mixins.json"
-}
-
-jar {
-    manifest.attributes([
-            "MixinConfigs": "${mod_id}.mixins.json"
-    ])
-}
+//mixin {
+//    add sourceSets.main, "${mod_id}.refmap.json"
+//    config "${mod_id}.mixins.json"
+//}
+//
+//jar {
+//    manifest.attributes([
+//            "MixinConfigs": "${mod_id}.mixins.json"
+//    ])
+//}
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
@@ -131,6 +131,7 @@ publishing {
                 if (dependenciesNode != null) {
                     // 这里添加你希望保留在 POM 中的 groupId 或 artifactId，也就是从 Maven 拉依赖时会附带的库、模组啥的
                     def whiteList = [
+                            'cc.sighs.oelib'
                     ]
 
                     def dependencies = dependenciesNode.children()
@@ -193,6 +194,7 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 tasks.named('jar', Jar).configure {
+    exclude('data/**')
     manifest {
         attributes(["Specification-Title"     : mod_id,
                     "Specification-Vendor"    : mod_authors,

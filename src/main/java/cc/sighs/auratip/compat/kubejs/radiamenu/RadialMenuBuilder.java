@@ -5,80 +5,76 @@ import cc.sighs.auratip.data.action.Action;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
-public class RadialMenuBuilder {
+/**
+ * KubeJS-facing radial menu builder.
+ * <p>
+ * This wraps the Java API builder, but keeps the KubeJS method names and string-based ids/icons.
+ */
+public final class RadialMenuBuilder {
 
-    private final String id;
-    private final List<RadialMenuData.Slot> slots = new ArrayList<>();
-    private int innerRadius = 40;
-    private int outerRadius = 80;
-    private float animationSpeed = 1.0f;
-    private ResourceLocation centerIcon;
-    private String ringColor;
-    private List<String> ringColors = new ArrayList<>();
+    private final cc.sighs.auratip.api.radiamenu.RadialMenuBuilder delegate;
 
     public RadialMenuBuilder(String id) {
-        this.id = id;
+        this.delegate = new cc.sighs.auratip.api.radiamenu.RadialMenuBuilder(normalizeId(id));
     }
 
     public RadialMenuBuilder radii(int inner, int outer) {
-        this.innerRadius = inner;
-        this.outerRadius = outer;
+        delegate.radii(inner, outer);
         return this;
     }
 
     public RadialMenuBuilder animationSpeed(float speed) {
-        this.animationSpeed = speed;
+        delegate.animationSpeed(speed);
         return this;
     }
 
-    public RadialMenuBuilder centerIcon(String id) {
-        if (id == null || id.isEmpty()) {
-            this.centerIcon = null;
+    public RadialMenuBuilder centerIcon(@Nullable String iconId) {
+        if (iconId == null || iconId.isEmpty()) {
+            delegate.centerIcon((ResourceLocation) null);
         } else {
-            this.centerIcon = new ResourceLocation(id);
+            delegate.centerIcon(new ResourceLocation(iconId));
         }
         return this;
     }
 
-    public RadialMenuBuilder ringColor(String color) {
-        this.ringColor = color;
+    public RadialMenuBuilder ringColor(@Nullable String color) {
+        delegate.ringColor(color);
         return this;
     }
 
-    public RadialMenuBuilder ringColors(List<String> colors) {
-        this.ringColors = colors == null ? new ArrayList<>() : new ArrayList<>(colors);
+    public RadialMenuBuilder ringColors(@Nullable List<String> colors) {
+        delegate.ringColors(colors);
         return this;
     }
 
-    public RadialMenuBuilder slot(String name, String iconId, Action action, Component text, String highlightColor) {
-        if (name == null || name.isEmpty() || iconId == null || iconId.isEmpty() || action == null) {
-            return this;
+    public RadialMenuBuilder slot(
+            String name,
+            String iconId,
+            Action action,
+            @Nullable Component text,
+            @Nullable String highlightColor
+    ) {
+        Objects.requireNonNull(iconId, "iconId");
+        delegate.slot(name, new ResourceLocation(iconId), action, text, highlightColor);
+        return this;
+    }
+
+    public RadialMenuData build() {
+        return delegate.build();
+    }
+
+    private static ResourceLocation normalizeId(String id) {
+        if (id == null || id.isEmpty()) {
+            return new ResourceLocation("kubejs", "radial_menu");
         }
-        ResourceLocation icon = new ResourceLocation(iconId);
-        RadialMenuData.Slot slot = new RadialMenuData.Slot(
-                name,
-                icon,
-                action,
-                Optional.ofNullable(text),
-                Optional.ofNullable(highlightColor)
-        );
-        this.slots.add(slot);
-        return this;
-    }
-
-    RadialMenuData build() {
-        RadialMenuData.MenuSettings settings = new RadialMenuData.MenuSettings(
-                innerRadius,
-                outerRadius,
-                animationSpeed,
-                Optional.ofNullable(centerIcon),
-                Optional.ofNullable(ringColor),
-                ringColors == null || ringColors.isEmpty() ? Optional.empty() : Optional.of(List.copyOf(ringColors))
-        );
-        return new RadialMenuData(settings, List.copyOf(slots));
+        if (id.indexOf(':') < 0) {
+            return new ResourceLocation("kubejs", id);
+        }
+        return new ResourceLocation(id);
     }
 }
+

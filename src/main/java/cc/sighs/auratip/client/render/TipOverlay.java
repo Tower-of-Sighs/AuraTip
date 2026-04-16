@@ -4,8 +4,8 @@ import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.TipData.VisualSettings;
 import cc.sighs.auratip.data.animation.AnimationType;
-import cc.sighs.auratip.data.animation.ha.HoverAnimation;
-import cc.sighs.auratip.data.animation.ta.TransitionAnimation;
+import cc.sighs.auratip.api.animation.HoverAnimation;
+import cc.sighs.auratip.api.animation.TransitionAnimation;
 import cc.sighs.auratip.util.ColorUtil;
 import cc.sighs.auratip.util.ComponentSerialization;
 import cc.sighs.auratip.util.ResolveUtil;
@@ -226,6 +226,18 @@ public class TipOverlay {
 
         renderPanelShadow(graphics, drawX, drawY, w, h, eased);
         renderPanelBackground(graphics, drawX, drawY, w, h, eased);
+
+        if (pages == null || pages.isEmpty()) {
+            tip = null;
+            closing = false;
+            hoveringInteractiveArea = false;
+            variables = Map.of();
+            TipClient.onTipClosed();
+            return;
+        }
+        if (currentPage < 0 || currentPage >= pages.size()) {
+            currentPage = 0;
+        }
 
         TipData.Page page = pages.get(currentPage);
 

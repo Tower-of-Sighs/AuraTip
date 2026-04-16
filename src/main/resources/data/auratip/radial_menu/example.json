@@ -1,11 +1,12 @@
 {
+  "id": "auratip:example_menu",
   "menu_settings": {
     "inner_radius": 55,
     "outer_radius": 100,
     "animation_speed": 0.2,
     "ring_colors": [
-      "#1A050A10",
-      "#D9102030"
+      "#1A071B10",
+      "#D91A6B3A"
     ]
   },
   "slots": [
@@ -13,7 +14,7 @@
       "name": "Set Day",
       "icon": "minecraft:textures/item/clock_06.png",
       "action": {
-        "type": "run_command",
+        "type": "auratip:run_command",
         "command": "time set day"
       },
       "text": {
@@ -29,7 +30,7 @@
       "name": "Health",
       "icon": "minecraft:textures/item/golden_apple.png",
       "action": {
-        "type": "run_command",
+        "type": "auratip:run_command",
         "command": "effect give @p minecraft:instant_health 1 1"
       },
       "text": {

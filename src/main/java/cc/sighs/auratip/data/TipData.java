@@ -8,6 +8,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +23,7 @@ import java.util.Optional;
         validator = TipDataValidator.class
 )
 public record TipData(
-        String id,
+        ResourceLocation id,
         Trigger trigger,
         VisualSettings visualSettings,
         Behavior behavior,
@@ -30,7 +31,7 @@ public record TipData(
 ) {
     public static final Codec<TipData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                    Codec.STRING.fieldOf("id").forGetter(TipData::id),
+                    ResourceLocation.CODEC.fieldOf("id").forGetter(TipData::id),
                     Trigger.CODEC.fieldOf("trigger").forGetter(TipData::trigger),
                     VisualSettings.CODEC.fieldOf("visual_settings").forGetter(TipData::visualSettings),
                     Behavior.CODEC.fieldOf("behavior").forGetter(TipData::behavior),
@@ -62,10 +63,10 @@ public record TipData(
         );
     }
 
-    public record Trigger(String type, Mode mode, int cooldown) {
+    public record Trigger(ResourceLocation type, Mode mode, int cooldown) {
         public static final Codec<Trigger> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
-                        Codec.STRING.fieldOf("type").forGetter(Trigger::type),
+                        ResourceLocation.CODEC.fieldOf("type").forGetter(Trigger::type),
                         Mode.CODEC.optionalFieldOf("mode", Mode.ONCE).forGetter(Trigger::mode),
                         Codec.INT.optionalFieldOf("cooldown", 0).forGetter(Trigger::cooldown)
                 ).apply(inst, Trigger::new)
@@ -83,7 +84,7 @@ public record TipData(
     }
 
     public record VisualSettings(
-            String animationStyle,
+            ResourceLocation animationStyle,
             Background background,
             Optional<String> themeColor,
             int width,
@@ -92,7 +93,7 @@ public record TipData(
             float animationSpeed,
             Optional<Position> animationFrom,
             Optional<Position> animationTo,
-            String hoverAnimationStyle,
+            ResourceLocation hoverAnimationStyle,
             float hoverAnimationSpeed,
             boolean hoverOnlyOnHover,
             int stripeWidth,
@@ -102,7 +103,7 @@ public record TipData(
     ) {
         public static final Codec<VisualSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
-                        Codec.STRING.optionalFieldOf("animation_style", "fade_and_slide")
+                        ResourceLocation.CODEC.optionalFieldOf("animation_style", new ResourceLocation(AuraTip.MODID, "fade_and_slide"))
                                 .forGetter(VisualSettings::animationStyle),
                         Background.CODEC.optionalFieldOf("background", new Background(BackgroundType.GRADIENT, List.of("#FFE0F7FF", "#FFB3E5FC"), 8, true, Optional.empty()))
                                 .forGetter(VisualSettings::background),
@@ -120,7 +121,7 @@ public record TipData(
                                 .forGetter(VisualSettings::animationFrom),
                         Position.CODEC.optionalFieldOf("animation_to")
                                 .forGetter(VisualSettings::animationTo),
-                        Codec.STRING.optionalFieldOf("hover_animation_style", "none")
+                        ResourceLocation.CODEC.optionalFieldOf("hover_animation_style", new ResourceLocation(AuraTip.MODID, "none"))
                                 .forGetter(VisualSettings::hoverAnimationStyle),
                         Codec.FLOAT.optionalFieldOf("hover_animation_speed", 1.0f)
                                 .forGetter(VisualSettings::hoverAnimationSpeed),

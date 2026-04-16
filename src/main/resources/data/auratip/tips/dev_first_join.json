@@ -1,0 +1,49 @@
+{
+  "id": "auratip:dev_first_join_datapack",
+  "trigger": {
+    "type": "auratip:first_join_world",
+    "mode": "repeatable",
+    "cooldown": 0
+  },
+  "visual_settings": {
+    "animation_style": "auratip:fade_and_slide",
+    "hover_animation_style": "auratip:none",
+    "background": {
+      "type": "solid",
+      "colors": [
+        "#CC101010"
+      ],
+      "border_radius": 6,
+      "rounded": true
+    },
+    "theme_color": "#55FFFF",
+    "width": 200,
+    "height": 50,
+    "position": "TOP_LEFT",
+    "animation_speed": 0.8
+  },
+  "behavior": {
+    "default_duration": 160,
+    "pause_timer_on_hover": false,
+    "allow_paging": false
+  },
+  "pages": [
+    {
+      "page_index": 0,
+      "title": {
+        "text": {
+          "text": "Datapack Tip",
+          "color": "aqua",
+          "bold": true
+        },
+        "scale": 0.8
+      },
+      "content": {
+        "text": "触发: auratip:first_join_world",
+        "scale": 0.65,
+        "line_spacing": 1
+      }
+    }
+  ]
+}
+

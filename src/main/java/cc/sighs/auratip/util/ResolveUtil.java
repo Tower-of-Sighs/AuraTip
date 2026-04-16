@@ -13,27 +13,31 @@ public final class ResolveUtil {
     private ResolveUtil() {
     }
 
-    public static @Nonnull Component resolveVariables(@Nullable Component component, @Nullable Map<String, ?> variables) {
+    public static Component resolveVariables(@Nullable Component component, @Nullable Map<String, ?> variables) {
         if (component == null || variables == null || variables.isEmpty()) {
             return Objects.requireNonNullElse(component, Component.empty());
         }
-        Map<String, Component> componentVars = new HashMap<>();
+        Map<String, Component> componentVars = toComponentMap(variables);
+        if (componentVars.isEmpty()) {
+            return component;
+        }
+        return resolveVariablesInternal(component, componentVars);
+    }
+
+    public static Map<String, Component> toComponentMap(@Nullable Map<String, ?> variables) {
+        if (variables == null || variables.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Component> out = new HashMap<>();
         for (Map.Entry<String, ?> entry : variables.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             if (key == null || key.isEmpty() || value == null) {
                 continue;
             }
-            if (value instanceof Component valueComponent) {
-                componentVars.put(key, valueComponent);
-            } else {
-                componentVars.put(key, Component.literal(value.toString()));
-            }
+            out.put(key, value instanceof Component c ? c : Component.literal(value.toString()));
         }
-        if (componentVars.isEmpty()) {
-            return component;
-        }
-        return resolveVariablesInternal(component, componentVars);
+        return out.isEmpty() ? Map.of() : out;
     }
 
     private static @Nonnull Component resolveVariablesInternal(Component component, Map<String, Component> variables) {

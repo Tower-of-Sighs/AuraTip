@@ -1,7 +1,8 @@
 package cc.sighs.auratip.handler;
 
 import cc.sighs.auratip.AuraTip;
-import cc.sighs.auratip.data.trigger.TipTriggerManager;
+import cc.sighs.auratip.api.tip.TipServer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -14,6 +15,6 @@ public class CommonEventHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
-        TipTriggerManager.trigger("FIRST_JOIN_WORLD", player);
+        TipServer.trigger(new ResourceLocation(AuraTip.MODID, "first_join_world"), player);
     }
 }

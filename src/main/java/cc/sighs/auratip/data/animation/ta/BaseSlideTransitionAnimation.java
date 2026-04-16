@@ -1,5 +1,6 @@
 package cc.sighs.auratip.data.animation.ta;
 
+import cc.sighs.auratip.api.animation.TransitionAnimation;
 import cc.sighs.auratip.util.AnimationUtil;
 import com.mojang.serialization.Dynamic;
 

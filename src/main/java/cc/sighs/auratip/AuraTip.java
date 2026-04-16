@@ -3,6 +3,8 @@ package cc.sighs.auratip;
 import cc.sighs.auratip.command.ShowTipCommand;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.TipData;
+import cc.sighs.auratip.dev.DevEnvironment;
+import cc.sighs.auratip.dev.DevJavaApiSamples;
 import cc.sighs.oelib.data.DataRegistry;
 import cc.sighs.oelib.event.EventAutoRegistration;
 import cc.sighs.oelib.network.api.NetworkAutoRegistration;
@@ -23,6 +25,10 @@ public class AuraTip {
         NetworkAutoRegistration.registerBasePackage("cc.sighs.auratip.network");
         EventAutoRegistration.registerBasePackage("cc.sighs.auratip.handler");
         ShowTipCommand.register();
+
+        if (DevEnvironment.isDev()) {
+            DevJavaApiSamples.initCommon();
+        }
         DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> AuraTipClient::init);
     }
 }

@@ -1,52 +1,40 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu.action;
 
+import cc.sighs.auratip.api.action.ActionHandlers;
 import com.mojang.serialization.Dynamic;
+import net.minecraft.resources.ResourceLocation;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ActionScriptRegistry {
-    private static final Map<String, ScriptHandler> HANDLERS = new ConcurrentHashMap<>();
-
     public static void register(String type, ScriptHandler handler) {
-        if (type == null || type.isEmpty() || handler == null) {
-            return;
-        }
-        HANDLERS.put(type, handler);
+        ActionHandlers.register(normalizeType(type), handler::execute);
     }
 
     public static void clear(String type) {
-        if (type == null || type.isEmpty()) {
-            return;
-        }
-        HANDLERS.remove(type);
+        ActionHandlers.clear(normalizeType(type));
     }
 
     public static void clearAll() {
-        HANDLERS.clear();
+        ActionHandlers.clearAll();
     }
 
     public static void execute(String type, Map<String, Dynamic<?>> params) {
-        if (type == null || type.isEmpty()) {
-            return;
-        }
-        ScriptHandler handler = HANDLERS.get(type);
-        if (handler == null) {
-            return;
-        }
-        Map<String, Dynamic<?>> safeParams;
-        if (params == null || params.isEmpty()) {
-            safeParams = Collections.emptyMap();
-        } else {
-            safeParams = new HashMap<>(params);
-        }
-        handler.execute(safeParams);
+        ActionHandlers.execute(normalizeType(type), params);
     }
 
     @FunctionalInterface
     public interface ScriptHandler {
         void execute(Map<String, Dynamic<?>> params);
+    }
+
+    private static ResourceLocation normalizeType(String type) {
+        if (type == null || type.isEmpty()) {
+            return new ResourceLocation("kubejs", "action");
+        }
+        if (type.indexOf(':') < 0) {
+            return new ResourceLocation("kubejs", type);
+        }
+        return new ResourceLocation(type);
     }
 }
