@@ -1,0 +1,2300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AuraTip Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Fira+Code&display=swap');
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #0f172a; overflow: hidden; color: #fff; }
+    .glass { background: rgba(30,41,59,.72); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,.10); }
+    .code { font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .preview-area { position: fixed; inset: 0; z-index: 0; display:flex; align-items:center; justify-content:center; background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.20); border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- Web 端不做 Canvas 预览：预览全部在 Minecraft 内渲染 -->
+<div class="preview-area" id="previewArea">
+  <div class="text-white/20 flex flex-col items-center">
+    <i data-lucide="monitor" class="w-16 h-16 mb-4"></i>
+    <p id="previewLine1">预览在 Minecraft 游戏窗口内渲染</p>
+    <p id="previewLine2" class="text-xs text-white/15 mt-2">在游戏里按 ESC 退出编辑器模式</p>
+  </div>
+</div>
+
+<nav class="fixed top-6 left-6 right-6 flex justify-between items-center z-50">
+  <div class="flex items-center space-x-4">
+    <div class="glass px-4 py-2 rounded-xl flex items-center space-x-2">
+      <i data-lucide="zap" class="text-blue-400 w-5 h-5"></i>
+      <span class="font-semibold tracking-wider text-sm">AURATIP STUDIO</span>
+    </div>
+    <div id="editorTag" class="hidden glass px-3 py-1.5 rounded-lg text-xs font-medium text-blue-300">TIP_BUILDER_MODE</div>
+    <div id="connPill" class="glass px-3 py-1.5 rounded-lg text-xs text-slate-300">Connecting…</div>
+  </div>
+  <div class="flex items-center space-x-3">
+    <button id="btnToggleAnim" class="glass p-2.5 rounded-xl hover:bg-white/10 transition" title="动画编辑器"><i data-lucide="sparkles" class="w-5 h-5"></i></button>
+    <button id="btnLang" class="glass p-2.5 rounded-xl hover:bg-white/10 transition" title="Language"><i data-lucide="languages" class="w-5 h-5"></i></button>
+    <button id="btnJson" class="glass p-2.5 rounded-xl hover:bg-white/10 transition" title="JSON"><i data-lucide="file-json" class="w-5 h-5"></i></button>
+    <div class="relative">
+      <button id="btnExport" class="glass p-2.5 rounded-xl hover:bg-white/10 transition" title="导出">
+        <i data-lucide="download" class="w-5 h-5"></i>
+      </button>
+      <div id="exportMenu" class="hidden absolute right-0 mt-2 w-44 glass rounded-xl overflow-hidden z-50">
+        <button id="exportJson" class="w-full text-left px-4 py-3 text-xs hover:bg-white/5 transition border-b border-white/5">导出为 JSON</button>
+        <button id="exportJs" class="w-full text-left px-4 py-3 text-xs hover:bg-white/5 transition border-b border-white/5">导出为 JS (KubeJS)</button>
+        <button id="exportJava" class="w-full text-left px-4 py-3 text-xs hover:bg-white/5 transition">导出为 Java Snippet</button>
+      </div>
+    </div>
+    <button id="btnCopyJson" class="glass p-2.5 rounded-xl hover:bg-white/10 transition" title="复制 JSON"><i data-lucide="copy" class="w-5 h-5"></i></button>
+    <button id="btnClose" class="glass p-2.5 rounded-xl hover:bg-white/10 transition" title="返回"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+  </div>
+</nav>
+
+<div id="mainMenu" class="fixed inset-0 z-40 flex items-center justify-center space-x-8 bg-slate-950/40 backdrop-blur-sm">
+  <div onclick="openEditor('tip')" class="group cursor-pointer glass p-10 rounded-[2rem] w-80 text-center hover:scale-105 transition-all hover:border-blue-500/50">
+    <div class="w-20 h-20 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-500/40 transition">
+      <i data-lucide="message-square" class="w-10 h-10 text-blue-400"></i>
+    </div>
+    <h3 id="tipCardTitle" class="text-xl font-bold mb-2">Tip 可视化编辑</h3>
+    <p id="tipCardDesc" class="text-slate-400 text-sm leading-relaxed">编辑 TipData（触发/外观/文本/动画参数）并在游戏内实时预览。</p>
+  </div>
+  <div onclick="openEditor('radial')" class="group cursor-pointer glass p-10 rounded-[2rem] w-80 text-center hover:scale-105 transition-all hover:border-purple-500/50">
+    <div class="w-20 h-20 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500/40 transition">
+      <i data-lucide="circle" class="w-10 h-10 text-purple-400"></i>
+    </div>
+    <h3 id="radialCardTitle" class="text-xl font-bold mb-2">轮盘 可视化编辑</h3>
+    <p id="radialCardDesc" class="text-slate-400 text-sm leading-relaxed">编辑 RadialMenuData（menu_settings/slots/actions）并在游戏内实时预览。</p>
+  </div>
+</div>
+
+<div id="leftPanel" class="fixed top-24 left-6 bottom-6 w-[420px] glass rounded-3xl z-30 -translate-x-[120%] transition-transform duration-500 overflow-hidden flex flex-col">
+  <div class="p-4 border-b border-white/10 flex items-center justify-between">
+    <div>
+      <div id="panelTitle" class="text-sm font-bold tracking-wide">Editor</div>
+      <div id="panelSub" class="text-[11px] text-white/30 mt-1">网页修改会实时同步到游戏内预览</div>
+    </div>
+    <button id="btnSendNow" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition">立即同步</button>
+  </div>
+  <div class="flex-1 overflow-auto p-4 space-y-4" id="formRoot">
+    <div class="text-white/40 text-sm">等待初始化数据…</div>
+  </div>
+  <div class="p-4 border-t border-white/10 flex items-center justify-between">
+    <div class="text-[10px] text-white/35 uppercase">LIVE</div>
+    <div class="text-[10px] text-white/25 code" id="currentId">id: -</div>
+  </div>
+</div>
+
+<div id="animEditor" class="fixed top-24 right-6 bottom-6 w-[min(54vw,860px)] glass rounded-3xl z-30 translate-x-[120%] transition-transform duration-500 overflow-hidden flex flex-col">
+  <div class="p-4 border-b border-white/10 flex items-center justify-between">
+    <div>
+      <div id="animTitle" class="text-sm font-bold tracking-wide">动画编辑器</div>
+      <div id="animSub" class="text-[11px] text-white/30 mt-1">黑魔法：临时动画注入游戏并立即应用预览</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <select id="animKind" class="text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none">
+        <option value="transition">transition</option>
+        <option value="hover">hover</option>
+      </select>
+      <button id="btnRunAnim" class="text-xs bg-purple-600/70 hover:bg-purple-600 px-4 py-2 rounded-xl transition">运行测试</button>
+      <button id="btnCopyAnimKjs" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Copy KubeJS</button>
+      <button id="btnCopyAnimJava" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Copy Java</button>
+    </div>
+  </div>
+  <div class="flex-1 p-4 grid grid-cols-12 gap-4 overflow-hidden">
+    <div class="col-span-8 h-full">
+      <textarea id="animJs" spellcheck="false" class="code w-full h-full bg-black/20 rounded-2xl p-4 text-xs text-blue-100/80 focus:outline-none leading-relaxed resize-none"></textarea>
+    </div>
+    <div class="col-span-4 h-full overflow-auto space-y-3">
+      <div class="space-y-1">
+        <div id="animIdLabel" class="text-[11px] text-white/50">id</div>
+        <input id="animId" class="w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-purple-500/40" type="text" placeholder="kubejs:my_animation" />
+        <div id="animIdHelp" class="text-[11px] text-white/25">Used for copy/export. Run Test will register/replace this id temporarily.</div>
+      </div>
+
+      <div class="space-y-1">
+        <div id="animDefaultsLabel" class="text-[11px] text-white/50">paramDefaults (tooling)</div>
+        <textarea id="animDefaults" spellcheck="false" class="code w-full bg-black/20 rounded-2xl p-3 text-xs text-slate-100/80 focus:outline-none leading-relaxed resize-none" style="height: 120px;"></textarea>
+        <div id="animDefaultsHelp" class="text-[11px] text-white/25">Keys/values are used by the editor UI as defaults and to build a registration snippet.</div>
+      </div>
+
+      <div class="space-y-1">
+        <div id="animTestParamsLabel" class="text-[11px] text-white/50">testParams (apply to preview)</div>
+        <textarea id="animTestParams" spellcheck="false" class="code w-full bg-black/20 rounded-2xl p-3 text-xs text-slate-100/80 focus:outline-none leading-relaxed resize-none" style="height: 120px;"></textarea>
+        <div id="animTestParamsHelp" class="text-[11px] text-white/25">When you click Run Test, these params overwrite visual_settings.animation_params for preview.</div>
+      </div>
+
+      <button id="btnUseDefaultsAsTest" class="w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Use defaults as test params</button>
+    </div>
+  </div>
+  <div class="p-4 border-t border-white/10 flex items-center justify-between">
+    <div class="text-[10px] text-white/35 uppercase" id="animStatus">READY</div>
+    <div id="animFooterHelp" class="text-[10px] text-white/25">transition: easedProgress/offsetX/offsetY；hover: offsetX/offsetY</div>
+  </div>
+</div>
+
+<div id="jsonInspector" class="fixed top-24 right-6 bottom-6 w-[min(54vw,860px)] glass rounded-3xl z-30 translate-x-[120%] transition-transform duration-500 overflow-hidden flex flex-col">
+  <div class="p-4 border-b border-white/10 flex items-center justify-between">
+    <div>
+      <div id="jsonTitle" class="text-sm font-bold tracking-wide">JSON Inspector</div>
+      <div id="jsonSub" class="text-[11px] text-white/30 mt-1">Edit the full JSON and sync to the in-game preview.</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnJsonApply" class="text-xs bg-blue-600/70 hover:bg-blue-600 px-4 py-2 rounded-xl transition">Apply</button>
+      <button id="btnJsonSync" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Sync Now</button>
+    </div>
+  </div>
+  <div class="flex-1 p-4">
+    <textarea id="jsonArea" spellcheck="false" class="code w-full h-full bg-black/20 rounded-2xl p-4 text-xs text-slate-100/80 focus:outline-none leading-relaxed resize-none"></textarea>
+  </div>
+  <div class="p-4 border-t border-white/10 flex items-center justify-between">
+    <div class="text-[10px] text-white/35 uppercase" id="jsonStatus">READY</div>
+    <div class="flex items-center gap-2">
+      <button id="btnJsonRevert" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Revert</button>
+      <button id="btnJsonCopy" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Copy</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // injected by embedded HTTP server; used when opened via file://
+  const INJECTED_WS_PORT = "__AURATIP_WS_PORT__";
+
+  lucide.createIcons();
+
+  const mainMenu = document.getElementById('mainMenu');
+  const leftPanel = document.getElementById('leftPanel');
+  const formRoot = document.getElementById('formRoot');
+  const editorTag = document.getElementById('editorTag');
+  const panelTitle = document.getElementById('panelTitle');
+  const currentId = document.getElementById('currentId');
+  const connPill = document.getElementById('connPill');
+  const previewLine1 = document.getElementById('previewLine1');
+  const previewLine2 = document.getElementById('previewLine2');
+
+  const animEditor = document.getElementById('animEditor');
+  const btnToggleAnim = document.getElementById('btnToggleAnim');
+  const btnLang = document.getElementById('btnLang');
+  const btnJson = document.getElementById('btnJson');
+  const btnRunAnim = document.getElementById('btnRunAnim');
+  const btnCopyAnimKjs = document.getElementById('btnCopyAnimKjs');
+  const btnCopyAnimJava = document.getElementById('btnCopyAnimJava');
+  const animKind = document.getElementById('animKind');
+  const animJs = document.getElementById('animJs');
+  const animStatus = document.getElementById('animStatus');
+  const animId = document.getElementById('animId');
+  const animDefaults = document.getElementById('animDefaults');
+  const animTestParams = document.getElementById('animTestParams');
+  const btnUseDefaultsAsTest = document.getElementById('btnUseDefaultsAsTest');
+
+  const jsonInspector = document.getElementById('jsonInspector');
+  const jsonArea = document.getElementById('jsonArea');
+  const jsonStatus = document.getElementById('jsonStatus');
+  const btnJsonApply = document.getElementById('btnJsonApply');
+  const btnJsonSync = document.getElementById('btnJsonSync');
+  const btnJsonRevert = document.getElementById('btnJsonRevert');
+  const btnJsonCopy = document.getElementById('btnJsonCopy');
+
+  const btnCopyJson = document.getElementById('btnCopyJson');
+  const btnExport = document.getElementById('btnExport');
+  const exportMenu = document.getElementById('exportMenu');
+  const exportJson = document.getElementById('exportJson');
+  const exportJs = document.getElementById('exportJs');
+  const exportJava = document.getElementById('exportJava');
+  const btnClose = document.getElementById('btnClose');
+  const btnSendNow = document.getElementById('btnSendNow');
+
+  let ws = null;
+  let initPayload = null;
+  let mode = null; // 'tip' | 'radial'
+  let tipState = null;
+  let radialState = null;
+  let debounceTimer = null;
+
+  // -----------------------------
+  // i18n (loaded from /lang/*.json)
+  // -----------------------------
+
+  const I18N = {
+    en: {
+      // minimal fallback (real strings live in web/lang/en.json)
+      connecting: 'Connecting…',
+      connected: 'Connected',
+      disconnected: 'Disconnected'
+    },
+    zh: {
+      // minimal fallback (real strings live in web/lang/zh.json)
+      connecting: '连接中…',
+      connected: '已连接',
+      disconnected: '已断开'
+    }
+  };
+
+  async function loadLangFile(lang) {
+    try {
+      const res = await fetch(`lang/${lang}.json`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && typeof data === 'object') {
+        I18N[lang] = { ...(I18N[lang] || {}), ...data };
+      }
+    } catch {
+      // ignore (fallback stays)
+    }
+  }
+
+  let LANG = localStorage.getItem('auratip_lang') || (navigator.language && navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en');
+  if (!I18N[LANG]) LANG = 'en';
+
+  function t(key) {
+    return (I18N[LANG] && I18N[LANG][key]) || I18N.en[key] || key;
+  }
+
+  function applyI18n() {
+    try { document.documentElement.lang = (LANG === 'zh') ? 'zh-CN' : 'en'; } catch {}
+    // static texts
+    if (previewLine1) previewLine1.textContent = t('preview_line1');
+    if (previewLine2) previewLine2.textContent = t('preview_line2');
+
+    const tipCardTitle = document.getElementById('tipCardTitle');
+    const tipCardDesc = document.getElementById('tipCardDesc');
+    const radialCardTitle = document.getElementById('radialCardTitle');
+    const radialCardDesc = document.getElementById('radialCardDesc');
+    if (tipCardTitle) tipCardTitle.textContent = t('tip_card_title');
+    if (tipCardDesc) tipCardDesc.textContent = t('tip_card_desc');
+    if (radialCardTitle) radialCardTitle.textContent = t('radial_card_title');
+    if (radialCardDesc) radialCardDesc.textContent = t('radial_card_desc');
+
+    const panelSub = document.getElementById('panelSub');
+    if (panelSub) panelSub.textContent = t('panel_sub');
+    btnSendNow.textContent = t('btn_send_now');
+
+    // buttons / titles
+    btnToggleAnim.title = t('anim_title');
+    btnExport.title = t('export_title');
+    btnCopyJson.title = t('copy_json');
+    btnClose.title = t('back');
+
+    exportJson.textContent = t('export_json');
+    exportJs.textContent = t('export_js');
+    exportJava.textContent = t('export_java');
+
+    // animation panel
+    const animTitle = document.getElementById('animTitle');
+    const animSub = document.getElementById('animSub');
+    const animFooterHelp = document.getElementById('animFooterHelp');
+    if (animTitle) animTitle.textContent = t('anim_title');
+    if (animSub) animSub.textContent = t('anim_sub');
+    btnRunAnim.textContent = t('anim_run');
+    if (animFooterHelp) animFooterHelp.textContent = t('anim_footer_help');
+    btnCopyAnimKjs.textContent = t('anim_copy_kjs');
+    btnCopyAnimJava.textContent = t('anim_copy_java');
+    if (animId) animId.placeholder = t('anim_id_placeholder');
+    if (btnUseDefaultsAsTest) btnUseDefaultsAsTest.textContent = t('anim_use_defaults');
+
+    const animIdLabel = document.getElementById('animIdLabel');
+    const animIdHelp = document.getElementById('animIdHelp');
+    const animDefaultsLabel = document.getElementById('animDefaultsLabel');
+    const animDefaultsHelp = document.getElementById('animDefaultsHelp');
+    const animTestParamsLabel = document.getElementById('animTestParamsLabel');
+    const animTestParamsHelp = document.getElementById('animTestParamsHelp');
+    if (animIdLabel) animIdLabel.textContent = t('anim_id_label');
+    if (animIdHelp) animIdHelp.textContent = t('anim_id_help');
+    if (animDefaultsLabel) animDefaultsLabel.textContent = t('anim_defaults_label');
+    if (animDefaultsHelp) animDefaultsHelp.textContent = t('anim_defaults_help');
+    if (animTestParamsLabel) animTestParamsLabel.textContent = t('anim_test_params_label');
+    if (animTestParamsHelp) animTestParamsHelp.textContent = t('anim_test_params_help');
+
+    // json inspector
+    const jsonTitle = document.getElementById('jsonTitle');
+    const jsonSub = document.getElementById('jsonSub');
+    if (jsonTitle) jsonTitle.textContent = t('json_title');
+    if (jsonSub) jsonSub.textContent = t('json_sub');
+    btnJson.title = t('json_title');
+    btnJsonApply.textContent = t('json_apply');
+    btnJsonSync.textContent = t('json_sync');
+    btnJsonRevert.textContent = t('json_revert');
+    btnJsonCopy.textContent = t('json_copy');
+
+    // connection pill baseline (state-specific strings set via setConn)
+  }
+
+  (async () => {
+    await Promise.all([loadLangFile('en'), loadLangFile('zh')]);
+    applyI18n();
+    renderForm();
+  })();
+
+  btnLang.addEventListener('click', () => {
+    LANG = (LANG === 'en') ? 'zh' : 'en';
+    localStorage.setItem('auratip_lang', LANG);
+    applyI18n();
+    renderForm();
+  });
+
+  function setConn(state, text) {
+    connPill.textContent = text;
+    if (state === 'ok') connPill.className = 'glass px-3 py-1.5 rounded-lg text-xs text-emerald-200 border-emerald-500/30';
+    else if (state === 'bad') connPill.className = 'glass px-3 py-1.5 rounded-lg text-xs text-rose-200 border-rose-500/30';
+    else connPill.className = 'glass px-3 py-1.5 rounded-lg text-xs text-slate-300';
+  }
+
+  function safeJsonParse(str){ try{ return JSON.parse(str); }catch{ return null; } }
+
+  function getWsPort() {
+    const qs = new URLSearchParams(location.search);
+    const p = qs.get('wsPort');
+    if (p) return p;
+    if (location.port) return location.port;
+    if (INJECTED_WS_PORT && INJECTED_WS_PORT !== '__AURATIP_WS_PORT__') return INJECTED_WS_PORT;
+    return '0';
+  }
+
+  function getWsUrl() {
+    const port = getWsPort();
+    const host = location.host ? location.host : `127.0.0.1:${port}`;
+    return `ws://${host}/ws`;
+  }
+
+  function send(obj) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify(obj));
+  }
+
+  function sendLiveDebounced() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => sendLiveNow(), 60);
+  }
+
+  function sendLiveNow() {
+    if (!mode) return;
+    if (mode === 'radial') send({ type: 'radial_update', menu: radialState });
+    else send({ type: 'tip_update', tip: tipState });
+  }
+
+  // -----------------------------
+  // JSON Inspector (single place for raw json)
+  // -----------------------------
+
+  let jsonDirty = false;
+  let jsonLastRendered = '';
+
+  function currentStateObject() {
+    if (mode === 'radial') return radialState;
+    if (mode === 'tip') return tipState;
+    return tipState || radialState;
+  }
+
+  function refreshJsonArea(force) {
+    if (!jsonArea) return;
+    if (jsonDirty && !force) return;
+    const obj = currentStateObject();
+    const next = JSON.stringify(obj || {}, null, 2);
+    if (!force && next === jsonLastRendered) return;
+    jsonArea.value = next;
+    jsonLastRendered = next;
+    jsonDirty = false;
+    if (jsonStatus) jsonStatus.textContent = 'READY';
+  }
+
+  function parseJsonArea() {
+    const text = jsonArea.value || '';
+    const v = safeJsonParse(text);
+    if (v === null) {
+      if (jsonStatus) jsonStatus.textContent = 'INVALID JSON';
+      return null;
+    }
+    if (jsonStatus) jsonStatus.textContent = 'VALID';
+    return v;
+  }
+
+  jsonArea.addEventListener('input', () => {
+    jsonDirty = true;
+    parseJsonArea();
+  });
+
+  btnJsonApply.addEventListener('click', () => {
+    const v = parseJsonArea();
+    if (v === null) return;
+    if (mode === 'radial') radialState = v;
+    else tipState = v;
+    jsonDirty = false;
+    renderForm();
+    sendLiveDebounced();
+    refreshJsonArea(true);
+  });
+
+  btnJsonSync.addEventListener('click', () => sendLiveNow());
+
+  btnJsonRevert.addEventListener('click', () => {
+    jsonDirty = false;
+    refreshJsonArea(true);
+  });
+
+  btnJsonCopy.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(jsonArea.value || ''); } catch {}
+  });
+
+  function openEditor(nextMode) {
+    mode = nextMode;
+    mainMenu.classList.add('hidden');
+    leftPanel.classList.remove('-translate-x-[120%]');
+    editorTag.classList.remove('hidden');
+
+    if (mode === 'radial') {
+      editorTag.innerText = 'RADIAL_MENU_MODE';
+      panelTitle.innerText = t('radial_card_title');
+    } else {
+      editorTag.innerText = 'TIP_BUILDER_MODE';
+      panelTitle.innerText = t('tip_card_title');
+    }
+
+    send({ type: 'set_mode', mode });
+    renderForm();
+    sendLiveDebounced();
+  }
+
+  function closeEditors() {
+    mode = null;
+    mainMenu.classList.remove('hidden');
+    leftPanel.classList.add('-translate-x-[120%]');
+    animEditor.classList.add('translate-x-[120%]');
+    jsonInspector.classList.add('translate-x-[120%]');
+    editorTag.classList.add('hidden');
+  }
+
+  window.openEditor = openEditor;
+  window.closeEditors = closeEditors;
+
+  btnClose.addEventListener('click', closeEditors);
+  btnToggleAnim.addEventListener('click', () => {
+    jsonInspector.classList.add('translate-x-[120%]');
+    animEditor.classList.toggle('translate-x-[120%]');
+  });
+  btnJson.addEventListener('click', () => {
+    animEditor.classList.add('translate-x-[120%]');
+    jsonInspector.classList.toggle('translate-x-[120%]');
+    refreshJsonArea(true);
+  });
+  btnSendNow.addEventListener('click', () => sendLiveNow());
+  btnRunAnim.addEventListener('click', () => {
+    animStatus.textContent = 'SENDING...';
+    const params = safeJsonParse(animTestParams.value || '{}');
+    send({
+      type: 'animation_test',
+      kind: animKind.value,
+      id: animId.value || '',
+      js: animJs.value || '',
+      params: (params && typeof params === 'object') ? params : {}
+    });
+  });
+
+  btnUseDefaultsAsTest.addEventListener('click', () => {
+    const d = safeJsonParse(animDefaults.value || '{}');
+    animTestParams.value = JSON.stringify((d && typeof d === 'object') ? d : {}, null, 2);
+  });
+
+  function normalizeAnimId(raw) {
+    const s = String(raw || '').trim();
+    if (!s) return (animKind.value === 'hover') ? 'kubejs:hover_animation' : 'kubejs:transition_animation';
+    if (s.indexOf(':') < 0) return `kubejs:${s}`;
+    return s;
+  }
+
+  function buildAnimKubeJsSnippet() {
+    const kind = animKind.value === 'hover' ? 'hover' : 'transition';
+    const id = normalizeAnimId(animId.value);
+    const defs = safeJsonParse(animDefaults.value || '{}');
+    const defaultsObj = (defs && typeof defs === 'object') ? defs : {};
+    const body = (animJs.value || '').trim() || '({})';
+    const fn = (kind === 'hover') ? 'registerHover' : 'register';
+
+    let out = '';
+    out += `// AuraTip Tip animation (${kind})\\n`;
+    out += `// Put this in: kubejs/client_scripts/*.js\\n\\n`;
+    out += `TipAnimations.${fn}(${JSON.stringify(id)}, ${JSON.stringify(defaultsObj, null, 2)}, params => ${body})\\n`;
+    return out;
+  }
+
+  function buildAnimJavaSnippet() {
+    const kind = animKind.value === 'hover' ? 'hover' : 'transition';
+    const id = normalizeAnimId(animId.value);
+    const defs = safeJsonParse(animDefaults.value || '{}');
+    const defaultsObj = (defs && typeof defs === 'object') ? defs : {};
+
+    const getterLines = [];
+    Object.keys(defaultsObj).forEach(k => {
+      const v = defaultsObj[k];
+      if (typeof v === 'boolean') getterLines.push(`    boolean ${k} = params.getBoolean(${JSON.stringify(k)}, ${v});`);
+      else if (typeof v === 'number') getterLines.push(`    double ${k} = params.getDouble(${JSON.stringify(k)}, ${v});`);
+      else getterLines.push(`    String ${k} = params.getString(${JSON.stringify(k)}, ${JSON.stringify(String(v))});`);
+    });
+
+    let out = '';
+    out += `// AuraTip Tip animation (${kind}) (Java)\\n`;
+    out += `import cc.sighs.auratip.api.animation.TipAnimations;\\n`;
+    out += `import cc.sighs.auratip.api.animation.${kind === 'hover' ? 'HoverAnimation' : 'TransitionAnimation'};\\n`;
+    out += `import net.minecraft.resources.ResourceLocation;\\n\\n`;
+
+    if (kind === 'hover') {
+      out += `TipAnimations.registerHover(new ResourceLocation(${JSON.stringify(id)}), params -> {\\n`;
+    } else {
+      out += `TipAnimations.register(new ResourceLocation(${JSON.stringify(id)}), params -> {\\n`;
+    }
+    if (getterLines.length) out += getterLines.join('\\n') + '\\n\\n';
+
+    if (kind === 'hover') {
+      out += `    return new HoverAnimation() {\\n`;
+      out += `      @Override public int offsetX(long now, long start, int w, int h, float speed) {\\n`;
+      out += `        return 0;\\n`;
+      out += `      }\\n`;
+      out += `      @Override public int offsetY(long now, long start, int w, int h, float speed) {\\n`;
+      out += `        return 0;\\n`;
+      out += `      }\\n`;
+      out += `    };\\n`;
+    } else {
+      out += `    return new TransitionAnimation() {\\n`;
+      out += `      @Override public float easedProgress(long nowMs, long startMs, boolean closing, int openMs, int closeMs) {\\n`;
+      out += `        return 0.0f;\\n`;
+      out += `      }\\n`;
+      out += `      @Override public int offsetX(float eased, int panelWidth, int panelHeight) {\\n`;
+      out += `        return 0;\\n`;
+      out += `      }\\n`;
+      out += `      @Override public int offsetY(float eased, int panelWidth, int panelHeight) {\\n`;
+      out += `        return 0;\\n`;
+      out += `      }\\n`;
+      out += `    };\\n`;
+    }
+    out += `});\\n`;
+    return out;
+  }
+
+  btnCopyAnimKjs.addEventListener('click', async () => {
+    const out = buildAnimKubeJsSnippet();
+    try { await navigator.clipboard.writeText(out); } catch {}
+  });
+
+  btnCopyAnimJava.addEventListener('click', async () => {
+    const out = buildAnimJavaSnippet();
+    try { await navigator.clipboard.writeText(out); } catch {}
+  });
+
+  btnCopyJson.addEventListener('click', async () => {
+    const obj = (mode === 'radial') ? radialState : tipState;
+    const text = JSON.stringify(obj || {}, null, 2);
+    try { await navigator.clipboard.writeText(text); } catch {}
+  });
+
+  function toggleExportMenu() {
+    exportMenu.classList.toggle('hidden');
+  }
+
+  btnExport.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleExportMenu();
+  });
+
+  document.addEventListener('click', () => {
+    if (!exportMenu.classList.contains('hidden')) {
+      exportMenu.classList.add('hidden');
+    }
+  });
+
+  function downloadText(filename, content, mime) {
+    const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  function exportCurrentJson() {
+    const obj = (mode === 'radial') ? radialState : tipState;
+    const name = (mode === 'radial') ? 'auratip_radial_menu.json' : 'auratip_tip.json';
+    downloadText(name, JSON.stringify(obj || {}, null, 2), 'application/json;charset=utf-8');
+  }
+
+  function jsLiteral(v) {
+    if (v === null || v === undefined) return 'null';
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (typeof v === 'string') return JSON.stringify(v);
+    return JSON.stringify(v);
+  }
+
+  function isPlainObject(v) {
+    return v !== null && typeof v === 'object' && !Array.isArray(v);
+  }
+
+  function sanitizeComponentJson(v) {
+    if (Array.isArray(v)) {
+      const out = v.map(sanitizeComponentJson).filter(x => x !== undefined);
+      return out;
+    }
+    if (!isPlainObject(v)) {
+      return v;
+    }
+
+    const out = {};
+    for (const [k, rawVal] of Object.entries(v)) {
+      if (rawVal === undefined || rawVal === null) continue;
+
+      // Drop explicit default false style flags to keep exports minimal.
+      if (k === 'bold' || k === 'italic' || k === 'underlined' || k === 'strikethrough' || k === 'obfuscated') {
+        if (rawVal === true) out[k] = true;
+        continue;
+      }
+
+      if (k === 'insertion') {
+        if (typeof rawVal === 'string' && rawVal.length === 0) continue;
+        out[k] = rawVal;
+        continue;
+      }
+
+      if (k === 'extra' || k === 'with') {
+        if (!Array.isArray(rawVal) || rawVal.length === 0) continue;
+        out[k] = rawVal.map(sanitizeComponentJson);
+        continue;
+      }
+
+      if (isPlainObject(rawVal)) {
+        out[k] = sanitizeComponentJson(rawVal);
+        continue;
+      }
+
+      out[k] = rawVal;
+    }
+    return out;
+  }
+
+  function exportKubeJs() {
+    function compExpr(componentJson) {
+      if (!componentJson) return 'null';
+      if (typeof componentJson === 'string') {
+        return `TipText.of(${JSON.stringify(componentJson)}).build()`;
+      }
+      if (isPlainObject(componentJson)) {
+        const clean = sanitizeComponentJson(componentJson);
+        const keys = Object.keys(clean);
+
+        const styleKeys = new Set(['color', 'bold', 'italic', 'underlined', 'strikethrough', 'obfuscated', 'extra']);
+
+        if (keys.length === 1 && keys[0] === 'text') {
+          return `TipText.of(${JSON.stringify(clean.text || '')}).build()`;
+        }
+
+        // Try to emit a TipText builder for simple text / translate components.
+        {
+          const hasUnsupported =
+            keys.some(k => !(k === 'text' || k === 'translate' || k === 'with' || styleKeys.has(k)));
+          const hasText = Object.prototype.hasOwnProperty.call(clean, 'text');
+          const hasTranslate = Object.prototype.hasOwnProperty.call(clean, 'translate');
+
+          if (!hasUnsupported && (hasText || hasTranslate)) {
+            let expr;
+            if (hasText) {
+              expr = `TipText.of(${JSON.stringify(clean.text || '')})`;
+            } else {
+              const args = Array.isArray(clean.with)
+                ? clean.with.map(a => {
+                  if (a === null || a === undefined) return 'null';
+                  if (typeof a === 'number' || typeof a === 'boolean') return String(a);
+                  if (typeof a === 'string') return JSON.stringify(a);
+                  return compExpr(a);
+                }).join(', ')
+                : '';
+              expr = `TipText.translatable(${JSON.stringify(String(clean.translate || ''))}${args ? ', ' + args : ''})`;
+            }
+
+            if (typeof clean.color === 'string' && clean.color.length > 0) {
+              if (clean.color.startsWith('#')) expr += `.colorHex(${JSON.stringify(clean.color)})`;
+              else expr += `.formatting(${JSON.stringify(clean.color)})`;
+            }
+            if (clean.bold) expr += `.bold()`;
+            if (clean.italic) expr += `.italic()`;
+            if (clean.underlined) expr += `.underlined()`;
+            if (clean.strikethrough) expr += `.strikethrough()`;
+            if (clean.obfuscated) expr += `.obfuscated()`;
+
+            if (Array.isArray(clean.extra)) {
+              for (const part of clean.extra) {
+                expr += `.appendComponent(${compExpr(part)})`;
+              }
+            }
+
+            return `${expr}.build()`;
+          }
+        }
+
+        const raw = JSON.stringify(clean);
+        return `Java.loadClass('net.minecraft.network.chat.Component$Serializer').fromJson(${JSON.stringify(raw)})`;
+      }
+
+      const raw = JSON.stringify(componentJson);
+      return `Java.loadClass('net.minecraft.network.chat.Component$Serializer').fromJson(${JSON.stringify(raw)})`;
+    }
+
+    function actionExpr(actionObj) {
+      const a = (actionObj && typeof actionObj === 'object') ? actionObj : { type: 'auratip:run_command', command: '/say hello' };
+      const type = a.type || 'auratip:run_command';
+      const params = { ...a };
+      delete params.type;
+      const keys = Object.keys(params);
+      if (keys.length === 0) {
+        return `Actions.of(${JSON.stringify(type)})`;
+      }
+      return `Actions.of(${JSON.stringify(type)}, ${JSON.stringify(params)})`;
+    }
+
+    if (mode === 'radial') {
+      const m = radialState || {};
+      const ms = m.menu_settings || {};
+      const slots = Array.isArray(m.slots) ? m.slots : [];
+
+      let out = '';
+      out += `// AuraTip Radial Menu (KubeJS)\\n`;
+      out += `// Put this in: kubejs/client_scripts/*.js\\n\\n`;
+      out += `RadialMenuEvents.register(event => {\\n`;
+      out += `  const menu = event.create(${JSON.stringify(String(m.id || 'kubejs:radial_menu'))})\\n`;
+      out += `  menu.radii(${Number(ms.inner_radius ?? 55)}, ${Number(ms.outer_radius ?? 100)})\\n`;
+      out += `  menu.animationSpeed(${Number(ms.animation_speed ?? 1.0)})\\n`;
+      if (ms.center_icon) out += `  menu.centerIcon(${JSON.stringify(ms.center_icon)})\\n`;
+      if (ms.ring_color) out += `  menu.ringColor(${JSON.stringify(ms.ring_color)})\\n`;
+      if (ms.ring_colors) out += `  menu.ringColors(${JSON.stringify(ms.ring_colors)})\\n`;
+      out += `\\n`;
+
+      slots.forEach(s => {
+        const name = String(s.name || 'Slot');
+        const icon = String(s.icon || 'minecraft:textures/item/paper.png');
+        out += `  menu.slot(\\n`;
+        out += `    ${JSON.stringify(name)},\\n`;
+        out += `    ${JSON.stringify(icon)},\\n`;
+        out += `    ${actionExpr(s.action)},\\n`;
+        out += `    ${s.text ? compExpr(s.text) : 'null'},\\n`;
+        out += `    ${s.highlight_color ? JSON.stringify(s.highlight_color) : 'null'}\\n`;
+        out += `  )\\n\\n`;
+      });
+
+      out += `})\\n`;
+      downloadText('auratip_radial_menu.kubejs.js', out, 'text/javascript;charset=utf-8');
+      return;
+    }
+
+    const tData = tipState || {};
+    const trig = tData.trigger || {};
+    const vs = tData.visual_settings || {};
+    const beh = tData.behavior || {};
+    const pages = Array.isArray(tData.pages) ? tData.pages : [];
+
+    let out = '';
+    out += `// AuraTip Tip (KubeJS)\\n`;
+    out += `// Put this in: kubejs/client_scripts/*.js\\n\\n`;
+    out += `TipEvents.register(event => {\\n`;
+    out += `  const tip = event.create(${JSON.stringify(String(tData.id || 'kubejs:tip'))})\\n`;
+    out += `  tip.trigger(${JSON.stringify(String(trig.type || 'auratip:first_join_world'))}, ${JSON.stringify(String(trig.mode || 'once'))}, ${Number(trig.cooldown || 0)})\\n\\n`;
+
+    out += `  tip.visual(v => {\\n`;
+    if (vs.animation_style) out += `    v.animationStyle(${JSON.stringify(vs.animation_style)})\\n`;
+    if (vs.animation_speed != null) out += `    v.animationSpeed(${Number(vs.animation_speed)})\\n`;
+    if (vs.animation_params && typeof vs.animation_params === 'object') out += `    v.animParams(${JSON.stringify(vs.animation_params)})\\n`;
+
+    if (vs.hover_animation_style) out += `    v.hoverAnimationStyle(${JSON.stringify(vs.hover_animation_style)})\\n`;
+    if (vs.hover_animation_speed != null) out += `    v.hoverAnimationSpeed(${Number(vs.hover_animation_speed)})\\n`;
+    if (vs.hover_only_on_hover != null) out += `    v.hoverOnlyOnHover(${!!vs.hover_only_on_hover})\\n`;
+    if (vs.hover_animation_params && typeof vs.hover_animation_params === 'object') out += `    v.hoverParams(${JSON.stringify(vs.hover_animation_params)})\\n`;
+
+    if (vs.stripe_width != null) out += `    v.stripeWidth(${Number(vs.stripe_width) | 0})\\n`;
+    if (vs.stripe_length_factor != null) out += `    v.stripeLengthFactor(${Number(vs.stripe_length_factor)})\\n`;
+    if (vs.theme_color) out += `    v.themeColor(${JSON.stringify(vs.theme_color)})\\n`;
+    if (vs.width != null && vs.height != null) out += `    v.size(${Number(vs.width) | 0}, ${Number(vs.height) | 0})\\n`;
+
+    if (typeof vs.position === 'string') out += `    v.position(${JSON.stringify(vs.position)})\\n`;
+    if (Array.isArray(vs.position)) out += `    v.position(${Number(vs.position[0] || 0)}, ${Number(vs.position[1] || 0)})\\n`;
+
+    if (vs.animation_from !== undefined) {
+      if (typeof vs.animation_from === 'string') out += `    v.animationFrom(${JSON.stringify(vs.animation_from)})\\n`;
+      if (Array.isArray(vs.animation_from)) out += `    v.animationFrom(${Number(vs.animation_from[0] || 0)}, ${Number(vs.animation_from[1] || 0)})\\n`;
+    }
+    if (vs.animation_to !== undefined) {
+      if (typeof vs.animation_to === 'string') out += `    v.animationTo(${JSON.stringify(vs.animation_to)})\\n`;
+      if (Array.isArray(vs.animation_to)) out += `    v.animationTo(${Number(vs.animation_to[0] || 0)}, ${Number(vs.animation_to[1] || 0)})\\n`;
+    }
+
+    if (vs.background && typeof vs.background === 'object') {
+      const bg = vs.background;
+      out += `    v.background(${JSON.stringify(String(bg.type || 'gradient'))}, ${JSON.stringify(bg.colors || [])}, ${Number(bg.border_radius || 8) | 0})\\n`;
+      if (bg.rounded != null) out += `    v.backgroundRounded(${!!bg.rounded})\\n`;
+      if (bg.image_path) out += `    v.backgroundImage(${JSON.stringify(bg.image_path)})\\n`;
+    }
+
+    out += `  })\\n\\n`;
+
+    out += `  tip.behavior(b => {\\n`;
+    if (beh.default_duration != null) out += `    b.duration(${Number(beh.default_duration) | 0})\\n`;
+    if (beh.pause_timer_on_hover != null) out += `    b.pauseOnHover(${!!beh.pause_timer_on_hover})\\n`;
+    if (beh.closable_by_key) out += `    b.closeKey(${JSON.stringify(beh.closable_by_key)})\\n`;
+    if (beh.allow_paging != null) out += `    b.allowPaging(${!!beh.allow_paging})\\n`;
+    out += `  })\\n\\n`;
+
+    pages.forEach(p => {
+      const idx = Number(p.page_index || 0);
+      out += `  tip.page(${idx}, pg => {\\n`;
+      const title = p.title;
+      const subtitle = p.subtitle;
+      const content = p.content;
+      if (title && title.text) out += `    pg.title(${compExpr(title.text)}, ${Number(title.scale || 1.0)}, ${Number(title.line_spacing || 0) | 0})\\n`;
+      if (title && title.divider) {
+        const d = title.divider;
+        out += `    pg.titleDivider(${Number(d.thickness || 1) | 0}, ${Number(d.margin_top || 4) | 0}, ${Number(d.margin_bottom || 4) | 0}, ${Number(d.length || 1.0)}, ${JSON.stringify(d.color || '')})\\n`;
+      }
+      if (subtitle && subtitle.text) out += `    pg.subtitle(${compExpr(subtitle.text)}, ${Number(subtitle.scale || 1.0)}, ${Number(subtitle.line_spacing || 0) | 0})\\n`;
+      if (content && content.text) out += `    pg.content(${compExpr(content.text)}, ${Number(content.scale || 1.0)}, ${Number(content.line_spacing || 0) | 0})\\n`;
+
+      if (p.image && p.image.path) {
+        const img = p.image;
+        const size = Array.isArray(img.size) ? img.size : [64, 64];
+        const w = Number(size[0] || 64) | 0;
+        const h = Number(size[1] || 64) | 0;
+        const sc = Number(img.scale || 1.0);
+        const pos = img.position;
+        const fn = (sc !== 1.0) ? 'imageScaled' : 'image';
+        if (typeof pos === 'string') {
+          if (sc !== 1.0) out += `    pg.${fn}(${JSON.stringify(img.path)}, ${JSON.stringify(pos)}, ${w}, ${h}, ${sc})\\n`;
+          else out += `    pg.${fn}(${JSON.stringify(img.path)}, ${JSON.stringify(pos)}, ${w}, ${h})\\n`;
+        } else if (Array.isArray(pos)) {
+          const x = Number(pos[0] || 0) | 0;
+          const y = Number(pos[1] || 0) | 0;
+          if (sc !== 1.0) out += `    pg.${fn}(${JSON.stringify(img.path)}, ${x}, ${y}, ${w}, ${h}, ${sc})\\n`;
+          else out += `    pg.${fn}(${JSON.stringify(img.path)}, ${x}, ${y}, ${w}, ${h})\\n`;
+        } else {
+          // no position: still emit
+          if (sc !== 1.0) out += `    pg.${fn}(${JSON.stringify(img.path)}, 'TOP_CENTER', ${w}, ${h}, ${sc})\\n`;
+          else out += `    pg.${fn}(${JSON.stringify(img.path)}, 'TOP_CENTER', ${w}, ${h})\\n`;
+        }
+      }
+
+      out += `  })\\n\\n`;
+    });
+
+    out += `})\\n`;
+    downloadText('auratip_tip.kubejs.js', out, 'text/javascript;charset=utf-8');
+  }
+
+  function exportJavaSnippet() {
+    function javaStr(s) {
+      return JSON.stringify(String(s ?? ''));
+    }
+
+    function javaCompExpr(componentJson) {
+      function fromJsonExpr(cleanObj) {
+        const raw = JSON.stringify(cleanObj);
+        if (!raw.includes('\"\"\"')) {
+          return `Component.Serializer.fromJson(\"\"\"${raw}\"\"\")`;
+        }
+        return `Component.Serializer.fromJson(${javaStr(raw)})`;
+      }
+
+      function fmtConst(colorName) {
+        if (!colorName || typeof colorName !== 'string') return null;
+        const key = colorName.trim().toUpperCase().replace(/[^A-Z_]/g, '_');
+        const allowed = new Set([
+          'BLACK','DARK_BLUE','DARK_GREEN','DARK_AQUA','DARK_RED','DARK_PURPLE',
+          'GOLD','GRAY','DARK_GRAY','BLUE','GREEN','AQUA','RED','LIGHT_PURPLE','YELLOW','WHITE'
+        ]);
+        return allowed.has(key) ? key : null;
+      }
+
+      if (componentJson === null || componentJson === undefined) return 'null';
+      if (typeof componentJson === 'string') {
+        return `Component.literal(${javaStr(componentJson)})`;
+      }
+
+      if (!isPlainObject(componentJson)) {
+        return fromJsonExpr(componentJson);
+      }
+
+      const clean = sanitizeComponentJson(componentJson);
+
+      if (Array.isArray(clean.extra) && clean.extra.length > 0) {
+        return fromJsonExpr(clean);
+      }
+      if (clean.clickEvent || clean.hoverEvent || clean.font) {
+        return fromJsonExpr(clean);
+      }
+
+      const hasText = Object.prototype.hasOwnProperty.call(clean, 'text');
+      const hasTranslate = Object.prototype.hasOwnProperty.call(clean, 'translate');
+
+      let baseExpr = null;
+      if (hasText) {
+        baseExpr = `Component.literal(${javaStr(clean.text || '')})`;
+      } else if (hasTranslate) {
+        const args = Array.isArray(clean.with)
+          ? clean.with.map(a => {
+            if (a === null || a === undefined) return 'null';
+            if (typeof a === 'number' || typeof a === 'boolean') return String(a);
+            if (typeof a === 'string') return javaStr(a);
+            return javaCompExpr(a);
+          }).join(', ')
+          : '';
+        baseExpr = `Component.translatable(${javaStr(String(clean.translate || ''))}${args ? ', ' + args : ''})`;
+      } else {
+        return fromJsonExpr(clean);
+      }
+
+      const styleCalls = [];
+
+      if (typeof clean.color === 'string' && clean.color.length > 0) {
+        if (clean.color.startsWith('#') && (clean.color.length === 7 || clean.color.length === 9)) {
+          const hex = clean.color.length === 9 ? clean.color.slice(3) : clean.color.slice(1);
+          styleCalls.push(`withColor(TextColor.fromRgb(0x${hex.toUpperCase()}))`);
+        } else {
+          const fmt = fmtConst(clean.color);
+          if (fmt) {
+            styleCalls.push(`applyFormat(ChatFormatting.${fmt})`);
+          } else {
+            return fromJsonExpr(clean);
+          }
+        }
+      }
+
+      if (clean.bold) styleCalls.push('withBold(true)');
+      if (clean.italic) styleCalls.push('withItalic(true)');
+      if (clean.underlined) styleCalls.push('withUnderlined(true)');
+      if (clean.strikethrough) styleCalls.push('withStrikethrough(true)');
+      if (clean.obfuscated) styleCalls.push('withObfuscated(true)');
+
+      if (typeof clean.insertion === 'string' && clean.insertion.length > 0) {
+        styleCalls.push(`withInsertion(${javaStr(clean.insertion)})`);
+      }
+
+      if (styleCalls.length === 0) {
+        return baseExpr;
+      }
+
+      return `${baseExpr}.withStyle(style -> style.${styleCalls.join('.')})`;
+    }
+
+    function javaRlExpr(s) {
+      return `new ResourceLocation(${javaStr(s)})`;
+    }
+
+    function javaMapExpr(obj) {
+      if (!obj || typeof obj !== 'object') return 'Map.of()';
+      const keys = Object.keys(obj);
+      if (keys.length === 0) return 'Map.of()';
+      if (keys.length > 8) {
+        return `/* TODO: params map has ${keys.length} entries */ Map.of()`;
+      }
+      const pairs = [];
+      for (const k of keys) {
+        const v = obj[k];
+        if (typeof v === 'number' || typeof v === 'boolean') pairs.push(`${javaStr(k)}, ${String(v)}`);
+        else pairs.push(`${javaStr(k)}, ${javaStr(v)}`);
+      }
+      return `Map.of(${pairs.join(', ')})`;
+    }
+
+    if (mode === 'radial') {
+      const m = radialState || {};
+      const ms = m.menu_settings || {};
+      const slots = Array.isArray(m.slots) ? m.slots : [];
+
+      let out = '';
+      out += `// AuraTip Radial Menu (Java)\\n`;
+      out += `// Register as runtime data via RadialMenuRegistry.setMenus(owner, menus).\\n\\n`;
+      out += `import cc.sighs.auratip.api.action.Actions;\\n`;
+      out += `import cc.sighs.auratip.api.radiamenu.RadialMenuBuilder;\\n`;
+      out += `import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;\\n`;
+      out += `import cc.sighs.auratip.data.RadialMenuData;\\n`;
+      out += `import net.minecraft.ChatFormatting;\\n`;
+      out += `import net.minecraft.network.chat.Component;\\n`;
+      out += `import net.minecraft.network.chat.TextColor;\\n`;
+      out += `import net.minecraft.resources.ResourceLocation;\\n`;
+      out += `import java.util.List;\\n`;
+      out += `import java.util.Map;\\n\\n`;
+
+      const id = String(m.id || 'auratip:menu');
+      out += `RadialMenuData menu = new RadialMenuBuilder(${javaRlExpr(id)})\\n`;
+      out += `  .radii(${Number(ms.inner_radius ?? 55) | 0}, ${Number(ms.outer_radius ?? 100) | 0})\\n`;
+      out += `  .animationSpeed(${Number(ms.animation_speed ?? 1.0)})\\n`;
+      if (ms.center_icon) out += `  .centerIcon(${javaRlExpr(ms.center_icon)})\\n`;
+      if (ms.ring_color) out += `  .ringColor(${javaStr(ms.ring_color)})\\n`;
+      if (ms.ring_colors) out += `  .ringColors(List.of(${(ms.ring_colors || []).map(javaStr).join(', ')}))\\n`;
+
+      slots.forEach(s => {
+        const a = (s.action && typeof s.action === 'object') ? s.action : { type: 'auratip:run_command', command: '' };
+        const type = String(a.type || 'auratip:run_command');
+        const params = { ...a }; delete params.type;
+        let actionExpr = '';
+        if (type === 'auratip:run_command') actionExpr = `Actions.runCommand(${javaStr(params.command || '')})`;
+        else if (type === 'auratip:simulate_key') actionExpr = `Actions.simulateKey(${Number(params.key_code || 0) | 0})`;
+        else actionExpr = `Actions.script(${javaRlExpr(type)}, ${javaMapExpr(params)})`;
+
+        out += `  .slot(${javaStr(String(s.name || 'Slot'))}, ${javaRlExpr(String(s.icon || 'minecraft:textures/item/paper.png'))}, ${actionExpr}, ${s.text ? javaCompExpr(s.text) : 'null'}, ${s.highlight_color ? javaStr(s.highlight_color) : 'null'})\\n`;
+      });
+
+      out += `  .build();\\n\\n`;
+      out += `RadialMenuRegistry.setMenus(\"<your_modid>\", List.of(menu));\\n`;
+
+      downloadText('auratip_radial_menu.java', out, 'text/plain;charset=utf-8');
+      return;
+    }
+
+    const tData = tipState || {};
+    const trig = tData.trigger || {};
+    const vs = tData.visual_settings || {};
+    const beh = tData.behavior || {};
+    const pages = Array.isArray(tData.pages) ? tData.pages : [];
+
+    let out = '';
+    out += `// AuraTip Tip (Java)\\n`;
+    out += `// Register as runtime data via TipRegistry.setTips(owner, tips).\\n\\n`;
+    out += `import cc.sighs.auratip.api.tip.TipBuilder;\\n`;
+    out += `import cc.sighs.auratip.api.tip.TipRegistry;\\n`;
+    out += `import cc.sighs.auratip.data.TipData;\\n`;
+    out += `import net.minecraft.ChatFormatting;\\n`;
+    out += `import net.minecraft.network.chat.Component;\\n`;
+    out += `import net.minecraft.network.chat.TextColor;\\n`;
+    out += `import net.minecraft.resources.ResourceLocation;\\n`;
+    out += `import java.util.List;\\n`;
+    out += `import java.util.Map;\\n\\n`;
+
+    const id = String(tData.id || 'auratip:tip');
+    const trigType = String(trig.type || 'auratip:first_join_world');
+    const modeStr = String(trig.mode || 'once').toUpperCase();
+    out += `TipData tip = new TipBuilder(${javaRlExpr(id)})\\n`;
+    out += `  .trigger(${javaRlExpr(trigType)}, TipData.Trigger.Mode.${modeStr}, ${Number(trig.cooldown || 0) | 0})\\n`;
+
+    // visual
+    out += `  .visual(v -> {\\n`;
+    if (vs.animation_style) out += `    v.animationStyle(${javaRlExpr(vs.animation_style)});\\n`;
+    if (vs.animation_speed != null) out += `    v.animationSpeed(${Number(vs.animation_speed)}f);\\n`;
+    if (vs.animation_params && typeof vs.animation_params === 'object') out += `    v.animParams(${javaMapExpr(vs.animation_params)});\\n`;
+    if (vs.hover_animation_style) out += `    v.hoverAnimationStyle(${javaRlExpr(vs.hover_animation_style)});\\n`;
+    if (vs.hover_animation_speed != null) out += `    v.hoverAnimationSpeed(${Number(vs.hover_animation_speed)}f);\\n`;
+    if (vs.hover_only_on_hover != null) out += `    v.hoverOnlyOnHover(${!!vs.hover_only_on_hover});\\n`;
+    if (vs.hover_animation_params && typeof vs.hover_animation_params === 'object') out += `    v.hoverParams(${javaMapExpr(vs.hover_animation_params)});\\n`;
+    if (vs.stripe_width != null) out += `    v.stripeWidth(${Number(vs.stripe_width) | 0});\\n`;
+    if (vs.stripe_length_factor != null) out += `    v.stripeLengthFactor(${Number(vs.stripe_length_factor)}f);\\n`;
+    if (vs.theme_color) out += `    v.themeColor(${javaStr(vs.theme_color)});\\n`;
+    if (vs.width != null && vs.height != null) out += `    v.size(${Number(vs.width) | 0}, ${Number(vs.height) | 0});\\n`;
+
+    if (typeof vs.position === 'string') out += `    v.positionPreset(${javaStr(vs.position)});\\n`;
+    if (Array.isArray(vs.position)) out += `    v.positionAbsolute(${Number(vs.position[0] || 0) | 0}, ${Number(vs.position[1] || 0) | 0});\\n`;
+
+    if (vs.animation_from !== undefined) {
+      if (typeof vs.animation_from === 'string') out += `    v.animationFromPreset(${javaStr(vs.animation_from)});\\n`;
+      if (Array.isArray(vs.animation_from)) out += `    v.animationFromAbsolute(${Number(vs.animation_from[0] || 0) | 0}, ${Number(vs.animation_from[1] || 0) | 0});\\n`;
+    }
+    if (vs.animation_to !== undefined) {
+      if (typeof vs.animation_to === 'string') out += `    v.animationToPreset(${javaStr(vs.animation_to)});\\n`;
+      if (Array.isArray(vs.animation_to)) out += `    v.animationToAbsolute(${Number(vs.animation_to[0] || 0) | 0}, ${Number(vs.animation_to[1] || 0) | 0});\\n`;
+    }
+
+    if (vs.background && typeof vs.background === 'object') {
+      const bg = vs.background;
+      out += `    v.background(TipData.VisualSettings.BackgroundType.${String(bg.type || 'gradient').toUpperCase()}, List.of(${(bg.colors || []).map(javaStr).join(', ')}), ${Number(bg.border_radius || 8) | 0});\\n`;
+      if (bg.rounded != null) out += `    v.backgroundRounded(${!!bg.rounded});\\n`;
+      if (bg.image_path) out += `    v.backgroundImage(${javaStr(bg.image_path)});\\n`;
+    }
+
+    out += `  })\\n`;
+
+    // behavior
+    out += `  .behavior(b -> {\\n`;
+    if (beh.default_duration != null) out += `    b.duration(${Number(beh.default_duration) | 0});\\n`;
+    if (beh.pause_timer_on_hover != null) out += `    b.pauseOnHover(${!!beh.pause_timer_on_hover});\\n`;
+    if (beh.closable_by_key) out += `    b.closeKey(${javaStr(beh.closable_by_key)});\\n`;
+    if (beh.allow_paging != null) out += `    b.allowPaging(${!!beh.allow_paging});\\n`;
+    out += `  })\\n`;
+
+    pages.forEach(p => {
+      const idx = Number(p.page_index || 0);
+      out += `  .page(${idx}, pg -> {\\n`;
+      const title = p.title;
+      const subtitle = p.subtitle;
+      const content = p.content;
+      if (title && title.text) out += `    pg.title(${javaCompExpr(title.text)}, ${Number(title.scale || 1.0)}f, ${Number(title.line_spacing || 0) | 0});\\n`;
+      if (title && title.divider) {
+        const d = title.divider;
+        out += `    pg.titleDivider(${Number(d.thickness || 1) | 0}, ${Number(d.margin_top || 4) | 0}, ${Number(d.margin_bottom || 4) | 0}, ${Number(d.length || 1.0)}f, ${javaStr(d.color || '')});\\n`;
+      }
+      if (subtitle && subtitle.text) out += `    pg.subtitle(${javaCompExpr(subtitle.text)}, ${Number(subtitle.scale || 1.0)}f, ${Number(subtitle.line_spacing || 0) | 0});\\n`;
+      if (content && content.text) out += `    pg.content(${javaCompExpr(content.text)}, ${Number(content.scale || 1.0)}f, ${Number(content.line_spacing || 0) | 0});\\n`;
+      if (p.image && p.image.path) {
+        const img = p.image;
+        const size = Array.isArray(img.size) ? img.size : [64, 64];
+        const w = Number(size[0] || 64) | 0;
+        const h = Number(size[1] || 64) | 0;
+        const sc = Number(img.scale || 1.0);
+        const pos = img.position;
+        if (typeof pos === 'string') {
+          out += `    pg.imageScaled(${javaStr(img.path)}, ${javaStr(pos)}, ${w}, ${h}, ${sc}f);\\n`;
+        } else if (Array.isArray(pos)) {
+          out += `    pg.imageScaled(${javaStr(img.path)}, ${Number(pos[0] || 0) | 0}, ${Number(pos[1] || 0) | 0}, ${w}, ${h}, ${sc}f);\\n`;
+        } else {
+          out += `    pg.imageScaled(${javaStr(img.path)}, ${javaStr('TOP_CENTER')}, ${w}, ${h}, ${sc}f);\\n`;
+        }
+      }
+      out += `  })\\n`;
+    });
+
+    out += `  .build();\\n\\n`;
+    out += `TipRegistry.setTips(\"<your_modid>\", List.of(tip));\\n`;
+
+    downloadText('auratip_tip.java', out, 'text/plain;charset=utf-8');
+  }
+
+  exportJson.addEventListener('click', () => { exportMenu.classList.add('hidden'); exportCurrentJson(); });
+  exportJs.addEventListener('click', () => { exportMenu.classList.add('hidden'); exportKubeJs(); });
+  exportJava.addEventListener('click', () => { exportMenu.classList.add('hidden'); exportJavaSnippet(); });
+
+  function getParamMeta() { return (initPayload && initPayload.paramMeta) ? initPayload.paramMeta : {}; }
+  function transitionParamDefs(id){ const m=getParamMeta(); return (m.animation && m.animation.transition && m.animation.transition[id]) ? m.animation.transition[id] : []; }
+  function hoverParamDefs(id){ const m=getParamMeta(); return (m.animation && m.animation.hover && m.animation.hover[id]) ? m.animation.hover[id] : []; }
+  function actionDefs(type){ const m=getParamMeta(); return (m.actions && m.actions[type]) ? m.actions[type] : null; }
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function row(label, control, help) {
+    const r = el('div', 'space-y-1');
+    r.appendChild(el('div', 'text-[11px] text-white/50', label));
+    r.appendChild(control);
+    if (help) r.appendChild(el('div', 'text-[11px] text-white/25', help));
+    return r;
+  }
+
+  function inputText(value, onChange) {
+    const input = el('input', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    input.type = 'text';
+    input.value = value ?? '';
+    input.addEventListener('input', () => onChange(input.value));
+    return input;
+  }
+
+  function inputNumber(value, onChange) {
+    const input = el('input', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    input.type = 'number';
+    input.step = 'any';
+    input.value = (value ?? 0);
+    input.addEventListener('input', () => onChange(Number(input.value)));
+    return input;
+  }
+
+  function inputBool(value, onChange) {
+    const wrap = el('label', 'flex items-center gap-2 text-xs text-white/80 select-none');
+    const input = el('input', 'accent-blue-500');
+    input.type = 'checkbox';
+    input.checked = !!value;
+    input.addEventListener('change', () => onChange(input.checked));
+    wrap.appendChild(input);
+    wrap.appendChild(el('span', 'text-white/60', input.checked ? 'true' : 'false'));
+    input.addEventListener('change', () => wrap.lastChild.textContent = input.checked ? 'true' : 'false');
+    return wrap;
+  }
+
+  function inputJson(value, onChange, rows=6) {
+    const area = el('textarea', 'code w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    area.style.height = (rows * 18) + 'px';
+    area.value = JSON.stringify(value ?? {}, null, 2);
+    area.addEventListener('input', () => {
+      const v = safeJsonParse(area.value);
+      if (v !== null) onChange(v);
+    });
+    return area;
+  }
+
+  function section(title) {
+    const s = el('div', 'glass rounded-2xl p-4 space-y-3');
+    s.appendChild(el('div', 'text-sm font-semibold', title));
+    return s;
+  }
+
+  function ensureObj(parent, key, fallback={}) {
+    if (!parent[key] || typeof parent[key] !== 'object') parent[key] = fallback;
+    return parent[key];
+  }
+  function ensureArr(parent, key, fallback=[]) {
+    if (!Array.isArray(parent[key])) parent[key] = fallback;
+    return parent[key];
+  }
+
+  function renderForm() {
+    formRoot.innerHTML = '';
+    if (!initPayload) {
+      formRoot.appendChild(el('div','text-white/40 text-sm', t('waiting_init')));
+      return;
+    }
+
+    const schema = getSchemaForMode();
+    if (mode === 'radial') {
+      if (!radialState) radialState = initPayload.defaultRadialMenu;
+      currentId.textContent = 'id: ' + (radialState && radialState.id ? radialState.id : '-');
+      if (schema) renderSchema(radialState, schema, ['radial']);
+      else renderAuto(radialState, ['radial']);
+    } else {
+      if (!tipState) tipState = initPayload.defaultTip;
+      currentId.textContent = 'id: ' + (tipState && tipState.id ? tipState.id : '-');
+      if (schema) renderSchema(tipState, schema, ['tip']);
+      else renderAuto(tipState, ['tip']);
+    }
+
+    // keep JSON inspector in sync (unless user is typing)
+    refreshJsonArea(false);
+  }
+
+  function getSchemaForMode() {
+    const schemas = (initPayload && initPayload.schemas) ? initPayload.schemas : null;
+    if (!schemas) return null;
+    return (mode === 'radial') ? schemas.radial : schemas.tip;
+  }
+
+  // -----------------------------
+  // Schema UI (Codec-first)
+  // -----------------------------
+
+  function deepClone(v) {
+    return JSON.parse(JSON.stringify(v));
+  }
+
+  function schemaDefaultValue(typeSchema, fieldSchema) {
+    if (fieldSchema && fieldSchema.default !== undefined) return deepClone(fieldSchema.default);
+    if (!typeSchema || typeof typeSchema !== 'object') return null;
+    const k = typeSchema.kind;
+    if (k === 'string' || k === 'resource_location') return '';
+    if (k === 'number') return 0;
+    if (k === 'boolean') return false;
+    if (k === 'enum') return (typeSchema.options && typeSchema.options[0]) ? typeSchema.options[0] : '';
+    if (k === 'fixed_int_array2') return [0, 0];
+    if (k === 'map_dynamic') return {};
+    if (k === 'component') return { text: '' };
+    if (k === 'either') {
+      // default to the first variant's type
+      const v0 = typeSchema.variants && typeSchema.variants[0] ? typeSchema.variants[0].type : null;
+      return schemaDefaultValue(v0, null);
+    }
+    if (k === 'action') return { type: 'auratip:run_command', command: '/say hello' };
+    if (k === 'array') return [];
+    if (k === 'object') {
+      const obj = {};
+      const fields = Array.isArray(typeSchema.fields) ? typeSchema.fields : [];
+      fields.forEach(f => {
+        if (!f || !f.name) return;
+        if (f.optional) return;
+        obj[f.name] = schemaDefaultValue(f.type, f);
+      });
+      return obj;
+    }
+    return null;
+  }
+
+  function renderSchema(rootObj, schema, rootPath) {
+    if (!rootObj || typeof rootObj !== 'object') {
+      formRoot.appendChild(el('div', 'text-white/40 text-sm', t('no_editable')));
+      return;
+    }
+
+    const title = (rootPath && rootPath[0] === 'radial') ? t('schema_title_radial') : t('schema_title_tip');
+    const sec = section(title);
+    sec.appendChild(el('div', 'text-[11px] text-white/25', t('schema_hint')));
+    sec.appendChild(renderSchemaObject(rootObj, schema, rootPath, 0));
+    formRoot.appendChild(sec);
+  }
+
+  function fieldLabel(fieldSchema) {
+    if (!fieldSchema) return '';
+    const name = fieldSchema.name || '';
+    const labelKey = fieldSchema.label_key;
+    const label = labelKey ? t(labelKey) : name;
+    if (label && label !== name) return `${label} (${name})`;
+    return name;
+  }
+
+  function fieldDesc(fieldSchema) {
+    if (!fieldSchema) return '';
+    const key = fieldSchema.desc_key;
+    if (!key) return '';
+    const v = t(key);
+    return (v && v !== key) ? v : '';
+  }
+
+  function rowField(labelText, control, fieldSchema, onRemove) {
+    const r = el('div', 'space-y-1');
+    const head = el('div', 'flex items-center justify-between');
+    head.appendChild(el('div', 'text-[11px] text-white/50', labelText));
+
+    if (fieldSchema && fieldSchema.optional && typeof onRemove === 'function') {
+      const rm = el('button', 'text-[11px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 transition', t('remove'));
+      rm.addEventListener('click', onRemove);
+      head.appendChild(rm);
+    }
+
+    r.appendChild(head);
+    r.appendChild(control);
+    const desc = fieldDesc(fieldSchema);
+    if (desc) {
+      r.appendChild(el('div', 'text-[11px] text-white/25', desc));
+    }
+    return r;
+  }
+
+  function renderSchemaObject(obj, schema, path, depth) {
+    const wrap = el('div', 'space-y-3');
+    const fields = schema && Array.isArray(schema.fields) ? schema.fields : [];
+
+    // known fields (in codec order)
+    fields.forEach(f => {
+      const k = f.name;
+      const nextPath = (path || []).concat([k]);
+      const has = Object.prototype.hasOwnProperty.call(obj, k);
+
+      if (!has) {
+        if (f.optional) {
+          const addBtn = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('add'));
+          addBtn.addEventListener('click', () => {
+            obj[k] = schemaDefaultValue(f.type, f);
+            renderForm();
+            sendLiveDebounced();
+          });
+          wrap.appendChild(rowField(fieldLabel(f), addBtn, f, null));
+          return;
+        }
+        obj[k] = schemaDefaultValue(f.type, f);
+      }
+
+      const value = obj[k];
+
+      // special cases (animations/action/position)
+      if (endsWithPath(nextPath, ['visual_settings', 'animation_style'])) {
+        wrap.appendChild(rowField(fieldLabel(f), renderAnimationStyleSelect(obj, false), f, f.optional ? () => { delete obj[k]; renderForm(); sendLiveDebounced(); } : null));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'hover_animation_style'])) {
+        wrap.appendChild(rowField(fieldLabel(f), renderAnimationStyleSelect(obj, true), f, f.optional ? () => { delete obj[k]; renderForm(); sendLiveDebounced(); } : null));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'animation_params'])) {
+        wrap.appendChild(renderAnimParamsBox(obj, false, f.optional, f.optional ? () => { delete obj[k]; renderForm(); sendLiveDebounced(); } : null));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'hover_animation_params'])) {
+        wrap.appendChild(renderAnimParamsBox(obj, true, f.optional, f.optional ? () => { delete obj[k]; renderForm(); sendLiveDebounced(); } : null));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'position'])) {
+        wrap.appendChild(rowField(fieldLabel(f), buildPositionControl(obj, k), f, f.optional ? () => { delete obj[k]; renderForm(); sendLiveDebounced(); } : null));
+        return;
+      }
+      if (f.type && f.type.kind === 'action') {
+        wrap.appendChild(renderActionEditor(obj, k));
+        return;
+      }
+
+      wrap.appendChild(renderSchemaField(obj, f, value, nextPath, depth));
+    });
+
+    // extra fields (not in schema)
+    Object.keys(obj || {}).forEach(k => {
+      if (fields.some(f => f && f.name === k)) return;
+      const v = obj[k];
+      const nextPath = (path || []).concat([k]);
+      wrap.appendChild(renderAutoField(obj, k, v, nextPath, depth));
+    });
+
+    return wrap;
+  }
+
+  function renderSchemaField(parent, fieldSchema, value, path, depth) {
+    const k = fieldSchema.name;
+    const type = fieldSchema.type || {};
+    const kind = type.kind || 'unknown';
+
+    const removeFn = fieldSchema.optional ? () => { delete parent[k]; renderForm(); sendLiveDebounced(); } : null;
+
+    if (kind === 'object') {
+      const details = el('details', 'glass rounded-2xl p-3 bg-black/20 border border-white/10');
+      details.open = depth < 1;
+      const summary = el('summary', 'cursor-pointer text-xs font-semibold text-white/70 select-none flex items-center justify-between');
+      summary.appendChild(el('span', '', fieldLabel(fieldSchema) || k));
+      if (removeFn) {
+        const rm = el('button', 'text-[11px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 transition', t('remove'));
+        rm.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          removeFn();
+        });
+        summary.appendChild(rm);
+      }
+      details.appendChild(summary);
+
+      const inner = el('div', 'mt-3 space-y-3');
+      const desc = fieldDesc(fieldSchema);
+      if (desc) inner.appendChild(el('div', 'text-[11px] text-white/25', desc));
+      inner.appendChild(renderSchemaObject(parent[k], type, path, depth + 1));
+
+      const openRaw = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('open_json_inspector'));
+      openRaw.addEventListener('click', () => {
+        animEditor.classList.add('translate-x-[120%]');
+        jsonInspector.classList.remove('translate-x-[120%]');
+        refreshJsonArea(true);
+      });
+      inner.appendChild(openRaw);
+
+      details.appendChild(inner);
+      return details;
+    }
+
+    if (kind === 'array') {
+      return rowField(fieldLabel(fieldSchema), renderSchemaArray(parent, k, value, type, path, depth + 1), fieldSchema, removeFn);
+    }
+
+    if (kind === 'enum') {
+      return rowField(fieldLabel(fieldSchema), renderEnumSelect(value, type.options || [], nv => { parent[k] = nv; sendLiveDebounced(); }), fieldSchema, removeFn);
+    }
+
+    if (kind === 'either') {
+      return rowField(fieldLabel(fieldSchema), renderEither(parent, k, value, type, path), fieldSchema, removeFn);
+    }
+
+    if (kind === 'fixed_int_array2') {
+      return rowField(fieldLabel(fieldSchema), renderFixedIntArray2(parent, k, value), fieldSchema, removeFn);
+    }
+
+    if (kind === 'map_dynamic') {
+      return rowField(fieldLabel(fieldSchema), inputJson(value, v => { parent[k] = v || {}; sendLiveDebounced(); }, 8), fieldSchema, removeFn);
+    }
+
+    if (kind === 'component') {
+      return rowField(fieldLabel(fieldSchema), renderComponentEditor(parent, k, value), fieldSchema, removeFn);
+    }
+
+    // primitives + fallback
+    if (kind === 'number') {
+      return rowField(fieldLabel(fieldSchema), inputNumber(value, v => { parent[k] = v; sendLiveDebounced(); }), fieldSchema, removeFn);
+    }
+    if (kind === 'boolean') {
+      return rowField(fieldLabel(fieldSchema), inputBool(value, v => { parent[k] = !!v; sendLiveDebounced(); }), fieldSchema, removeFn);
+    }
+
+    // string/resource_location/unknown
+    return rowField(fieldLabel(fieldSchema), inputText(value ?? '', v => { parent[k] = v; sendLiveDebounced(); }), fieldSchema, removeFn);
+  }
+
+  function renderSchemaArray(parent, key, arr, typeSchema, path, depth) {
+    const wrap = el('div', 'space-y-2');
+    if (!Array.isArray(arr)) {
+      parent[key] = [];
+      arr = parent[key];
+    }
+
+    arr.forEach((item, idx) => {
+      const card = el('div', 'p-3 rounded-2xl bg-black/20 border border-white/10 space-y-2');
+      const head = el('div', 'flex items-center justify-between');
+      head.appendChild(el('div', 'text-[11px] text-white/50', `#${idx}`));
+      const del = el('button', 'text-xs bg-rose-600/30 hover:bg-rose-600/50 px-3 py-1.5 rounded-lg transition', t('delete'));
+      del.addEventListener('click', () => {
+        arr.splice(idx, 1);
+        renderForm();
+        sendLiveDebounced();
+      });
+      head.appendChild(del);
+      card.appendChild(head);
+
+      const itemSchema = typeSchema.item;
+      const itemPath = (path || []).concat([idx]);
+
+      if (itemSchema && itemSchema.kind === 'object') {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+          arr[idx] = schemaDefaultValue(itemSchema, null);
+        }
+        card.appendChild(renderSchemaObject(arr[idx], itemSchema, itemPath, depth + 1));
+      } else if (itemSchema && itemSchema.kind === 'either') {
+        card.appendChild(renderEither({ tmp: arr }, idx, item, itemSchema, itemPath));
+      } else {
+        // fallback to auto inference
+        if (Array.isArray(item)) {
+          card.appendChild(renderAutoArray({ tmp: item }, 'tmp', item, itemPath, depth + 1));
+        } else if (item && typeof item === 'object') {
+          card.appendChild(renderAutoObject(item, itemPath, depth + 1));
+          card.appendChild(row(t('raw_json'), inputJson(item, v => { arr[idx] = v; sendLiveDebounced(); }, 8)));
+        } else if (typeof item === 'number') {
+          card.appendChild(row('value', inputNumber(item, v => { arr[idx] = v; sendLiveDebounced(); })));
+        } else if (typeof item === 'boolean') {
+          card.appendChild(row('value', inputBool(item, v => { arr[idx] = !!v; sendLiveDebounced(); })));
+        } else {
+          card.appendChild(row('value', inputText(item ?? '', v => { arr[idx] = v; sendLiveDebounced(); })));
+        }
+      }
+
+      wrap.appendChild(card);
+    });
+
+    const addBtn = el('button', 'text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('add_item'));
+    addBtn.addEventListener('click', () => {
+      const itemSchema = typeSchema.item;
+      const item = schemaDefaultValue(itemSchema, null);
+      if (key === 'pages' && item && typeof item === 'object' && item.page_index !== undefined) {
+        item.page_index = arr.length;
+      }
+      arr.push(item);
+      renderForm();
+      sendLiveDebounced();
+    });
+    wrap.appendChild(addBtn);
+    return wrap;
+  }
+
+  function renderFixedIntArray2(parent, key, value) {
+    if (!Array.isArray(value) || value.length < 2) {
+      parent[key] = [0, 0];
+      value = parent[key];
+    }
+    const wrap = el('div', 'grid grid-cols-2 gap-2');
+    wrap.appendChild(inputNumber(value[0] || 0, v => { value[0] = v|0; sendLiveDebounced(); }));
+    wrap.appendChild(inputNumber(value[1] || 0, v => { value[1] = v|0; sendLiveDebounced(); }));
+    return wrap;
+  }
+
+  function renderEither(parent, key, value, typeSchema, path) {
+    const variants = Array.isArray(typeSchema.variants) ? typeSchema.variants : [];
+    const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    variants.forEach((v, idx) => {
+      const o = el('option', '', v.label || String(idx));
+      o.value = String(idx);
+      sel.appendChild(o);
+    });
+
+    const isAbs = Array.isArray(value);
+    sel.value = isAbs ? '1' : '0';
+
+    const body = el('div', 'space-y-2');
+
+    function renderBody() {
+      body.innerHTML = '';
+      const idx = Number(sel.value || 0);
+      const variant = variants[idx] || variants[0];
+      const vt = variant ? variant.type : null;
+      if (idx === 1) {
+        // absolute: fixed [x,y]
+        if (!Array.isArray(parent[key])) parent[key] = [0, 0];
+        body.appendChild(renderFixedIntArray2(parent, key, parent[key]));
+      } else {
+        if (Array.isArray(parent[key])) parent[key] = 'BOTTOM_CENTER';
+        body.appendChild(inputText(parent[key] ?? '', v => { parent[key] = v; sendLiveDebounced(); }));
+      }
+    }
+
+    sel.addEventListener('change', () => {
+      const idx = Number(sel.value || 0);
+      const variant = variants[idx] || variants[0];
+      parent[key] = schemaDefaultValue(variant ? variant.type : null, null);
+      renderBody();
+      sendLiveDebounced();
+    });
+
+    renderBody();
+
+    const wrap = el('div', 'space-y-2');
+    wrap.appendChild(sel);
+    wrap.appendChild(body);
+    return wrap;
+  }
+
+  // -----------------------------
+  // Component editor (basic Style fields)
+  // -----------------------------
+
+  function ensureComponentValue(v) {
+    if (v === null || v === undefined) return { text: '' };
+    if (typeof v === 'string') return { text: v };
+    if (typeof v !== 'object' || Array.isArray(v)) return { text: String(v) };
+    return v;
+  }
+
+  function unsetBtn(onClick) {
+    const b = el('button', 'text-[11px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 transition', t('unset'));
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function stringWithUnset(obj, key, placeholder) {
+    const wrap = el('div', 'flex items-center gap-2');
+    const input = inputText(obj[key] ?? '', v => { obj[key] = v; sendLiveDebounced(); });
+    if (placeholder) input.placeholder = placeholder;
+    wrap.appendChild(input);
+    wrap.appendChild(unsetBtn(() => { delete obj[key]; input.value = ''; sendLiveDebounced(); }));
+    return wrap;
+  }
+
+  function boolWithUnset(obj, key) {
+    const wrap = el('div', 'flex items-center justify-between gap-2');
+    const v = obj[key];
+    const chk = inputBool(!!v, nv => { obj[key] = !!nv; sendLiveDebounced(); });
+    wrap.appendChild(chk);
+    wrap.appendChild(unsetBtn(() => { delete obj[key]; sendLiveDebounced(); }));
+    return wrap;
+  }
+
+  function renderComponentEditor(parent, key, value) {
+    parent[key] = ensureComponentValue(value);
+    const c = parent[key];
+
+    const card = el('div', 'p-3 rounded-2xl bg-black/20 border border-white/10 space-y-3');
+
+    // Content (best-effort)
+    const hasText = Object.prototype.hasOwnProperty.call(c, 'text');
+    const hasTranslate = Object.prototype.hasOwnProperty.call(c, 'translate');
+    const kind = hasTranslate ? 'translate' : (hasText ? 'text' : 'custom');
+    card.appendChild(el('div', 'text-[11px] text-white/40', `${t('component.kind')}: ${kind}`));
+
+    if (hasText || kind === 'custom') {
+      card.appendChild(row(t('component.text'), inputText(c.text ?? '', v => { c.text = v; sendLiveDebounced(); }), t('component.text.desc')));
+    }
+    if (hasTranslate) {
+      card.appendChild(row(t('component.translate'), stringWithUnset(c, 'translate', 'my.translation.key'), t('component.translate.desc')));
+    }
+
+    // Style fields
+    card.appendChild(row(t('style.color'), stringWithUnset(c, 'color', '#RRGGBB / #AARRGGBB / named'), t('style.color.desc')));
+    card.appendChild(row(t('style.bold'), boolWithUnset(c, 'bold'), t('style.bold.desc')));
+    card.appendChild(row(t('style.italic'), boolWithUnset(c, 'italic'), t('style.italic.desc')));
+    card.appendChild(row(t('style.underlined'), boolWithUnset(c, 'underlined'), t('style.underlined.desc')));
+    card.appendChild(row(t('style.strikethrough'), boolWithUnset(c, 'strikethrough'), t('style.strikethrough.desc')));
+    card.appendChild(row(t('style.obfuscated'), boolWithUnset(c, 'obfuscated'), t('style.obfuscated.desc')));
+    card.appendChild(row(t('style.font'), stringWithUnset(c, 'font', 'minecraft:default'), t('style.font.desc')));
+    card.appendChild(row(t('style.insertion'), stringWithUnset(c, 'insertion', ''), t('style.insertion.desc')));
+
+    // Click event (simple)
+    const click = (c.clickEvent && typeof c.clickEvent === 'object') ? c.clickEvent : null;
+    const clickWrap = el('div', 'space-y-2');
+    const clickEnable = el('label', 'flex items-center gap-2 text-xs text-white/80 select-none');
+    const clickChk = el('input', 'accent-blue-500');
+    clickChk.type = 'checkbox';
+    clickChk.checked = !!click;
+    clickEnable.appendChild(clickChk);
+    clickEnable.appendChild(el('span', 'text-white/60', 'clickEvent'));
+    clickWrap.appendChild(clickEnable);
+
+    const clickBody = el('div', 'space-y-2');
+    clickWrap.appendChild(clickBody);
+
+    function renderClickBody() {
+      clickBody.innerHTML = '';
+      if (!clickChk.checked) return;
+      if (!c.clickEvent || typeof c.clickEvent !== 'object') c.clickEvent = { action: 'run_command', value: '/say hi' };
+      const ce = c.clickEvent;
+
+      const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+      ['open_url', 'open_file', 'run_command', 'suggest_command', 'change_page', 'copy_to_clipboard'].forEach(a => {
+        const o = el('option', '', a);
+        o.value = a;
+        sel.appendChild(o);
+      });
+      sel.value = ce.action || 'run_command';
+      sel.addEventListener('change', () => { ce.action = sel.value; sendLiveDebounced(); });
+      clickBody.appendChild(row('action', sel));
+      clickBody.appendChild(row('value', inputText(ce.value ?? '', v => { ce.value = v; sendLiveDebounced(); })));
+
+      clickBody.appendChild(unsetBtn(() => { delete c.clickEvent; clickChk.checked = false; renderClickBody(); sendLiveDebounced(); }));
+    }
+
+    clickChk.addEventListener('change', () => {
+      if (!clickChk.checked) {
+        delete c.clickEvent;
+      }
+      renderClickBody();
+      sendLiveDebounced();
+    });
+    renderClickBody();
+
+    card.appendChild(row(t('style.click_event'), clickWrap, t('style.click_event.desc')));
+
+    // Raw editing is centralized in the JSON inspector.
+    const openRaw = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('component.open_json'));
+    openRaw.addEventListener('click', () => {
+      animEditor.classList.add('translate-x-[120%]');
+      jsonInspector.classList.remove('translate-x-[120%]');
+      refreshJsonArea(true);
+    });
+    card.appendChild(openRaw);
+
+    return card;
+  }
+
+  // -----------------------------
+  // Auto UI (type inference)
+  // -----------------------------
+
+  function renderAuto(rootObj, rootPath) {
+    if (!rootObj || typeof rootObj !== 'object') {
+      formRoot.appendChild(el('div', 'text-white/40 text-sm', t('no_editable')));
+      return;
+    }
+
+    const title = (rootPath && rootPath[0] === 'radial') ? 'RadialMenuData' : 'TipData';
+    const sec = section(title + ' (auto)');
+    sec.appendChild(el('div', 'text-[11px] text-white/25', 'Type inference fallback (no schema).'));
+    sec.appendChild(renderAutoObject(rootObj, rootPath, 0));
+    formRoot.appendChild(sec);
+  }
+
+  function pathNoIndex(path) {
+    return (path || []).filter(p => typeof p === 'string');
+  }
+
+  function endsWithPath(path, tail) {
+    const p = pathNoIndex(path);
+    if (p.length < tail.length) return false;
+    for (let i = 0; i < tail.length; i++) {
+      if (p[p.length - tail.length + i] !== tail[i]) return false;
+    }
+    return true;
+  }
+
+  function renderAutoObject(obj, path, depth) {
+    const wrap = el('div', 'space-y-3');
+    const keys = Object.keys(obj).sort();
+    keys.forEach(k => {
+      const v = obj[k];
+      const nextPath = (path || []).concat([k]);
+
+      // VisualSettings special cases (animation style + params)
+      if (endsWithPath(nextPath, ['visual_settings', 'animation_style'])) {
+        wrap.appendChild(row(k, renderAnimationStyleSelect(obj, false), '下拉菜单读取所有已注册 transition 动画'));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'hover_animation_style'])) {
+        wrap.appendChild(row(k, renderAnimationStyleSelect(obj, true), '下拉菜单读取所有已注册 hover 动画'));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'animation_params'])) {
+        wrap.appendChild(renderAnimParamsBox(obj, false));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'hover_animation_params'])) {
+        wrap.appendChild(renderAnimParamsBox(obj, true));
+        return;
+      }
+      if (endsWithPath(nextPath, ['visual_settings', 'position'])) {
+        wrap.appendChild(renderPositionControl(obj, 'position'));
+        return;
+      }
+
+      // Trigger mode enum
+      if (endsWithPath(nextPath, ['trigger', 'mode'])) {
+        wrap.appendChild(row(k, renderEnumSelect(
+          v ?? 'repeatable',
+          ['once', 'repeatable'],
+          nv => { obj[k] = nv; sendLiveDebounced(); }
+        )));
+        return;
+      }
+
+      // Background type enum
+      if (endsWithPath(nextPath, ['background', 'type'])) {
+        wrap.appendChild(row(k, renderEnumSelect(
+          v ?? 'gradient',
+          ['gradient', 'solid', 'image'],
+          nv => { obj[k] = nv; sendLiveDebounced(); }
+        )));
+        return;
+      }
+
+      // Radial slot action editor
+      if (k === 'action' && v && typeof v === 'object' && endsWithPath(nextPath, ['slots', 'action'])) {
+        wrap.appendChild(renderActionEditor(obj, k));
+        return;
+      }
+
+      wrap.appendChild(renderAutoField(obj, k, v, nextPath, depth));
+    });
+    return wrap;
+  }
+
+  function renderAutoField(parent, key, value, path, depth) {
+    if (Array.isArray(value)) {
+      return row(key, renderAutoArray(parent, key, value, path, depth + 1));
+    }
+    if (value && typeof value === 'object') {
+      // Component JSON or any object: use nested editor, with JSON fallback toggle
+      const details = el('details', 'glass rounded-2xl p-3 bg-black/20 border border-white/10');
+      details.open = depth < 1;
+      const summary = el('summary', 'cursor-pointer text-xs font-semibold text-white/70 select-none');
+      summary.textContent = key;
+      details.appendChild(summary);
+
+      const inner = el('div', 'mt-3 space-y-3');
+      inner.appendChild(renderAutoObject(value, path, depth + 1));
+
+      const openRaw = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('open_json_inspector'));
+      openRaw.addEventListener('click', () => {
+        animEditor.classList.add('translate-x-[120%]');
+        jsonInspector.classList.remove('translate-x-[120%]');
+        refreshJsonArea(true);
+      });
+      inner.appendChild(openRaw);
+      details.appendChild(inner);
+      return details;
+    }
+
+    // primitive inference
+    if (typeof value === 'number') {
+      return row(key, inputNumber(value, v => { parent[key] = v; sendLiveDebounced(); }));
+    }
+    if (typeof value === 'boolean') {
+      return row(key, inputBool(value, v => { parent[key] = !!v; sendLiveDebounced(); }));
+    }
+    // string / null
+    return row(key, inputText(value ?? '', v => {
+      if (v === '' && (value === null || value === undefined)) {
+        parent[key] = '';
+      } else {
+        parent[key] = v;
+      }
+      sendLiveDebounced();
+    }));
+  }
+
+  function renderAutoArray(parent, key, arr, path, depth) {
+    const wrap = el('div', 'space-y-2');
+    if (!Array.isArray(arr)) {
+      parent[key] = [];
+      arr = parent[key];
+    }
+
+    arr.forEach((item, idx) => {
+      const card = el('div', 'p-3 rounded-2xl bg-black/20 border border-white/10 space-y-2');
+      const head = el('div', 'flex items-center justify-between');
+      head.appendChild(el('div', 'text-[11px] text-white/50', `#${idx}`));
+      const del = el('button', 'text-xs bg-rose-600/30 hover:bg-rose-600/50 px-3 py-1.5 rounded-lg transition', t('delete'));
+      del.addEventListener('click', () => {
+        arr.splice(idx, 1);
+        renderForm();
+        sendLiveDebounced();
+      });
+      head.appendChild(del);
+      card.appendChild(head);
+
+      const itemPath = (path || []).concat([idx]);
+      // Render array item:
+      if (Array.isArray(item)) {
+        card.appendChild(renderAutoArray({ tmp: item }, 'tmp', item, itemPath, depth + 1));
+      } else if (item && typeof item === 'object') {
+        card.appendChild(renderAutoObject(item, itemPath, depth + 1));
+      } else if (typeof item === 'number') {
+        card.appendChild(row('value', inputNumber(item, v => { arr[idx] = v; sendLiveDebounced(); })));
+      } else if (typeof item === 'boolean') {
+        card.appendChild(row('value', inputBool(item, v => { arr[idx] = !!v; sendLiveDebounced(); })));
+      } else {
+        card.appendChild(row('value', inputText(item ?? '', v => { arr[idx] = v; sendLiveDebounced(); })));
+      }
+
+      wrap.appendChild(card);
+    });
+
+    const addBtn = el('button', 'text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('add_item'));
+    addBtn.addEventListener('click', () => {
+      arr.push(null);
+      renderForm();
+      sendLiveDebounced();
+    });
+    wrap.appendChild(addBtn);
+    return wrap;
+  }
+
+  function renderEnumSelect(value, options, onChange) {
+    const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    (options || []).forEach(opt => {
+      const labelKey = `enum.${opt}`;
+      const label = t(labelKey);
+      const o = el('option', '', (label && label !== labelKey) ? label : opt);
+      o.value = opt;
+      sel.appendChild(o);
+    });
+    sel.value = value ?? (options && options[0] ? options[0] : '');
+    sel.addEventListener('change', () => onChange(sel.value));
+    return sel;
+  }
+
+  function renderAnimationStyleSelect(visualSettings, hover) {
+    const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    const list = hover ? (initPayload.hoverAnimations || []) : (initPayload.transitionAnimations || []);
+    list.forEach(id => {
+      const o = el('option', '', id);
+      o.value = id;
+      sel.appendChild(o);
+    });
+
+    const key = hover ? 'hover_animation_style' : 'animation_style';
+    sel.value = visualSettings[key] ?? (hover ? 'auratip:none' : 'auratip:fade_and_slide');
+    sel.addEventListener('change', () => {
+      visualSettings[key] = sel.value;
+      rebuildAnimParamsInto(visualSettings, hover);
+      renderForm();
+      sendLiveDebounced();
+    });
+    return sel;
+  }
+
+  function renderActionEditor(slotObj, actionKey) {
+    const card = el('div', 'p-3 rounded-2xl bg-black/20 border border-white/10 space-y-3');
+    card.appendChild(el('div', 'text-xs font-semibold text-white/70', t('radial.slot.action')));
+
+    slotObj[actionKey] = (slotObj[actionKey] && typeof slotObj[actionKey] === 'object') ? slotObj[actionKey] : { type: 'auratip:run_command' };
+    const action = slotObj[actionKey];
+
+    const actSel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    (initPayload.actionTypes || []).forEach(t => {
+      const o = el('option', '', t);
+      o.value = t;
+      actSel.appendChild(o);
+    });
+    actSel.value = action.type || 'auratip:run_command';
+    actSel.addEventListener('change', () => {
+      const nextType = actSel.value;
+      const defs = actionDefs(nextType);
+      const next = { type: nextType };
+      if (Array.isArray(defs)) {
+        defs.forEach(d => { if (d && d.name) next[d.name] = (d.default !== undefined) ? d.default : ''; });
+      }
+      slotObj[actionKey] = next;
+      renderForm();
+      sendLiveDebounced();
+    });
+    card.appendChild(row('type', actSel));
+
+    const defs = actionDefs(slotObj[actionKey].type || '');
+    if (Array.isArray(defs)) {
+      defs.forEach(d => {
+        const name = d.name;
+        const kind = d.kind || 'string';
+        const cur = (slotObj[actionKey][name] !== undefined) ? slotObj[actionKey][name] : (d.default !== undefined ? d.default : '');
+        const control = (kind === 'number')
+                ? inputNumber(cur, v => { slotObj[actionKey][name] = v; sendLiveDebounced(); })
+                : inputText(cur, v => { slotObj[actionKey][name] = v; sendLiveDebounced(); });
+        card.appendChild(row(name, control));
+      });
+    } else {
+      const openRaw = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('open_json_inspector'));
+      openRaw.addEventListener('click', () => {
+        animEditor.classList.add('translate-x-[120%]');
+        jsonInspector.classList.remove('translate-x-[120%]');
+        refreshJsonArea(true);
+      });
+      card.appendChild(openRaw);
+    }
+
+    return card;
+  }
+
+  function renderTipForm() {
+    const tip = tipState; if (!tip) return;
+    const trigger = ensureObj(tip, 'trigger', {});
+    const visual = ensureObj(tip, 'visual_settings', {});
+    const behavior = ensureObj(tip, 'behavior', {});
+    const pages = ensureArr(tip, 'pages', []);
+
+    const secTrigger = section('Trigger');
+    secTrigger.appendChild(row('type', inputText(trigger.type ?? 'auratip:editor', v => { trigger.type=v; sendLiveDebounced(); }), 'ResourceLocation string'));
+    const modeSel = el('select','w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    ['once','repeatable'].forEach(m => { const o=el('option','',m); o.value=m; modeSel.appendChild(o); });
+    modeSel.value = trigger.mode ?? 'repeatable';
+    modeSel.addEventListener('change', () => { trigger.mode=modeSel.value; sendLiveDebounced(); });
+    secTrigger.appendChild(row('mode', modeSel));
+    secTrigger.appendChild(row('cooldown', inputNumber(trigger.cooldown ?? 0, v => { trigger.cooldown=Math.max(0, v|0); sendLiveDebounced(); })));
+    formRoot.appendChild(secTrigger);
+
+    const secVisual = section('Visual Settings');
+    const animSel = el('select','w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    (initPayload.transitionAnimations || []).forEach(id => { const o=el('option','',id); o.value=id; animSel.appendChild(o); });
+    animSel.value = visual.animation_style ?? 'auratip:fade_and_slide';
+    animSel.addEventListener('change', () => { visual.animation_style=animSel.value; rebuildAnimParamsInto(visual,false); renderForm(); sendLiveDebounced(); });
+    secVisual.appendChild(row('animation_style', animSel));
+    secVisual.appendChild(row('animation_speed', inputNumber(visual.animation_speed ?? 1.0, v => { visual.animation_speed=v; sendLiveDebounced(); })));
+    secVisual.appendChild(renderAnimParamsBox(visual,false));
+
+    const hoverSel = el('select','w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    (initPayload.hoverAnimations || []).forEach(id => { const o=el('option','',id); o.value=id; hoverSel.appendChild(o); });
+    hoverSel.value = visual.hover_animation_style ?? 'auratip:none';
+    hoverSel.addEventListener('change', () => { visual.hover_animation_style=hoverSel.value; rebuildAnimParamsInto(visual,true); renderForm(); sendLiveDebounced(); });
+    secVisual.appendChild(row('hover_animation_style', hoverSel));
+    secVisual.appendChild(row('hover_animation_speed', inputNumber(visual.hover_animation_speed ?? 1.0, v => { visual.hover_animation_speed=v; sendLiveDebounced(); })));
+    secVisual.appendChild(row('hover_only_on_hover', inputBool(visual.hover_only_on_hover ?? false, v => { visual.hover_only_on_hover=!!v; sendLiveDebounced(); })));
+    secVisual.appendChild(renderAnimParamsBox(visual,true));
+
+    secVisual.appendChild(row('width', inputNumber(visual.width ?? 280, v => { visual.width=v|0; sendLiveDebounced(); })));
+    secVisual.appendChild(row('height', inputNumber(visual.height ?? 180, v => { visual.height=v|0; sendLiveDebounced(); })));
+    secVisual.appendChild(renderPositionControl(visual,'position'));
+
+    const bg = ensureObj(visual,'background',{});
+    const bgTypeSel = el('select','w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    ['gradient','solid','image'].forEach(t => { const o=el('option','',t); o.value=t; bgTypeSel.appendChild(o); });
+    bgTypeSel.value = bg.type ?? 'gradient';
+    bgTypeSel.addEventListener('change', () => { bg.type=bgTypeSel.value; sendLiveDebounced(); });
+    secVisual.appendChild(row('background.type', bgTypeSel));
+    secVisual.appendChild(row('background.colors', inputJson(bg.colors ?? ['#FFE0F7FF','#FFB3E5FC'], v => { bg.colors=v; sendLiveDebounced(); }, 4), '颜色数组'));
+    secVisual.appendChild(row('background.border_radius', inputNumber(bg.border_radius ?? 8, v => { bg.border_radius=v|0; sendLiveDebounced(); })));
+    secVisual.appendChild(row('background.rounded', inputBool(bg.rounded ?? true, v => { bg.rounded=!!v; sendLiveDebounced(); })));
+    secVisual.appendChild(row('background.image_path', inputText(bg.image_path ?? '', v => { if(!v) delete bg.image_path; else bg.image_path=v; sendLiveDebounced(); })));
+    formRoot.appendChild(secVisual);
+
+    const secBehavior = section('Behavior');
+    secBehavior.appendChild(row('default_duration', inputNumber(behavior.default_duration ?? -1, v => { behavior.default_duration=v|0; sendLiveDebounced(); }), '-1=永久'));
+    secBehavior.appendChild(row('pause_timer_on_hover', inputBool(behavior.pause_timer_on_hover ?? true, v => { behavior.pause_timer_on_hover=!!v; sendLiveDebounced(); })));
+    secBehavior.appendChild(row('closable_by_key', inputText(behavior.closable_by_key ?? '', v => { if(!v) delete behavior.closable_by_key; else behavior.closable_by_key=v; sendLiveDebounced(); }), 'key.keyboard.delete'));
+    secBehavior.appendChild(row('allow_paging', inputBool(behavior.allow_paging ?? true, v => { behavior.allow_paging=!!v; sendLiveDebounced(); })));
+    formRoot.appendChild(secBehavior);
+
+    const secPage = section('Page 0');
+    let page0 = pages.find(p => p.page_index === 0);
+    if (!page0) { page0 = { page_index: 0 }; pages.push(page0); }
+    const titleEl = ensureObj(page0,'title',{ text:{ text:'AuraTip Editor Preview' }, scale:0.85, line_spacing:0 });
+    const contentEl = ensureObj(page0,'content',{ text:{ text:'Edit in browser, preview renders in-game.' }, scale:0.70, line_spacing:1 });
+    secPage.appendChild(row('title.text (plain)', inputText((titleEl.text && titleEl.text.text) ? titleEl.text.text : '', v => { titleEl.text={ text:v }; sendLiveDebounced(); })));
+    const contentArea = el('textarea','w-full h-20 text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    contentArea.value = (contentEl.text && contentEl.text.text) ? contentEl.text.text : '';
+    contentArea.addEventListener('input', () => { contentEl.text={ text: contentArea.value }; sendLiveDebounced(); });
+    secPage.appendChild(row('content.text (plain)', contentArea));
+    secPage.appendChild(row('title.text (json)', inputJson(titleEl.text ?? {text:''}, v => { titleEl.text=v; sendLiveDebounced(); }, 6)));
+    secPage.appendChild(row('content.text (json)', inputJson(contentEl.text ?? {text:''}, v => { contentEl.text=v; sendLiveDebounced(); }, 8)));
+    secPage.appendChild(row('title.scale', inputNumber(titleEl.scale ?? 0.85, v => { titleEl.scale=v; sendLiveDebounced(); })));
+    secPage.appendChild(row('content.scale', inputNumber(contentEl.scale ?? 0.70, v => { contentEl.scale=v; sendLiveDebounced(); })));
+    formRoot.appendChild(secPage);
+  }
+
+  function renderRadialForm() {
+    const menu = radialState; if (!menu) return;
+    const settings = ensureObj(menu,'menu_settings',{});
+    const slots = ensureArr(menu,'slots',[]);
+
+    const secMenu = section('Menu');
+    secMenu.appendChild(row('id', inputText(menu.id ?? 'auratip:editor_preview_menu', v => { menu.id=v; sendLiveDebounced(); })));
+    secMenu.appendChild(row('inner_radius', inputNumber(settings.inner_radius ?? 55, v => { settings.inner_radius=v|0; sendLiveDebounced(); })));
+    secMenu.appendChild(row('outer_radius', inputNumber(settings.outer_radius ?? 100, v => { settings.outer_radius=v|0; sendLiveDebounced(); })));
+    secMenu.appendChild(row('animation_speed', inputNumber(settings.animation_speed ?? 1.0, v => { settings.animation_speed=v; sendLiveDebounced(); })));
+    secMenu.appendChild(row('center_icon', inputText(settings.center_icon ?? '', v => { if(!v) delete settings.center_icon; else settings.center_icon=v; sendLiveDebounced(); }), 'ResourceLocation'));
+    secMenu.appendChild(row('ring_color', inputText(settings.ring_color ?? '', v => { if(!v) delete settings.ring_color; else settings.ring_color=v; sendLiveDebounced(); }), 'ARGB'));
+    secMenu.appendChild(row('ring_colors', inputJson(settings.ring_colors ?? null, v => { if(v===null) delete settings.ring_colors; else settings.ring_colors=v; sendLiveDebounced(); }, 4), '可选渐变数组'));
+    formRoot.appendChild(secMenu);
+
+    const secSlots = section('Slots');
+    const addBtn = el('button','text-xs bg-purple-600/30 hover:bg-purple-600/50 px-4 py-2 rounded-xl transition', t('add_item'));
+    addBtn.addEventListener('click', () => {
+      slots.push({ name:'NewSlot', icon:'minecraft:textures/item/paper.png', action:{ type:'auratip:run_command', command:'/say hello' }, text:{ text:'NewSlot' }, highlight_color:'#77FFFFFF' });
+      renderForm(); sendLiveDebounced();
+    });
+    secSlots.appendChild(addBtn);
+
+    slots.forEach((slot, idx) => {
+      const card = el('div','mt-3 p-3 rounded-2xl bg-black/20 border border-white/10 space-y-3');
+      const head = el('div','flex items-center justify-between');
+      head.appendChild(el('div','text-xs font-semibold text-white/70', `#${idx} ${slot.name || ''}`));
+      const del = el('button','text-xs bg-rose-600/30 hover:bg-rose-600/50 px-3 py-1.5 rounded-lg transition', t('delete'));
+      del.addEventListener('click', () => { slots.splice(idx,1); renderForm(); sendLiveDebounced(); });
+      head.appendChild(del);
+      card.appendChild(head);
+
+      card.appendChild(row('name', inputText(slot.name ?? '', v => { slot.name=v; renderForm(); sendLiveDebounced(); })));
+      card.appendChild(row('icon', inputText(slot.icon ?? '', v => { slot.icon=v; sendLiveDebounced(); }), 'ResourceLocation'));
+      card.appendChild(row('highlight_color', inputText(slot.highlight_color ?? '', v => { if(!v) delete slot.highlight_color; else slot.highlight_color=v; sendLiveDebounced(); }), 'ARGB'));
+
+      slot.text = (slot.text && typeof slot.text === 'object') ? slot.text : { text:'' };
+      card.appendChild(row('text (plain)', inputText(slot.text.text ?? '', v => { slot.text={ text:v }; sendLiveDebounced(); })));
+      card.appendChild(row('text (json)', inputJson(slot.text, v => { slot.text=v; sendLiveDebounced(); }, 6)));
+
+      slot.action = (slot.action && typeof slot.action === 'object') ? slot.action : { type:'auratip:run_command' };
+      const actSel = el('select','w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+      (initPayload.actionTypes || []).forEach(t => { const o=el('option','',t); o.value=t; actSel.appendChild(o); });
+      actSel.value = slot.action.type || 'auratip:run_command';
+      actSel.addEventListener('change', () => {
+        const nextType = actSel.value;
+        const defs = actionDefs(nextType);
+        const next = { type: nextType };
+        if (Array.isArray(defs)) defs.forEach(d => { if(d && d.name) next[d.name] = (d.default !== undefined) ? d.default : ''; });
+        slot.action = next;
+        renderForm(); sendLiveDebounced();
+      });
+      card.appendChild(row('action.type', actSel));
+
+      const defs = actionDefs(slot.action.type || '');
+      if (Array.isArray(defs)) {
+        defs.forEach(d => {
+          const name=d.name, kind=d.kind||'string';
+          const cur = (slot.action[name] !== undefined) ? slot.action[name] : (d.default !== undefined ? d.default : '');
+          const control = (kind === 'number') ? inputNumber(cur, v => { slot.action[name]=v; sendLiveDebounced(); }) : inputText(cur, v => { slot.action[name]=v; sendLiveDebounced(); });
+          card.appendChild(row(`action.${name}`, control));
+        });
+      } else {
+        const raw = { ...slot.action }; delete raw.type;
+        card.appendChild(row('action.params (raw)', inputJson(raw, v => { slot.action = { type: slot.action.type, ...(v||{}) }; sendLiveDebounced(); }, 8), '无 schema：JSON map'));
+      }
+      secSlots.appendChild(card);
+    });
+
+    formRoot.appendChild(secSlots);
+  }
+
+  function buildPositionControl(parent, key) {
+    const wrap = el('div','space-y-2');
+    const sel = el('select','w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    const presets = ['TOP_LEFT','TOP_CENTER','TOP_RIGHT','LEFT_CENTER','CENTER','RIGHT_CENTER','BOTTOM_LEFT','BOTTOM_CENTER','BOTTOM_RIGHT'];
+    presets.forEach(p => { const o=el('option','',p); o.value=p; sel.appendChild(o); });
+    const oAbs = el('option','', 'ABSOLUTE (x,y)'); oAbs.value='__ABS__'; sel.appendChild(oAbs);
+
+    const v = parent[key];
+    const isAbs = Array.isArray(v);
+    sel.value = isAbs ? '__ABS__' : (v || 'CENTER');
+
+    const rowXY = el('div','grid grid-cols-12 gap-2');
+    const inX = el('input','col-span-6 w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    const inY = el('input','col-span-6 w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    inX.type='number'; inY.type='number';
+    const xy = isAbs ? v : [0,0];
+    inX.value = xy[0] ?? 0; inY.value = xy[1] ?? 0;
+    rowXY.appendChild(inX); rowXY.appendChild(inY);
+    function apply(){ rowXY.style.display = (sel.value === '__ABS__') ? 'grid' : 'none'; }
+    apply();
+
+    sel.addEventListener('change', () => { parent[key] = (sel.value === '__ABS__') ? [Number(inX.value||0), Number(inY.value||0)] : sel.value; apply(); sendLiveDebounced(); });
+    inX.addEventListener('input', () => { if(sel.value!=='__ABS__') return; parent[key]=[Number(inX.value||0), Number(inY.value||0)]; sendLiveDebounced(); });
+    inY.addEventListener('input', () => { if(sel.value!=='__ABS__') return; parent[key]=[Number(inX.value||0), Number(inY.value||0)]; sendLiveDebounced(); });
+    wrap.appendChild(sel); wrap.appendChild(rowXY);
+    return wrap;
+  }
+
+  function renderPositionControl(parent, key) {
+    return row(key, buildPositionControl(parent, key), t('pos_help'));
+  }
+
+  function rebuildAnimParamsInto(visual, hover) {
+    const styleKey = hover ? 'hover_animation_style' : 'animation_style';
+    const paramsKey = hover ? 'hover_animation_params' : 'animation_params';
+    const styleId = visual[styleKey] || '';
+    const defs = hover ? hoverParamDefs(styleId) : transitionParamDefs(styleId);
+    if (!defs || !defs.length) return;
+    const out = {};
+    defs.forEach(d => { if(d && d.name) out[d.name] = (d.default !== undefined) ? d.default : (d.kind === 'boolean' ? false : ''); });
+    visual[paramsKey] = out;
+  }
+
+  function renderAnimParamsBox(visual, hover, canRemove=false, onRemove=null) {
+    const paramsKey = hover ? 'hover_animation_params' : 'animation_params';
+    const styleKey = hover ? 'hover_animation_style' : 'animation_style';
+    const styleId = visual[styleKey] || '';
+    const defs = hover ? hoverParamDefs(styleId) : transitionParamDefs(styleId);
+    if (!visual[paramsKey] || typeof visual[paramsKey] !== 'object') visual[paramsKey] = {};
+    const params = visual[paramsKey];
+
+    const box = el('div','p-3 rounded-2xl bg-black/20 border border-white/10 space-y-3');
+    const head = el('div', 'flex items-center justify-between');
+    head.appendChild(el('div','text-xs font-semibold text-white/70', paramsKey));
+    if (canRemove && typeof onRemove === 'function') {
+      const rm = el('button', 'text-[11px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/50 transition', t('remove'));
+      rm.addEventListener('click', onRemove);
+      head.appendChild(rm);
+    }
+    box.appendChild(head);
+    if (defs && defs.length) {
+      defs.forEach(d => {
+        const name=d.name, kind=d.kind||'string';
+        const cur = (params[name] !== undefined) ? params[name] : (d.default !== undefined ? d.default : '');
+        let control;
+        if (kind === 'number') control = inputNumber(cur, v => { params[name]=v; sendLiveDebounced(); });
+        else if (kind === 'boolean') control = inputBool(cur, v => { params[name]=!!v; sendLiveDebounced(); });
+        else control = inputText(cur, v => { params[name]=v; sendLiveDebounced(); });
+        box.appendChild(row(name, control));
+      });
+      return box;
+    }
+    const openRaw = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('open_json_inspector'));
+    openRaw.addEventListener('click', () => {
+      animEditor.classList.add('translate-x-[120%]');
+      jsonInspector.classList.remove('translate-x-[120%]');
+      refreshJsonArea(true);
+    });
+    box.appendChild(openRaw);
+    return box;
+  }
+
+  function connectWs() {
+    setConn('wait', t('connecting'));
+    const url = getWsUrl();
+    ws = new WebSocket(url);
+
+    ws.addEventListener('open', () => {
+      setConn('ok', t('connected'));
+      send({ type:'ping' });
+    });
+
+    ws.addEventListener('close', () => {
+      setConn('bad', t('disconnected'));
+      setTimeout(connectWs, 800);
+    });
+
+    ws.addEventListener('message', (ev) => {
+      const msg = safeJsonParse(ev.data);
+      if (!msg) return;
+      if (msg.type === 'init') {
+        initPayload = msg.payload || {};
+        tipState = initPayload.defaultTip || null;
+        radialState = initPayload.defaultRadialMenu || null;
+        if (!animJs.value) {
+          animJs.value =
+`({
+  // Option A: return an animation object directly.
+  // Option B: implement create(params) to build the animation object from params.
+  // params is a plain JS object (keys -> primitive values).
+  create(params) {
+    // params is a java.util.Map<String, Dynamic<?>>
+    const d = params ? params.get('offset') : null;
+    const offset = d ? d.asDouble(32) : 32;
+    return {
+      easedProgress(now, start, closing, openMs, closeMs) {
+        const dur = closing ? closeMs : openMs;
+        const t = dur <= 0 ? 1 : Math.min(1, Math.max(0, (now - start) / dur));
+        // smoothstep
+        const s = t * t * (3 - 2 * t);
+        return closing ? (1 - s) : s;
+      },
+      offsetX(eased, w, h) { return 0; },
+      offsetY(eased, w, h) { return Math.floor((1 - eased) * offset); }
+    };
+  }
+})`;
+        }
+        if (!animId.value) {
+          animId.value = 'kubejs:editor_animation';
+        }
+        if (!animDefaults.value) {
+          animDefaults.value = JSON.stringify({ offset: 32 }, null, 2);
+        }
+        if (!animTestParams.value) {
+          animTestParams.value = JSON.stringify({ offset: 32 }, null, 2);
+        }
+        renderForm();
+      }
+      if (msg.type === 'animation_test_result') {
+        if (msg.ok) animStatus.textContent = 'OK: ' + (msg.id || '');
+        else animStatus.textContent = 'ERROR: ' + (msg.error || 'unknown');
+      }
+    });
+  }
+
+  connectWs();
+</script>
+
+</body>
+</html>

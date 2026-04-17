@@ -7,7 +7,10 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 
 /**
  * Registry for custom radial-menu action handlers.
@@ -20,6 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ActionHandlers {
 
     private static final Map<ResourceLocation, Handler> HANDLERS = new ConcurrentHashMap<>();
+
+    /**
+     * Optional parameter schema metadata for tooling (e.g. the visual editor).
+     * <p>
+     * This does not affect runtime behavior; it is only used to render nicer UIs.
+     */
+    private static final Map<ResourceLocation, Map<String, CapturedParam>> PARAM_SCHEMA = new ConcurrentHashMap<>();
 
     private ActionHandlers() {
     }
@@ -45,6 +55,7 @@ public final class ActionHandlers {
             return;
         }
         HANDLERS.remove(type);
+        PARAM_SCHEMA.remove(type);
     }
 
     /**
@@ -52,6 +63,35 @@ public final class ActionHandlers {
      */
     public static void clearAll() {
         HANDLERS.clear();
+        PARAM_SCHEMA.clear();
+    }
+
+    /**
+     * Returns all registered handler types.
+     */
+    public static Set<ResourceLocation> listTypes() {
+        return Set.copyOf(HANDLERS.keySet());
+    }
+
+    /**
+     * Declares a parameter schema for the given action type (tooling-only).
+     */
+    public static void declareParamsInternal(ResourceLocation type, Map<String, CapturedParam> params) {
+        if (type == null || params == null || params.isEmpty()) {
+            return;
+        }
+        PARAM_SCHEMA.put(type, Map.copyOf(params));
+    }
+
+    /**
+     * Returns the declared parameter schema for a type, or an empty map if none is declared.
+     */
+    public static Map<String, CapturedParam> getDeclaredParams(ResourceLocation type) {
+        if (type == null) {
+            return Map.of();
+        }
+        Map<String, CapturedParam> schema = PARAM_SCHEMA.get(type);
+        return schema == null ? Map.of() : schema;
     }
 
     /**
