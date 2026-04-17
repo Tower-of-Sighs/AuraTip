@@ -72,17 +72,33 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
                 String next = root.has("mode") ? root.get("mode").getAsString() : "tip";
                 mode = next == null ? "tip" : next;
                 if ("radial".equalsIgnoreCase(mode)) {
+                    // Switching editors: close the other preview so only one is visible.
+                    EditorPreviewApplier.closePreview();
                     if (lastRadialJson != null) {
                         EditorRadialPreviewApplier.applyMenuJson(lastRadialJson);
                     } else {
                         EditorRadialPreviewApplier.applyDefaultPreview();
                     }
                 } else {
+                    // Switching editors: close the other preview so only one is visible.
+                    EditorRadialPreviewApplier.closePreview();
                     if (lastTipJson != null) {
                         EditorPreviewApplier.applyTipJson(lastTipJson);
                     } else {
                         EditorPreviewApplier.applyDefaultPreview();
                     }
+                }
+            }
+            case "close_preview" -> {
+                String which = root.has("mode") ? root.get("mode").getAsString() : "";
+                if ("radial".equalsIgnoreCase(which)) {
+                    EditorRadialPreviewApplier.closePreview();
+                } else if ("tip".equalsIgnoreCase(which)) {
+                    EditorPreviewApplier.closePreview();
+                } else {
+                    // Unknown / not provided: close both previews.
+                    EditorPreviewApplier.closePreview();
+                    EditorRadialPreviewApplier.closePreview();
                 }
             }
             case "tip_update" -> {
@@ -102,6 +118,34 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
                         EditorRadialPreviewApplier.applyMenuJson(menu);
                     }
                 }
+            }
+            case "animation_apply" -> {
+                String kind = root.has("kind") ? root.get("kind").getAsString() : "transition";
+                String idRaw = root.has("id") ? root.get("id").getAsString() : "";
+                JsonElement params = root.has("params") ? root.get("params") : JsonNull.INSTANCE;
+
+                JsonObject result = new JsonObject();
+                result.addProperty("type", "animation_apply_result");
+
+                try {
+                    ResourceLocation id = normalizeIdOrTemp(kind, idRaw);
+                    JsonElement base = lastTipJson != null ? lastTipJson : EditorPreviewCodec.encodeTip(EditorPreviewApplier.defaultTip());
+
+                    if ("hover".equalsIgnoreCase(kind)) {
+                        applyStyleOverrideToPreview(base, "hover_animation_style", id.toString(), "hover_animation_params", params);
+                    } else {
+                        applyStyleOverrideToPreview(base, "animation_style", id.toString(), "animation_params", params);
+                    }
+
+                    result.addProperty("ok", true);
+                    result.addProperty("id", id.toString());
+                } catch (Throwable t) {
+                    AuraTip.LOGGER.warn("Editor animation_apply failed", t);
+                    result.addProperty("ok", false);
+                    result.addProperty("error", String.valueOf(t.getMessage()));
+                }
+
+                send(ctx, result);
             }
             case "animation_test" -> {
                 String kind = root.has("kind") ? root.get("kind").getAsString() : "transition";

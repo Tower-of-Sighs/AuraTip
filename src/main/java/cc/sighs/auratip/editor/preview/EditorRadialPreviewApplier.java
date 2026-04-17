@@ -49,6 +49,10 @@ public final class EditorRadialPreviewApplier {
         });
     }
 
+    public static void closePreview() {
+        Minecraft.getInstance().execute(() -> RadialMenuOverlay.INSTANCE.close());
+    }
+
     public static void applyMenuJson(JsonElement menuJson) {
         if (menuJson == null) {
             return;

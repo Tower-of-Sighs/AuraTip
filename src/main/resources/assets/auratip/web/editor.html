@@ -93,15 +93,14 @@
   <div class="p-4 border-b border-white/10 flex items-center justify-between">
     <div>
       <div id="animTitle" class="text-sm font-bold tracking-wide">动画编辑器</div>
-      <div id="animSub" class="text-[11px] text-white/30 mt-1">黑魔法：临时动画注入游戏并立即应用预览</div>
+      <div id="animSub" class="text-[11px] text-white/30 mt-1">Java snippet generator + preview params (no JS runtime)</div>
     </div>
     <div class="flex items-center gap-2">
       <select id="animKind" class="text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none">
         <option value="transition">transition</option>
         <option value="hover">hover</option>
       </select>
-      <button id="btnRunAnim" class="text-xs bg-purple-600/70 hover:bg-purple-600 px-4 py-2 rounded-xl transition">运行测试</button>
-      <button id="btnCopyAnimKjs" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Copy KubeJS</button>
+      <button id="btnRunAnim" class="text-xs bg-purple-600/70 hover:bg-purple-600 px-4 py-2 rounded-xl transition">Apply Preview</button>
       <button id="btnCopyAnimJava" class="text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Copy Java</button>
     </div>
   </div>
@@ -113,7 +112,7 @@
       <div class="space-y-1">
         <div id="animIdLabel" class="text-[11px] text-white/50">id</div>
         <input id="animId" class="w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-purple-500/40" type="text" placeholder="kubejs:my_animation" />
-        <div id="animIdHelp" class="text-[11px] text-white/25">Used for copy/export. Run Test will register/replace this id temporarily.</div>
+        <div id="animIdHelp" class="text-[11px] text-white/25">Used for preview + Java snippet id.</div>
       </div>
 
       <div class="space-y-1">
@@ -125,7 +124,7 @@
       <div class="space-y-1">
         <div id="animTestParamsLabel" class="text-[11px] text-white/50">testParams (apply to preview)</div>
         <textarea id="animTestParams" spellcheck="false" class="code w-full bg-black/20 rounded-2xl p-3 text-xs text-slate-100/80 focus:outline-none leading-relaxed resize-none" style="height: 120px;"></textarea>
-        <div id="animTestParamsHelp" class="text-[11px] text-white/25">When you click Run Test, these params overwrite visual_settings.animation_params for preview.</div>
+        <div id="animTestParamsHelp" class="text-[11px] text-white/25">When you click Apply Preview, these params are applied to the in-game tip preview.</div>
       </div>
 
       <button id="btnUseDefaultsAsTest" class="w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Use defaults as test params</button>
@@ -181,7 +180,6 @@
   const btnLang = document.getElementById('btnLang');
   const btnJson = document.getElementById('btnJson');
   const btnRunAnim = document.getElementById('btnRunAnim');
-  const btnCopyAnimKjs = document.getElementById('btnCopyAnimKjs');
   const btnCopyAnimJava = document.getElementById('btnCopyAnimJava');
   const animKind = document.getElementById('animKind');
   const animJs = document.getElementById('animJs');
@@ -291,7 +289,6 @@
     if (animSub) animSub.textContent = t('anim_sub');
     btnRunAnim.textContent = t('anim_run');
     if (animFooterHelp) animFooterHelp.textContent = t('anim_footer_help');
-    btnCopyAnimKjs.textContent = t('anim_copy_kjs');
     btnCopyAnimJava.textContent = t('anim_copy_java');
     if (animId) animId.placeholder = t('anim_id_placeholder');
     if (btnUseDefaultsAsTest) btnUseDefaultsAsTest.textContent = t('anim_use_defaults');
@@ -459,12 +456,18 @@
   }
 
   function closeEditors() {
+    const prev = mode;
     mode = null;
     mainMenu.classList.remove('hidden');
     leftPanel.classList.add('-translate-x-[120%]');
     animEditor.classList.add('translate-x-[120%]');
     jsonInspector.classList.add('translate-x-[120%]');
     editorTag.classList.add('hidden');
+
+    // Close the in-game preview for the editor we just exited.
+    if (prev) {
+      send({ type: 'close_preview', mode: prev });
+    }
   }
 
   window.openEditor = openEditor;
@@ -482,13 +485,12 @@
   });
   btnSendNow.addEventListener('click', () => sendLiveNow());
   btnRunAnim.addEventListener('click', () => {
-    animStatus.textContent = 'SENDING...';
+    animStatus.textContent = 'APPLYING...';
     const params = safeJsonParse(animTestParams.value || '{}');
     send({
-      type: 'animation_test',
+      type: 'animation_apply',
       kind: animKind.value,
       id: animId.value || '',
-      js: animJs.value || '',
       params: (params && typeof params === 'object') ? params : {}
     });
   });
@@ -505,81 +507,89 @@
     return s;
   }
 
-  function buildAnimKubeJsSnippet() {
-    const kind = animKind.value === 'hover' ? 'hover' : 'transition';
-    const id = normalizeAnimId(animId.value);
-    const defs = safeJsonParse(animDefaults.value || '{}');
-    const defaultsObj = (defs && typeof defs === 'object') ? defs : {};
-    const body = (animJs.value || '').trim() || '({})';
-    const fn = (kind === 'hover') ? 'registerHover' : 'register';
-
-    let out = '';
-    out += `// AuraTip Tip animation (${kind})\\n`;
-    out += `// Put this in: kubejs/client_scripts/*.js\\n\\n`;
-    out += `TipAnimations.${fn}(${JSON.stringify(id)}, ${JSON.stringify(defaultsObj, null, 2)}, params => ${body})\\n`;
-    return out;
-  }
-
   function buildAnimJavaSnippet() {
     const kind = animKind.value === 'hover' ? 'hover' : 'transition';
     const id = normalizeAnimId(animId.value);
     const defs = safeJsonParse(animDefaults.value || '{}');
     const defaultsObj = (defs && typeof defs === 'object') ? defs : {};
 
-    const getterLines = [];
+    const getters = [];
     Object.keys(defaultsObj).forEach(k => {
       const v = defaultsObj[k];
-      if (typeof v === 'boolean') getterLines.push(`    boolean ${k} = params.getBoolean(${JSON.stringify(k)}, ${v});`);
-      else if (typeof v === 'number') getterLines.push(`    double ${k} = params.getDouble(${JSON.stringify(k)}, ${v});`);
-      else getterLines.push(`    String ${k} = params.getString(${JSON.stringify(k)}, ${JSON.stringify(String(v))});`);
+      if (typeof v === 'boolean') getters.push(`    boolean ${k} = params.getBoolean(${JSON.stringify(k)}, ${v});`);
+      else if (typeof v === 'number') getters.push(`    double ${k} = params.getDouble(${JSON.stringify(k)}, ${v});`);
+      else getters.push(`    String ${k} = params.getString(${JSON.stringify(k)}, ${JSON.stringify(String(v))});`);
     });
 
-    let out = '';
-    out += `// AuraTip Tip animation (${kind}) (Java)\\n`;
-    out += `import cc.sighs.auratip.api.animation.TipAnimations;\\n`;
-    out += `import cc.sighs.auratip.api.animation.${kind === 'hover' ? 'HoverAnimation' : 'TransitionAnimation'};\\n`;
-    out += `import net.minecraft.resources.ResourceLocation;\\n\\n`;
+    const lines = [];
+    const push = (s = '') => lines.push(s);
+
+    push(`// AuraTip Tip animation (${kind}) (Java)`);
+    push('import cc.sighs.auratip.api.animation.TipAnimations;');
+    push(`import cc.sighs.auratip.api.animation.${kind === 'hover' ? 'HoverAnimation' : 'TransitionAnimation'};`);
+    push('import net.minecraft.resources.ResourceLocation;');
+    push('');
 
     if (kind === 'hover') {
-      out += `TipAnimations.registerHover(new ResourceLocation(${JSON.stringify(id)}), params -> {\\n`;
+      push(`TipAnimations.registerHover(new ResourceLocation(${JSON.stringify(id)}), params -> {`);
     } else {
-      out += `TipAnimations.register(new ResourceLocation(${JSON.stringify(id)}), params -> {\\n`;
+      push(`TipAnimations.register(new ResourceLocation(${JSON.stringify(id)}), params -> {`);
     }
-    if (getterLines.length) out += getterLines.join('\\n') + '\\n\\n';
+
+    if (getters.length) {
+      getters.forEach(l => push(l));
+      push('');
+    }
 
     if (kind === 'hover') {
-      out += `    return new HoverAnimation() {\\n`;
-      out += `      @Override public int offsetX(long now, long start, int w, int h, float speed) {\\n`;
-      out += `        return 0;\\n`;
-      out += `      }\\n`;
-      out += `      @Override public int offsetY(long now, long start, int w, int h, float speed) {\\n`;
-      out += `        return 0;\\n`;
-      out += `      }\\n`;
-      out += `    };\\n`;
+      push('  return new HoverAnimation() {');
+      push('    @Override public int offsetX(long now, long start, int w, int h, float speed) {');
+      push('      return 0;');
+      push('    }');
+      push('    @Override public int offsetY(long now, long start, int w, int h, float speed) {');
+      push('      return 0;');
+      push('    }');
+      push('  };');
     } else {
-      out += `    return new TransitionAnimation() {\\n`;
-      out += `      @Override public float easedProgress(long nowMs, long startMs, boolean closing, int openMs, int closeMs) {\\n`;
-      out += `        return 0.0f;\\n`;
-      out += `      }\\n`;
-      out += `      @Override public int offsetX(float eased, int panelWidth, int panelHeight) {\\n`;
-      out += `        return 0;\\n`;
-      out += `      }\\n`;
-      out += `      @Override public int offsetY(float eased, int panelWidth, int panelHeight) {\\n`;
-      out += `        return 0;\\n`;
-      out += `      }\\n`;
-      out += `    };\\n`;
+      push('  return new TransitionAnimation() {');
+      push('    @Override public float easedProgress(long nowMs, long startMs, boolean closing, int openMs, int closeMs) {');
+      push('      return 0.0f;');
+      push('    }');
+      push('    @Override public int offsetX(float eased, int panelWidth, int panelHeight) {');
+      push('      return 0;');
+      push('    }');
+      push('    @Override public int offsetY(float eased, int panelWidth, int panelHeight) {');
+      push('      return 0;');
+      push('    }');
+      push('  };');
     }
-    out += `});\\n`;
-    return out;
+    push('});');
+
+    return lines.join('\n') + '\n';
   }
 
-  btnCopyAnimKjs.addEventListener('click', async () => {
-    const out = buildAnimKubeJsSnippet();
-    try { await navigator.clipboard.writeText(out); } catch {}
+  let animJavaLastGenerated = '';
+  let animJavaDirty = false;
+
+  function refreshAnimJavaSnippet(force) {
+    const next = buildAnimJavaSnippet();
+    if (force || (!animJavaDirty && (!animJs.value || animJs.value === animJavaLastGenerated))) {
+      animJs.value = next;
+      animJavaDirty = false;
+    }
+    animJavaLastGenerated = next;
+  }
+
+  animJs.addEventListener('input', () => {
+    animJavaDirty = (animJs.value !== animJavaLastGenerated);
   });
+  animKind.addEventListener('change', () => refreshAnimJavaSnippet(false));
+  animId.addEventListener('input', () => refreshAnimJavaSnippet(false));
+  animDefaults.addEventListener('input', () => refreshAnimJavaSnippet(false));
 
   btnCopyAnimJava.addEventListener('click', async () => {
-    const out = buildAnimJavaSnippet();
+    refreshAnimJavaSnippet(false);
+    const out = animJs.value || buildAnimJavaSnippet();
     try { await navigator.clipboard.writeText(out); } catch {}
   });
 
@@ -646,15 +656,14 @@
     for (const [k, rawVal] of Object.entries(v)) {
       if (rawVal === undefined || rawVal === null) continue;
 
-      // Drop explicit default false style flags to keep exports minimal.
-      if (k === 'bold' || k === 'italic' || k === 'underlined' || k === 'strikethrough' || k === 'obfuscated') {
-        if (rawVal === true) out[k] = true;
+      // AuraTip editor: filter out vanilla-only fields we don't support in this workflow.
+      if (k === 'insertion' || k === 'clickEvent' || k === 'hoverEvent' || k === 'font') {
         continue;
       }
 
-      if (k === 'insertion') {
-        if (typeof rawVal === 'string' && rawVal.length === 0) continue;
-        out[k] = rawVal;
+      // Drop explicit default false style flags to keep exports minimal.
+      if (k === 'bold' || k === 'italic' || k === 'underlined' || k === 'strikethrough' || k === 'obfuscated') {
+        if (rawVal === true) out[k] = true;
         continue;
       }
 
@@ -675,62 +684,60 @@
   }
 
   function exportKubeJs() {
+    const lines = [];
+    const push = (s = '') => lines.push(s);
+
     function compExpr(componentJson) {
-      if (!componentJson) return 'null';
+      if (componentJson === null || componentJson === undefined) return 'null';
       if (typeof componentJson === 'string') {
         return `TipText.of(${JSON.stringify(componentJson)}).build()`;
       }
       if (isPlainObject(componentJson)) {
         const clean = sanitizeComponentJson(componentJson);
         const keys = Object.keys(clean);
-
         const styleKeys = new Set(['color', 'bold', 'italic', 'underlined', 'strikethrough', 'obfuscated', 'extra']);
 
         if (keys.length === 1 && keys[0] === 'text') {
           return `TipText.of(${JSON.stringify(clean.text || '')}).build()`;
         }
 
-        // Try to emit a TipText builder for simple text / translate components.
-        {
-          const hasUnsupported =
-            keys.some(k => !(k === 'text' || k === 'translate' || k === 'with' || styleKeys.has(k)));
-          const hasText = Object.prototype.hasOwnProperty.call(clean, 'text');
-          const hasTranslate = Object.prototype.hasOwnProperty.call(clean, 'translate');
+        const hasUnsupported = keys.some(k => !(k === 'text' || k === 'translate' || k === 'with' || styleKeys.has(k)));
+        const hasText = Object.prototype.hasOwnProperty.call(clean, 'text');
+        const hasTranslate = Object.prototype.hasOwnProperty.call(clean, 'translate');
 
-          if (!hasUnsupported && (hasText || hasTranslate)) {
-            let expr;
-            if (hasText) {
-              expr = `TipText.of(${JSON.stringify(clean.text || '')})`;
-            } else {
-              const args = Array.isArray(clean.with)
-                ? clean.with.map(a => {
-                  if (a === null || a === undefined) return 'null';
-                  if (typeof a === 'number' || typeof a === 'boolean') return String(a);
-                  if (typeof a === 'string') return JSON.stringify(a);
-                  return compExpr(a);
-                }).join(', ')
-                : '';
-              expr = `TipText.translatable(${JSON.stringify(String(clean.translate || ''))}${args ? ', ' + args : ''})`;
-            }
-
-            if (typeof clean.color === 'string' && clean.color.length > 0) {
-              if (clean.color.startsWith('#')) expr += `.colorHex(${JSON.stringify(clean.color)})`;
-              else expr += `.formatting(${JSON.stringify(clean.color)})`;
-            }
-            if (clean.bold) expr += `.bold()`;
-            if (clean.italic) expr += `.italic()`;
-            if (clean.underlined) expr += `.underlined()`;
-            if (clean.strikethrough) expr += `.strikethrough()`;
-            if (clean.obfuscated) expr += `.obfuscated()`;
-
-            if (Array.isArray(clean.extra)) {
-              for (const part of clean.extra) {
-                expr += `.appendComponent(${compExpr(part)})`;
-              }
-            }
-
-            return `${expr}.build()`;
+        if (!hasUnsupported && (hasText || hasTranslate)) {
+          let expr;
+          if (hasText) {
+            expr = `TipText.of(${JSON.stringify(clean.text || '')})`;
+          } else {
+            const args = Array.isArray(clean.with)
+              ? clean.with.map(a => {
+                if (a === null || a === undefined) return 'null';
+                if (typeof a === 'number' || typeof a === 'boolean') return String(a);
+                if (typeof a === 'string') return JSON.stringify(a);
+                return compExpr(a);
+              }).join(', ')
+              : '';
+            expr = `TipText.translatable(${JSON.stringify(String(clean.translate || ''))}${args ? ', ' + args : ''})`;
           }
+
+          if (typeof clean.color === 'string' && clean.color.length > 0) {
+            if (clean.color.startsWith('#')) expr += `.colorHex(${JSON.stringify(clean.color)})`;
+            else expr += `.formatting(${JSON.stringify(clean.color)})`;
+          }
+          if (clean.bold) expr += `.bold()`;
+          if (clean.italic) expr += `.italic()`;
+          if (clean.underlined) expr += `.underlined()`;
+          if (clean.strikethrough) expr += `.strikethrough()`;
+          if (clean.obfuscated) expr += `.obfuscated()`;
+
+          if (Array.isArray(clean.extra)) {
+            for (const part of clean.extra) {
+              expr += `.appendComponent(${compExpr(part)})`;
+            }
+          }
+
+          return `${expr}.build()`;
         }
 
         const raw = JSON.stringify(clean);
@@ -758,32 +765,33 @@
       const ms = m.menu_settings || {};
       const slots = Array.isArray(m.slots) ? m.slots : [];
 
-      let out = '';
-      out += `// AuraTip Radial Menu (KubeJS)\\n`;
-      out += `// Put this in: kubejs/client_scripts/*.js\\n\\n`;
-      out += `RadialMenuEvents.register(event => {\\n`;
-      out += `  const menu = event.create(${JSON.stringify(String(m.id || 'kubejs:radial_menu'))})\\n`;
-      out += `  menu.radii(${Number(ms.inner_radius ?? 55)}, ${Number(ms.outer_radius ?? 100)})\\n`;
-      out += `  menu.animationSpeed(${Number(ms.animation_speed ?? 1.0)})\\n`;
-      if (ms.center_icon) out += `  menu.centerIcon(${JSON.stringify(ms.center_icon)})\\n`;
-      if (ms.ring_color) out += `  menu.ringColor(${JSON.stringify(ms.ring_color)})\\n`;
-      if (ms.ring_colors) out += `  menu.ringColors(${JSON.stringify(ms.ring_colors)})\\n`;
-      out += `\\n`;
+      push('// AuraTip Radial Menu (KubeJS)');
+      push('// Put this in: kubejs/client_scripts/*.js');
+      push('');
+      push('RadialMenuEvents.register(event => {');
+      push(`  const menu = event.create(${JSON.stringify(String(m.id || 'kubejs:radial_menu'))});`);
+      push('');
+      push(`  menu.radii(${Number(ms.inner_radius ?? 55)}, ${Number(ms.outer_radius ?? 100)});`);
+      push(`  menu.animationSpeed(${Number(ms.animation_speed ?? 1.0)});`);
+      if (ms.ring_color) push(`  menu.ringColor(${JSON.stringify(ms.ring_color)});`);
+      if (ms.ring_colors) push(`  menu.ringColors(${JSON.stringify(ms.ring_colors)});`);
+      push('');
 
       slots.forEach(s => {
         const name = String(s.name || 'Slot');
         const icon = String(s.icon || 'minecraft:textures/item/paper.png');
-        out += `  menu.slot(\\n`;
-        out += `    ${JSON.stringify(name)},\\n`;
-        out += `    ${JSON.stringify(icon)},\\n`;
-        out += `    ${actionExpr(s.action)},\\n`;
-        out += `    ${s.text ? compExpr(s.text) : 'null'},\\n`;
-        out += `    ${s.highlight_color ? JSON.stringify(s.highlight_color) : 'null'}\\n`;
-        out += `  )\\n\\n`;
+        push('  menu.slot(');
+        push(`    ${JSON.stringify(name)},`);
+        push(`    ${JSON.stringify(icon)},`);
+        push(`    ${actionExpr(s.action)},`);
+        push(`    ${s.text ? compExpr(s.text) : 'null'},`);
+        push(`    ${s.highlight_color ? JSON.stringify(s.highlight_color) : 'null'}`);
+        push('  );');
+        push('');
       });
 
-      out += `})\\n`;
-      downloadText('auratip_radial_menu.kubejs.js', out, 'text/javascript;charset=utf-8');
+      push('});');
+      downloadText('auratip_radial_menu.kubejs.js', lines.join('\n') + '\n', 'text/javascript;charset=utf-8');
       return;
     }
 
@@ -793,69 +801,70 @@
     const beh = tData.behavior || {};
     const pages = Array.isArray(tData.pages) ? tData.pages : [];
 
-    let out = '';
-    out += `// AuraTip Tip (KubeJS)\\n`;
-    out += `// Put this in: kubejs/client_scripts/*.js\\n\\n`;
-    out += `TipEvents.register(event => {\\n`;
-    out += `  const tip = event.create(${JSON.stringify(String(tData.id || 'kubejs:tip'))})\\n`;
-    out += `  tip.trigger(${JSON.stringify(String(trig.type || 'auratip:first_join_world'))}, ${JSON.stringify(String(trig.mode || 'once'))}, ${Number(trig.cooldown || 0)})\\n\\n`;
+    push('// AuraTip Tip (KubeJS)');
+    push('// Put this in: kubejs/client_scripts/*.js');
+    push('');
+    push('TipEvents.register(event => {');
+    push(`  const tip = event.create(${JSON.stringify(String(tData.id || 'kubejs:tip'))});`);
+    push(`  tip.trigger(${JSON.stringify(String(trig.type || 'auratip:first_join_world'))}, ${JSON.stringify(String(trig.mode || 'once'))}, ${Number(trig.cooldown || 0)});`);
+    push('');
 
-    out += `  tip.visual(v => {\\n`;
-    if (vs.animation_style) out += `    v.animationStyle(${JSON.stringify(vs.animation_style)})\\n`;
-    if (vs.animation_speed != null) out += `    v.animationSpeed(${Number(vs.animation_speed)})\\n`;
-    if (vs.animation_params && typeof vs.animation_params === 'object') out += `    v.animParams(${JSON.stringify(vs.animation_params)})\\n`;
+    push('  tip.visual(v => {');
+    if (vs.animation_style) push(`    v.animationStyle(${JSON.stringify(vs.animation_style)});`);
+    if (vs.animation_speed != null) push(`    v.animationSpeed(${Number(vs.animation_speed)});`);
+    if (vs.animation_params && typeof vs.animation_params === 'object' && Object.keys(vs.animation_params).length) push(`    v.animParams(${JSON.stringify(vs.animation_params)});`);
+    if (vs.hover_animation_style) push(`    v.hoverAnimationStyle(${JSON.stringify(vs.hover_animation_style)});`);
+    if (vs.hover_animation_speed != null) push(`    v.hoverAnimationSpeed(${Number(vs.hover_animation_speed)});`);
+    if (vs.hover_only_on_hover != null) push(`    v.hoverOnlyOnHover(${!!vs.hover_only_on_hover});`);
+    if (vs.hover_animation_params && typeof vs.hover_animation_params === 'object' && Object.keys(vs.hover_animation_params).length) push(`    v.hoverParams(${JSON.stringify(vs.hover_animation_params)});`);
+    if (vs.stripe_width != null) push(`    v.stripeWidth(${Number(vs.stripe_width) | 0});`);
+    if (vs.stripe_length_factor != null) push(`    v.stripeLengthFactor(${Number(vs.stripe_length_factor)});`);
+    if (vs.theme_color) push(`    v.themeColor(${JSON.stringify(vs.theme_color)});`);
+    if (vs.width != null && vs.height != null) push(`    v.size(${Number(vs.width) | 0}, ${Number(vs.height) | 0});`);
 
-    if (vs.hover_animation_style) out += `    v.hoverAnimationStyle(${JSON.stringify(vs.hover_animation_style)})\\n`;
-    if (vs.hover_animation_speed != null) out += `    v.hoverAnimationSpeed(${Number(vs.hover_animation_speed)})\\n`;
-    if (vs.hover_only_on_hover != null) out += `    v.hoverOnlyOnHover(${!!vs.hover_only_on_hover})\\n`;
-    if (vs.hover_animation_params && typeof vs.hover_animation_params === 'object') out += `    v.hoverParams(${JSON.stringify(vs.hover_animation_params)})\\n`;
-
-    if (vs.stripe_width != null) out += `    v.stripeWidth(${Number(vs.stripe_width) | 0})\\n`;
-    if (vs.stripe_length_factor != null) out += `    v.stripeLengthFactor(${Number(vs.stripe_length_factor)})\\n`;
-    if (vs.theme_color) out += `    v.themeColor(${JSON.stringify(vs.theme_color)})\\n`;
-    if (vs.width != null && vs.height != null) out += `    v.size(${Number(vs.width) | 0}, ${Number(vs.height) | 0})\\n`;
-
-    if (typeof vs.position === 'string') out += `    v.position(${JSON.stringify(vs.position)})\\n`;
-    if (Array.isArray(vs.position)) out += `    v.position(${Number(vs.position[0] || 0)}, ${Number(vs.position[1] || 0)})\\n`;
+    if (typeof vs.position === 'string') push(`    v.position(${JSON.stringify(vs.position)});`);
+    if (Array.isArray(vs.position)) push(`    v.position(${Number(vs.position[0] || 0)}, ${Number(vs.position[1] || 0)});`);
 
     if (vs.animation_from !== undefined) {
-      if (typeof vs.animation_from === 'string') out += `    v.animationFrom(${JSON.stringify(vs.animation_from)})\\n`;
-      if (Array.isArray(vs.animation_from)) out += `    v.animationFrom(${Number(vs.animation_from[0] || 0)}, ${Number(vs.animation_from[1] || 0)})\\n`;
+      if (typeof vs.animation_from === 'string') push(`    v.animationFrom(${JSON.stringify(vs.animation_from)});`);
+      if (Array.isArray(vs.animation_from)) push(`    v.animationFrom(${Number(vs.animation_from[0] || 0)}, ${Number(vs.animation_from[1] || 0)});`);
     }
     if (vs.animation_to !== undefined) {
-      if (typeof vs.animation_to === 'string') out += `    v.animationTo(${JSON.stringify(vs.animation_to)})\\n`;
-      if (Array.isArray(vs.animation_to)) out += `    v.animationTo(${Number(vs.animation_to[0] || 0)}, ${Number(vs.animation_to[1] || 0)})\\n`;
+      if (typeof vs.animation_to === 'string') push(`    v.animationTo(${JSON.stringify(vs.animation_to)});`);
+      if (Array.isArray(vs.animation_to)) push(`    v.animationTo(${Number(vs.animation_to[0] || 0)}, ${Number(vs.animation_to[1] || 0)});`);
     }
 
     if (vs.background && typeof vs.background === 'object') {
       const bg = vs.background;
-      out += `    v.background(${JSON.stringify(String(bg.type || 'gradient'))}, ${JSON.stringify(bg.colors || [])}, ${Number(bg.border_radius || 8) | 0})\\n`;
-      if (bg.rounded != null) out += `    v.backgroundRounded(${!!bg.rounded})\\n`;
-      if (bg.image_path) out += `    v.backgroundImage(${JSON.stringify(bg.image_path)})\\n`;
+      push(`    v.background(${JSON.stringify(String(bg.type || 'gradient'))}, ${JSON.stringify(bg.colors || [])}, ${Number(bg.border_radius || 8) | 0});`);
+      if (bg.rounded != null) push(`    v.backgroundRounded(${!!bg.rounded});`);
+      if (bg.image_path) push(`    v.backgroundImage(${JSON.stringify(bg.image_path)});`);
     }
+    push('  });');
+    push('');
 
-    out += `  })\\n\\n`;
-
-    out += `  tip.behavior(b => {\\n`;
-    if (beh.default_duration != null) out += `    b.duration(${Number(beh.default_duration) | 0})\\n`;
-    if (beh.pause_timer_on_hover != null) out += `    b.pauseOnHover(${!!beh.pause_timer_on_hover})\\n`;
-    if (beh.closable_by_key) out += `    b.closeKey(${JSON.stringify(beh.closable_by_key)})\\n`;
-    if (beh.allow_paging != null) out += `    b.allowPaging(${!!beh.allow_paging})\\n`;
-    out += `  })\\n\\n`;
+    push('  tip.behavior(b => {');
+    if (beh.default_duration != null) push(`    b.duration(${Number(beh.default_duration) | 0});`);
+    if (beh.pause_timer_on_hover != null) push(`    b.pauseOnHover(${!!beh.pause_timer_on_hover});`);
+    if (beh.closable_by_key) push(`    b.closeKey(${JSON.stringify(beh.closable_by_key)});`);
+    if (beh.allow_paging != null) push(`    b.allowPaging(${!!beh.allow_paging});`);
+    push('  });');
+    push('');
 
     pages.forEach(p => {
       const idx = Number(p.page_index || 0);
-      out += `  tip.page(${idx}, pg => {\\n`;
+      push(`  tip.page(${idx}, pg => {`);
       const title = p.title;
       const subtitle = p.subtitle;
       const content = p.content;
-      if (title && title.text) out += `    pg.title(${compExpr(title.text)}, ${Number(title.scale || 1.0)}, ${Number(title.line_spacing || 0) | 0})\\n`;
+
+      if (title && title.text) push(`    pg.title(${compExpr(title.text)}, ${Number(title.scale || 1.0)}, ${Number(title.line_spacing || 0) | 0});`);
       if (title && title.divider) {
         const d = title.divider;
-        out += `    pg.titleDivider(${Number(d.thickness || 1) | 0}, ${Number(d.margin_top || 4) | 0}, ${Number(d.margin_bottom || 4) | 0}, ${Number(d.length || 1.0)}, ${JSON.stringify(d.color || '')})\\n`;
+        push(`    pg.titleDivider(${Number(d.thickness || 1) | 0}, ${Number(d.margin_top || 4) | 0}, ${Number(d.margin_bottom || 4) | 0}, ${Number(d.length || 1.0)}, ${JSON.stringify(d.color || '')});`);
       }
-      if (subtitle && subtitle.text) out += `    pg.subtitle(${compExpr(subtitle.text)}, ${Number(subtitle.scale || 1.0)}, ${Number(subtitle.line_spacing || 0) | 0})\\n`;
-      if (content && content.text) out += `    pg.content(${compExpr(content.text)}, ${Number(content.scale || 1.0)}, ${Number(content.line_spacing || 0) | 0})\\n`;
+      if (subtitle && subtitle.text) push(`    pg.subtitle(${compExpr(subtitle.text)}, ${Number(subtitle.scale || 1.0)}, ${Number(subtitle.line_spacing || 0) | 0});`);
+      if (content && content.text) push(`    pg.content(${compExpr(content.text)}, ${Number(content.scale || 1.0)}, ${Number(content.line_spacing || 0) | 0});`);
 
       if (p.image && p.image.path) {
         const img = p.image;
@@ -866,25 +875,25 @@
         const pos = img.position;
         const fn = (sc !== 1.0) ? 'imageScaled' : 'image';
         if (typeof pos === 'string') {
-          if (sc !== 1.0) out += `    pg.${fn}(${JSON.stringify(img.path)}, ${JSON.stringify(pos)}, ${w}, ${h}, ${sc})\\n`;
-          else out += `    pg.${fn}(${JSON.stringify(img.path)}, ${JSON.stringify(pos)}, ${w}, ${h})\\n`;
+          if (sc !== 1.0) push(`    pg.${fn}(${JSON.stringify(img.path)}, ${JSON.stringify(pos)}, ${w}, ${h}, ${sc});`);
+          else push(`    pg.${fn}(${JSON.stringify(img.path)}, ${JSON.stringify(pos)}, ${w}, ${h});`);
         } else if (Array.isArray(pos)) {
           const x = Number(pos[0] || 0) | 0;
           const y = Number(pos[1] || 0) | 0;
-          if (sc !== 1.0) out += `    pg.${fn}(${JSON.stringify(img.path)}, ${x}, ${y}, ${w}, ${h}, ${sc})\\n`;
-          else out += `    pg.${fn}(${JSON.stringify(img.path)}, ${x}, ${y}, ${w}, ${h})\\n`;
+          if (sc !== 1.0) push(`    pg.${fn}(${JSON.stringify(img.path)}, ${x}, ${y}, ${w}, ${h}, ${sc});`);
+          else push(`    pg.${fn}(${JSON.stringify(img.path)}, ${x}, ${y}, ${w}, ${h});`);
         } else {
-          // no position: still emit
-          if (sc !== 1.0) out += `    pg.${fn}(${JSON.stringify(img.path)}, 'TOP_CENTER', ${w}, ${h}, ${sc})\\n`;
-          else out += `    pg.${fn}(${JSON.stringify(img.path)}, 'TOP_CENTER', ${w}, ${h})\\n`;
+          if (sc !== 1.0) push(`    pg.${fn}(${JSON.stringify(img.path)}, "TOP_CENTER", ${w}, ${h}, ${sc});`);
+          else push(`    pg.${fn}(${JSON.stringify(img.path)}, "TOP_CENTER", ${w}, ${h});`);
         }
       }
 
-      out += `  })\\n\\n`;
+      push('  });');
+      push('');
     });
 
-    out += `})\\n`;
-    downloadText('auratip_tip.kubejs.js', out, 'text/javascript;charset=utf-8');
+    push('});');
+    downloadText('auratip_tip.kubejs.js', lines.join('\n') + '\n', 'text/javascript;charset=utf-8');
   }
 
   function exportJavaSnippet() {
@@ -923,9 +932,6 @@
       const clean = sanitizeComponentJson(componentJson);
 
       if (Array.isArray(clean.extra) && clean.extra.length > 0) {
-        return fromJsonExpr(clean);
-      }
-      if (clean.clickEvent || clean.hoverEvent || clean.font) {
         return fromJsonExpr(clean);
       }
 
@@ -971,10 +977,6 @@
       if (clean.strikethrough) styleCalls.push('withStrikethrough(true)');
       if (clean.obfuscated) styleCalls.push('withObfuscated(true)');
 
-      if (typeof clean.insertion === 'string' && clean.insertion.length > 0) {
-        styleCalls.push(`withInsertion(${javaStr(clean.insertion)})`);
-      }
-
       if (styleCalls.length === 0) {
         return baseExpr;
       }
@@ -1002,32 +1004,35 @@
       return `Map.of(${pairs.join(', ')})`;
     }
 
+    const lines = [];
+    const push = (s = '') => lines.push(s);
+
     if (mode === 'radial') {
       const m = radialState || {};
       const ms = m.menu_settings || {};
       const slots = Array.isArray(m.slots) ? m.slots : [];
 
-      let out = '';
-      out += `// AuraTip Radial Menu (Java)\\n`;
-      out += `// Register as runtime data via RadialMenuRegistry.setMenus(owner, menus).\\n\\n`;
-      out += `import cc.sighs.auratip.api.action.Actions;\\n`;
-      out += `import cc.sighs.auratip.api.radiamenu.RadialMenuBuilder;\\n`;
-      out += `import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;\\n`;
-      out += `import cc.sighs.auratip.data.RadialMenuData;\\n`;
-      out += `import net.minecraft.ChatFormatting;\\n`;
-      out += `import net.minecraft.network.chat.Component;\\n`;
-      out += `import net.minecraft.network.chat.TextColor;\\n`;
-      out += `import net.minecraft.resources.ResourceLocation;\\n`;
-      out += `import java.util.List;\\n`;
-      out += `import java.util.Map;\\n\\n`;
+      push('// AuraTip Radial Menu (Java)');
+      push('// Register as runtime data via RadialMenuRegistry.setMenus(owner, menus).');
+      push('');
+      push('import cc.sighs.auratip.api.action.Actions;');
+      push('import cc.sighs.auratip.api.radiamenu.RadialMenuBuilder;');
+      push('import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;');
+      push('import cc.sighs.auratip.data.RadialMenuData;');
+      push('import net.minecraft.ChatFormatting;');
+      push('import net.minecraft.network.chat.Component;');
+      push('import net.minecraft.network.chat.TextColor;');
+      push('import net.minecraft.resources.ResourceLocation;');
+      push('import java.util.List;');
+      push('import java.util.Map;');
+      push('');
 
       const id = String(m.id || 'auratip:menu');
-      out += `RadialMenuData menu = new RadialMenuBuilder(${javaRlExpr(id)})\\n`;
-      out += `  .radii(${Number(ms.inner_radius ?? 55) | 0}, ${Number(ms.outer_radius ?? 100) | 0})\\n`;
-      out += `  .animationSpeed(${Number(ms.animation_speed ?? 1.0)})\\n`;
-      if (ms.center_icon) out += `  .centerIcon(${javaRlExpr(ms.center_icon)})\\n`;
-      if (ms.ring_color) out += `  .ringColor(${javaStr(ms.ring_color)})\\n`;
-      if (ms.ring_colors) out += `  .ringColors(List.of(${(ms.ring_colors || []).map(javaStr).join(', ')}))\\n`;
+      push(`RadialMenuData menu = new RadialMenuBuilder(${javaRlExpr(id)})`);
+      push(`  .radii(${Number(ms.inner_radius ?? 55) | 0}, ${Number(ms.outer_radius ?? 100) | 0})`);
+      push(`  .animationSpeed(${Number(ms.animation_speed ?? 1.0)})`);
+      if (ms.ring_color) push(`  .ringColor(${javaStr(ms.ring_color)})`);
+      if (ms.ring_colors) push(`  .ringColors(List.of(${(ms.ring_colors || []).map(javaStr).join(', ')}))`);
 
       slots.forEach(s => {
         const a = (s.action && typeof s.action === 'object') ? s.action : { type: 'auratip:run_command', command: '' };
@@ -1038,13 +1043,14 @@
         else if (type === 'auratip:simulate_key') actionExpr = `Actions.simulateKey(${Number(params.key_code || 0) | 0})`;
         else actionExpr = `Actions.script(${javaRlExpr(type)}, ${javaMapExpr(params)})`;
 
-        out += `  .slot(${javaStr(String(s.name || 'Slot'))}, ${javaRlExpr(String(s.icon || 'minecraft:textures/item/paper.png'))}, ${actionExpr}, ${s.text ? javaCompExpr(s.text) : 'null'}, ${s.highlight_color ? javaStr(s.highlight_color) : 'null'})\\n`;
+        push(`  .slot(${javaStr(String(s.name || 'Slot'))}, ${javaRlExpr(String(s.icon || 'minecraft:textures/item/paper.png'))}, ${actionExpr}, ${s.text ? javaCompExpr(s.text) : 'null'}, ${s.highlight_color ? javaStr(s.highlight_color) : 'null'})`);
       });
 
-      out += `  .build();\\n\\n`;
-      out += `RadialMenuRegistry.setMenus(\"<your_modid>\", List.of(menu));\\n`;
+      push('  .build();');
+      push('');
+      push('RadialMenuRegistry.setMenus("<your_modid>", List.of(menu));');
 
-      downloadText('auratip_radial_menu.java', out, 'text/plain;charset=utf-8');
+      downloadText('auratip_radial_menu.java', lines.join('\n') + '\n', 'text/plain;charset=utf-8');
       return;
     }
 
@@ -1054,81 +1060,80 @@
     const beh = tData.behavior || {};
     const pages = Array.isArray(tData.pages) ? tData.pages : [];
 
-    let out = '';
-    out += `// AuraTip Tip (Java)\\n`;
-    out += `// Register as runtime data via TipRegistry.setTips(owner, tips).\\n\\n`;
-    out += `import cc.sighs.auratip.api.tip.TipBuilder;\\n`;
-    out += `import cc.sighs.auratip.api.tip.TipRegistry;\\n`;
-    out += `import cc.sighs.auratip.data.TipData;\\n`;
-    out += `import net.minecraft.ChatFormatting;\\n`;
-    out += `import net.minecraft.network.chat.Component;\\n`;
-    out += `import net.minecraft.network.chat.TextColor;\\n`;
-    out += `import net.minecraft.resources.ResourceLocation;\\n`;
-    out += `import java.util.List;\\n`;
-    out += `import java.util.Map;\\n\\n`;
+    push('// AuraTip Tip (Java)');
+    push('// Register as runtime data via TipRegistry.setTips(owner, tips).');
+    push('');
+    push('import cc.sighs.auratip.api.tip.TipBuilder;');
+    push('import cc.sighs.auratip.api.tip.TipRegistry;');
+    push('import cc.sighs.auratip.data.TipData;');
+    push('import net.minecraft.ChatFormatting;');
+    push('import net.minecraft.network.chat.Component;');
+    push('import net.minecraft.network.chat.TextColor;');
+    push('import net.minecraft.resources.ResourceLocation;');
+    push('import java.util.List;');
+    push('import java.util.Map;');
+    push('');
 
     const id = String(tData.id || 'auratip:tip');
     const trigType = String(trig.type || 'auratip:first_join_world');
     const modeStr = String(trig.mode || 'once').toUpperCase();
-    out += `TipData tip = new TipBuilder(${javaRlExpr(id)})\\n`;
-    out += `  .trigger(${javaRlExpr(trigType)}, TipData.Trigger.Mode.${modeStr}, ${Number(trig.cooldown || 0) | 0})\\n`;
+    push(`TipData tip = new TipBuilder(${javaRlExpr(id)})`);
+    push(`  .trigger(${javaRlExpr(trigType)}, TipData.Trigger.Mode.${modeStr}, ${Number(trig.cooldown || 0) | 0})`);
 
-    // visual
-    out += `  .visual(v -> {\\n`;
-    if (vs.animation_style) out += `    v.animationStyle(${javaRlExpr(vs.animation_style)});\\n`;
-    if (vs.animation_speed != null) out += `    v.animationSpeed(${Number(vs.animation_speed)}f);\\n`;
-    if (vs.animation_params && typeof vs.animation_params === 'object') out += `    v.animParams(${javaMapExpr(vs.animation_params)});\\n`;
-    if (vs.hover_animation_style) out += `    v.hoverAnimationStyle(${javaRlExpr(vs.hover_animation_style)});\\n`;
-    if (vs.hover_animation_speed != null) out += `    v.hoverAnimationSpeed(${Number(vs.hover_animation_speed)}f);\\n`;
-    if (vs.hover_only_on_hover != null) out += `    v.hoverOnlyOnHover(${!!vs.hover_only_on_hover});\\n`;
-    if (vs.hover_animation_params && typeof vs.hover_animation_params === 'object') out += `    v.hoverParams(${javaMapExpr(vs.hover_animation_params)});\\n`;
-    if (vs.stripe_width != null) out += `    v.stripeWidth(${Number(vs.stripe_width) | 0});\\n`;
-    if (vs.stripe_length_factor != null) out += `    v.stripeLengthFactor(${Number(vs.stripe_length_factor)}f);\\n`;
-    if (vs.theme_color) out += `    v.themeColor(${javaStr(vs.theme_color)});\\n`;
-    if (vs.width != null && vs.height != null) out += `    v.size(${Number(vs.width) | 0}, ${Number(vs.height) | 0});\\n`;
+    push('  .visual(v -> {');
+    if (vs.animation_style) push(`    v.animationStyle(${javaRlExpr(vs.animation_style)});`);
+    if (vs.animation_speed != null) push(`    v.animationSpeed(${Number(vs.animation_speed)}f);`);
+    if (vs.animation_params && typeof vs.animation_params === 'object' && Object.keys(vs.animation_params).length) push(`    v.animParams(${javaMapExpr(vs.animation_params)});`);
+    if (vs.hover_animation_style) push(`    v.hoverAnimationStyle(${javaRlExpr(vs.hover_animation_style)});`);
+    if (vs.hover_animation_speed != null) push(`    v.hoverAnimationSpeed(${Number(vs.hover_animation_speed)}f);`);
+    if (vs.hover_only_on_hover != null) push(`    v.hoverOnlyOnHover(${!!vs.hover_only_on_hover});`);
+    if (vs.hover_animation_params && typeof vs.hover_animation_params === 'object' && Object.keys(vs.hover_animation_params).length) push(`    v.hoverParams(${javaMapExpr(vs.hover_animation_params)});`);
+    if (vs.stripe_width != null) push(`    v.stripeWidth(${Number(vs.stripe_width) | 0});`);
+    if (vs.stripe_length_factor != null) push(`    v.stripeLengthFactor(${Number(vs.stripe_length_factor)}f);`);
+    if (vs.theme_color) push(`    v.themeColor(${javaStr(vs.theme_color)});`);
+    if (vs.width != null && vs.height != null) push(`    v.size(${Number(vs.width) | 0}, ${Number(vs.height) | 0});`);
 
-    if (typeof vs.position === 'string') out += `    v.positionPreset(${javaStr(vs.position)});\\n`;
-    if (Array.isArray(vs.position)) out += `    v.positionAbsolute(${Number(vs.position[0] || 0) | 0}, ${Number(vs.position[1] || 0) | 0});\\n`;
+    if (typeof vs.position === 'string') push(`    v.positionPreset(${javaStr(vs.position)});`);
+    if (Array.isArray(vs.position)) push(`    v.positionAbsolute(${Number(vs.position[0] || 0) | 0}, ${Number(vs.position[1] || 0) | 0});`);
 
     if (vs.animation_from !== undefined) {
-      if (typeof vs.animation_from === 'string') out += `    v.animationFromPreset(${javaStr(vs.animation_from)});\\n`;
-      if (Array.isArray(vs.animation_from)) out += `    v.animationFromAbsolute(${Number(vs.animation_from[0] || 0) | 0}, ${Number(vs.animation_from[1] || 0) | 0});\\n`;
+      if (typeof vs.animation_from === 'string') push(`    v.animationFromPreset(${javaStr(vs.animation_from)});`);
+      if (Array.isArray(vs.animation_from)) push(`    v.animationFromAbsolute(${Number(vs.animation_from[0] || 0) | 0}, ${Number(vs.animation_from[1] || 0) | 0});`);
     }
     if (vs.animation_to !== undefined) {
-      if (typeof vs.animation_to === 'string') out += `    v.animationToPreset(${javaStr(vs.animation_to)});\\n`;
-      if (Array.isArray(vs.animation_to)) out += `    v.animationToAbsolute(${Number(vs.animation_to[0] || 0) | 0}, ${Number(vs.animation_to[1] || 0) | 0});\\n`;
+      if (typeof vs.animation_to === 'string') push(`    v.animationToPreset(${javaStr(vs.animation_to)});`);
+      if (Array.isArray(vs.animation_to)) push(`    v.animationToAbsolute(${Number(vs.animation_to[0] || 0) | 0}, ${Number(vs.animation_to[1] || 0) | 0});`);
     }
 
     if (vs.background && typeof vs.background === 'object') {
       const bg = vs.background;
-      out += `    v.background(TipData.VisualSettings.BackgroundType.${String(bg.type || 'gradient').toUpperCase()}, List.of(${(bg.colors || []).map(javaStr).join(', ')}), ${Number(bg.border_radius || 8) | 0});\\n`;
-      if (bg.rounded != null) out += `    v.backgroundRounded(${!!bg.rounded});\\n`;
-      if (bg.image_path) out += `    v.backgroundImage(${javaStr(bg.image_path)});\\n`;
+      push(`    v.background(TipData.VisualSettings.BackgroundType.${String(bg.type || 'gradient').toUpperCase()}, List.of(${(bg.colors || []).map(javaStr).join(', ')}), ${Number(bg.border_radius || 8) | 0});`);
+      if (bg.rounded != null) push(`    v.backgroundRounded(${!!bg.rounded});`);
+      if (bg.image_path) push(`    v.backgroundImage(${javaStr(bg.image_path)});`);
     }
 
-    out += `  })\\n`;
+    push('  })');
 
-    // behavior
-    out += `  .behavior(b -> {\\n`;
-    if (beh.default_duration != null) out += `    b.duration(${Number(beh.default_duration) | 0});\\n`;
-    if (beh.pause_timer_on_hover != null) out += `    b.pauseOnHover(${!!beh.pause_timer_on_hover});\\n`;
-    if (beh.closable_by_key) out += `    b.closeKey(${javaStr(beh.closable_by_key)});\\n`;
-    if (beh.allow_paging != null) out += `    b.allowPaging(${!!beh.allow_paging});\\n`;
-    out += `  })\\n`;
+    push('  .behavior(b -> {');
+    if (beh.default_duration != null) push(`    b.duration(${Number(beh.default_duration) | 0});`);
+    if (beh.pause_timer_on_hover != null) push(`    b.pauseOnHover(${!!beh.pause_timer_on_hover});`);
+    if (beh.closable_by_key) push(`    b.closeKey(${javaStr(beh.closable_by_key)});`);
+    if (beh.allow_paging != null) push(`    b.allowPaging(${!!beh.allow_paging});`);
+    push('  })');
 
     pages.forEach(p => {
       const idx = Number(p.page_index || 0);
-      out += `  .page(${idx}, pg -> {\\n`;
+      push(`  .page(${idx}, pg -> {`);
       const title = p.title;
       const subtitle = p.subtitle;
       const content = p.content;
-      if (title && title.text) out += `    pg.title(${javaCompExpr(title.text)}, ${Number(title.scale || 1.0)}f, ${Number(title.line_spacing || 0) | 0});\\n`;
+      if (title && title.text) push(`    pg.title(${javaCompExpr(title.text)}, ${Number(title.scale || 1.0)}f, ${Number(title.line_spacing || 0) | 0});`);
       if (title && title.divider) {
         const d = title.divider;
-        out += `    pg.titleDivider(${Number(d.thickness || 1) | 0}, ${Number(d.margin_top || 4) | 0}, ${Number(d.margin_bottom || 4) | 0}, ${Number(d.length || 1.0)}f, ${javaStr(d.color || '')});\\n`;
+        push(`    pg.titleDivider(${Number(d.thickness || 1) | 0}, ${Number(d.margin_top || 4) | 0}, ${Number(d.margin_bottom || 4) | 0}, ${Number(d.length || 1.0)}f, ${javaStr(d.color || '')});`);
       }
-      if (subtitle && subtitle.text) out += `    pg.subtitle(${javaCompExpr(subtitle.text)}, ${Number(subtitle.scale || 1.0)}f, ${Number(subtitle.line_spacing || 0) | 0});\\n`;
-      if (content && content.text) out += `    pg.content(${javaCompExpr(content.text)}, ${Number(content.scale || 1.0)}f, ${Number(content.line_spacing || 0) | 0});\\n`;
+      if (subtitle && subtitle.text) push(`    pg.subtitle(${javaCompExpr(subtitle.text)}, ${Number(subtitle.scale || 1.0)}f, ${Number(subtitle.line_spacing || 0) | 0});`);
+      if (content && content.text) push(`    pg.content(${javaCompExpr(content.text)}, ${Number(content.scale || 1.0)}f, ${Number(content.line_spacing || 0) | 0});`);
       if (p.image && p.image.path) {
         const img = p.image;
         const size = Array.isArray(img.size) ? img.size : [64, 64];
@@ -1137,20 +1142,21 @@
         const sc = Number(img.scale || 1.0);
         const pos = img.position;
         if (typeof pos === 'string') {
-          out += `    pg.imageScaled(${javaStr(img.path)}, ${javaStr(pos)}, ${w}, ${h}, ${sc}f);\\n`;
+          push(`    pg.imageScaled(${javaStr(img.path)}, ${javaStr(pos)}, ${w}, ${h}, ${sc}f);`);
         } else if (Array.isArray(pos)) {
-          out += `    pg.imageScaled(${javaStr(img.path)}, ${Number(pos[0] || 0) | 0}, ${Number(pos[1] || 0) | 0}, ${w}, ${h}, ${sc}f);\\n`;
+          push(`    pg.imageScaled(${javaStr(img.path)}, ${Number(pos[0] || 0) | 0}, ${Number(pos[1] || 0) | 0}, ${w}, ${h}, ${sc}f);`);
         } else {
-          out += `    pg.imageScaled(${javaStr(img.path)}, ${javaStr('TOP_CENTER')}, ${w}, ${h}, ${sc}f);\\n`;
+          push(`    pg.imageScaled(${javaStr(img.path)}, ${javaStr('TOP_CENTER')}, ${w}, ${h}, ${sc}f);`);
         }
       }
-      out += `  })\\n`;
+      push('  })');
     });
 
-    out += `  .build();\\n\\n`;
-    out += `TipRegistry.setTips(\"<your_modid>\", List.of(tip));\\n`;
+    push('  .build();');
+    push('');
+    push('TipRegistry.setTips("<your_modid>", List.of(tip));');
 
-    downloadText('auratip_tip.java', out, 'text/plain;charset=utf-8');
+    downloadText('auratip_tip.java', lines.join('\n') + '\n', 'text/plain;charset=utf-8');
   }
 
   exportJson.addEventListener('click', () => { exportMenu.classList.add('hidden'); exportCurrentJson(); });
@@ -1674,53 +1680,6 @@
     card.appendChild(row(t('style.underlined'), boolWithUnset(c, 'underlined'), t('style.underlined.desc')));
     card.appendChild(row(t('style.strikethrough'), boolWithUnset(c, 'strikethrough'), t('style.strikethrough.desc')));
     card.appendChild(row(t('style.obfuscated'), boolWithUnset(c, 'obfuscated'), t('style.obfuscated.desc')));
-    card.appendChild(row(t('style.font'), stringWithUnset(c, 'font', 'minecraft:default'), t('style.font.desc')));
-    card.appendChild(row(t('style.insertion'), stringWithUnset(c, 'insertion', ''), t('style.insertion.desc')));
-
-    // Click event (simple)
-    const click = (c.clickEvent && typeof c.clickEvent === 'object') ? c.clickEvent : null;
-    const clickWrap = el('div', 'space-y-2');
-    const clickEnable = el('label', 'flex items-center gap-2 text-xs text-white/80 select-none');
-    const clickChk = el('input', 'accent-blue-500');
-    clickChk.type = 'checkbox';
-    clickChk.checked = !!click;
-    clickEnable.appendChild(clickChk);
-    clickEnable.appendChild(el('span', 'text-white/60', 'clickEvent'));
-    clickWrap.appendChild(clickEnable);
-
-    const clickBody = el('div', 'space-y-2');
-    clickWrap.appendChild(clickBody);
-
-    function renderClickBody() {
-      clickBody.innerHTML = '';
-      if (!clickChk.checked) return;
-      if (!c.clickEvent || typeof c.clickEvent !== 'object') c.clickEvent = { action: 'run_command', value: '/say hi' };
-      const ce = c.clickEvent;
-
-      const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
-      ['open_url', 'open_file', 'run_command', 'suggest_command', 'change_page', 'copy_to_clipboard'].forEach(a => {
-        const o = el('option', '', a);
-        o.value = a;
-        sel.appendChild(o);
-      });
-      sel.value = ce.action || 'run_command';
-      sel.addEventListener('change', () => { ce.action = sel.value; sendLiveDebounced(); });
-      clickBody.appendChild(row('action', sel));
-      clickBody.appendChild(row('value', inputText(ce.value ?? '', v => { ce.value = v; sendLiveDebounced(); })));
-
-      clickBody.appendChild(unsetBtn(() => { delete c.clickEvent; clickChk.checked = false; renderClickBody(); sendLiveDebounced(); }));
-    }
-
-    clickChk.addEventListener('change', () => {
-      if (!clickChk.checked) {
-        delete c.clickEvent;
-      }
-      renderClickBody();
-      sendLiveDebounced();
-    });
-    renderClickBody();
-
-    card.appendChild(row(t('style.click_event'), clickWrap, t('style.click_event.desc')));
 
     // Raw editing is centralized in the JSON inspector.
     const openRaw = el('button', 'w-full text-xs bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition', t('component.open_json'));
@@ -2085,7 +2044,6 @@
     secMenu.appendChild(row('inner_radius', inputNumber(settings.inner_radius ?? 55, v => { settings.inner_radius=v|0; sendLiveDebounced(); })));
     secMenu.appendChild(row('outer_radius', inputNumber(settings.outer_radius ?? 100, v => { settings.outer_radius=v|0; sendLiveDebounced(); })));
     secMenu.appendChild(row('animation_speed', inputNumber(settings.animation_speed ?? 1.0, v => { settings.animation_speed=v; sendLiveDebounced(); })));
-    secMenu.appendChild(row('center_icon', inputText(settings.center_icon ?? '', v => { if(!v) delete settings.center_icon; else settings.center_icon=v; sendLiveDebounced(); }), 'ResourceLocation'));
     secMenu.appendChild(row('ring_color', inputText(settings.ring_color ?? '', v => { if(!v) delete settings.ring_color; else settings.ring_color=v; sendLiveDebounced(); }), 'ARGB'));
     secMenu.appendChild(row('ring_colors', inputJson(settings.ring_colors ?? null, v => { if(v===null) delete settings.ring_colors; else settings.ring_colors=v; sendLiveDebounced(); }, 4), '可选渐变数组'));
     formRoot.appendChild(secMenu);
@@ -2251,30 +2209,6 @@
         initPayload = msg.payload || {};
         tipState = initPayload.defaultTip || null;
         radialState = initPayload.defaultRadialMenu || null;
-        if (!animJs.value) {
-          animJs.value =
-`({
-  // Option A: return an animation object directly.
-  // Option B: implement create(params) to build the animation object from params.
-  // params is a plain JS object (keys -> primitive values).
-  create(params) {
-    // params is a java.util.Map<String, Dynamic<?>>
-    const d = params ? params.get('offset') : null;
-    const offset = d ? d.asDouble(32) : 32;
-    return {
-      easedProgress(now, start, closing, openMs, closeMs) {
-        const dur = closing ? closeMs : openMs;
-        const t = dur <= 0 ? 1 : Math.min(1, Math.max(0, (now - start) / dur));
-        // smoothstep
-        const s = t * t * (3 - 2 * t);
-        return closing ? (1 - s) : s;
-      },
-      offsetX(eased, w, h) { return 0; },
-      offsetY(eased, w, h) { return Math.floor((1 - eased) * offset); }
-    };
-  }
-})`;
-        }
         if (!animId.value) {
           animId.value = 'kubejs:editor_animation';
         }
@@ -2284,9 +2218,14 @@
         if (!animTestParams.value) {
           animTestParams.value = JSON.stringify({ offset: 32 }, null, 2);
         }
+        refreshAnimJavaSnippet(true);
         renderForm();
       }
       if (msg.type === 'animation_test_result') {
+        if (msg.ok) animStatus.textContent = 'OK: ' + (msg.id || '');
+        else animStatus.textContent = 'ERROR: ' + (msg.error || 'unknown');
+      }
+      if (msg.type === 'animation_apply_result') {
         if (msg.ok) animStatus.textContent = 'OK: ' + (msg.id || '');
         else animStatus.textContent = 'ERROR: ' + (msg.error || 'unknown');
       }
