@@ -9,6 +9,7 @@ import cc.sighs.auratip.api.animation.TransitionAnimation;
 import cc.sighs.auratip.util.ColorUtil;
 import cc.sighs.auratip.util.ComponentSerialization;
 import cc.sighs.auratip.util.ResolveUtil;
+import cc.sighs.auratip.editor.client.EditorClient;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.Util;
@@ -317,6 +318,10 @@ public class TipOverlay {
         }
         if (button != 0) {
             return false;
+        }
+        if (EditorClient.isOpen()) {
+            // Editor preview mode: don't allow clicks to close the tip or change pages.
+            return true;
         }
         if (transitionAnimation == null) {
             transitionAnimation = AnimationType.resolve(null);

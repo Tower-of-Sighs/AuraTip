@@ -28,6 +28,10 @@ public final class EditorPreviewApplier {
         ));
     }
 
+    public static void closePreview() {
+        Minecraft.getInstance().execute(() -> TipOverlay.INSTANCE.closeImmediately());
+    }
+
     public static void applyTipJson(JsonElement tipJson) {
         if (tipJson == null) {
             return;

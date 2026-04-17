@@ -33,12 +33,15 @@ public class RadialMenuOverlay {
     private int[] ringArgbStops;
     private boolean closing;
     private long animationStartMs;
-    private static final int OPEN_MS = 200;
-    private static final int CLOSE_MS = 140;
+    private static final int OPEN_MS_BASE = 200;
+    private static final int CLOSE_MS_BASE = 140;
+    private int openDurationMs;
+    private int closeDurationMs;
 
     private int hoveredIndex = -1;
     private int activeIndex = -1;
     private float activeFill;
+    private long lastFillUpdateMs;
     private Minecraft mc;
 
     private RadialMenuOverlay() {
@@ -84,9 +87,16 @@ public class RadialMenuOverlay {
 
         this.closing = false;
         this.animationStartMs = Util.getMillis();
+        float speed = menu.menuSettings().animationSpeed();
+        if (speed <= 0.0f) {
+            speed = 1.0f;
+        }
+        this.openDurationMs = Math.max(1, (int) (OPEN_MS_BASE / speed));
+        this.closeDurationMs = Math.max(1, (int) (CLOSE_MS_BASE / speed));
         this.hoveredIndex = -1;
         this.activeIndex = -1;
         this.activeFill = 0.0f;
+        this.lastFillUpdateMs = this.animationStartMs;
 
         mc.mouseHandler.releaseMouse();
     }
@@ -113,7 +123,10 @@ public class RadialMenuOverlay {
 
         long now = Util.getMillis();
         int elapsed = (int) Math.max(0, now - animationStartMs);
-        int duration = closing ? CLOSE_MS : OPEN_MS;
+        int duration = closing ? closeDurationMs : openDurationMs;
+        if (duration <= 0) {
+            duration = closing ? CLOSE_MS_BASE : OPEN_MS_BASE;
+        }
         float t = elapsed / (float) duration;
         t = Mth.clamp(t, 0.0f, 1.0f);
         float progress = closing ? 1.0f - t : t;
@@ -170,23 +183,36 @@ public class RadialMenuOverlay {
             hoveredIndex = (int) ((deg + halfSlice) / slice) % count;
         }
 
-        if (hoveredIndex != activeIndex) {
+        // Only reset when switching between actual slots.
+        // When leaving hover, keep the last activeIndex and ease activeFill back to 0.
+        if (hoveredIndex >= 0 && hoveredIndex != activeIndex) {
             activeIndex = hoveredIndex;
             activeFill = 0.0f;
+            lastFillUpdateMs = now;
         }
 
-        float targetFill = activeIndex >= 0 ? 1.0f : 0.0f;
-        activeFill += (targetFill - activeFill) * 0.25f;
+        float targetFill = hoveredIndex >= 0 ? 1.0f : 0.0f;
+        long dtMs = Math.max(0L, now - lastFillUpdateMs);
+        // Clamp to avoid a huge jump after a lag spike / tab out.
+        dtMs = Math.min(dtMs, 250L);
+        // alpha(dt) = 1 - exp(-k * dt), choose k so alpha(1/120) = 0.25  => k ~= 34.52.
+        double dtSec = dtMs / 1000.0;
+        double alpha = 1.0 - Math.exp(-34.5218 * dtSec);
+        activeFill += (float) ((targetFill - activeFill) * alpha);
         activeFill = Mth.clamp(activeFill, 0.0f, 1.0f);
+        lastFillUpdateMs = now;
+
+        if (hoveredIndex < 0 && activeFill <= 0.001f) {
+            activeIndex = -1;
+        }
 
         if (activeIndex >= 0 && activeFill > 0.01f) {
             RadialMenuData.Slot slot = slots.get(activeIndex);
             var colorOpt = slot.highlightColor();
             if (colorOpt.isPresent()) {
                 int rgb = ColorUtil.parseRgb(colorOpt.get());
-                int alpha1 = (int) (180 * activeFill);
-                int innerHighlight = ColorUtil.withAlpha(rgb, (int) (70 * activeFill));
-                int outerHighlight = ColorUtil.withAlpha(rgb, alpha1);
+                int innerHighlight = ColorUtil.withAlpha(rgb, (int) (70 * eased));
+                int outerHighlight = ColorUtil.withAlpha(rgb, (int) (180 * eased));
 
                 double slice = 360.0 / count;
                 float startDeg = (float) (-slice / 2.0 + activeIndex * slice);
@@ -206,7 +232,8 @@ public class RadialMenuOverlay {
             int iconX = centerX + (int) (iconRadius * Math.cos(angle));
             int iconY = centerY + (int) (iconRadius * Math.sin(angle));
 
-            float scale = i == hoveredIndex ? 1.25f : 1.0f;
+            float hoverScale = (i == activeIndex) ? activeFill : 0.0f;
+            float scale = 1.0f + 0.25f * hoverScale;
             drawIcon(graphics, slot.icon(), iconX, iconY, scale * eased);
         }
 

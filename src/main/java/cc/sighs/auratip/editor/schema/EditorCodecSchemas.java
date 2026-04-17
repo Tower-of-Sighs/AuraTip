@@ -56,22 +56,27 @@ public final class EditorCodecSchemas {
         bgDefault.addProperty("rounded", true);
 
         return obj(
+                // Transition animation (grouped for editing convenience).
                 f("animation_style", rl(), true, rlVal(AuraTip.MOD_ID + ":fade_and_slide"), "tip.visual.animation_style", "tip.visual.animation_style.desc"),
-                f("background", tipBackground(), true, bgDefault, "tip.visual.background", "tip.visual.background.desc"),
-                f("theme_color", string(), true, str("#FFFFFFFF"), "tip.visual.theme_color", "tip.visual.theme_color.desc"),
-                f("width", number(), true, num(280), "tip.visual.width", "tip.visual.width.desc"),
-                f("height", number(), true, num(180), "tip.visual.height", "tip.visual.height.desc"),
-                f("position", position(), true, str("BOTTOM_CENTER"), "tip.visual.position", "tip.visual.position.desc"),
+                f("animation_params", dynamicMap(), true, new JsonObject(), "tip.visual.animation_params", "tip.visual.animation_params.desc"),
                 f("animation_speed", number(), true, num(1.0), "tip.visual.animation_speed", "tip.visual.animation_speed.desc"),
                 f("animation_from", position(), true, str("BOTTOM_CENTER"), "tip.visual.animation_from", "tip.visual.animation_from.desc"),
                 f("animation_to", position(), true, str("BOTTOM_CENTER"), "tip.visual.animation_to", "tip.visual.animation_to.desc"),
+
+                // Hover animation (grouped).
                 f("hover_animation_style", rl(), true, rlVal(AuraTip.MOD_ID + ":none"), "tip.visual.hover_animation_style", "tip.visual.hover_animation_style.desc"),
+                f("hover_animation_params", dynamicMap(), true, new JsonObject(), "tip.visual.hover_animation_params", "tip.visual.hover_animation_params.desc"),
                 f("hover_animation_speed", number(), true, num(1.0), "tip.visual.hover_animation_speed", "tip.visual.hover_animation_speed.desc"),
                 f("hover_only_on_hover", bool(), true, boolVal(false), "tip.visual.hover_only_on_hover", "tip.visual.hover_only_on_hover.desc"),
+
+                // Layout / background.
+                f("background", tipBackground(), true, bgDefault, "tip.visual.background", "tip.visual.background.desc"),
+                f("theme_color", string(), true, str("#FFFFFFFF"), "tip.visual.theme_color", "tip.visual.theme_color.desc"),
                 f("stripe_width", number(), true, num(4), "tip.visual.stripe_width", "tip.visual.stripe_width.desc"),
                 f("stripe_length_factor", number(), true, num(1.0), "tip.visual.stripe_length_factor", "tip.visual.stripe_length_factor.desc"),
-                f("animation_params", dynamicMap(), true, new JsonObject(), "tip.visual.animation_params", "tip.visual.animation_params.desc"),
-                f("hover_animation_params", dynamicMap(), true, new JsonObject(), "tip.visual.hover_animation_params", "tip.visual.hover_animation_params.desc")
+                f("width", number(), true, num(280), "tip.visual.width", "tip.visual.width.desc"),
+                f("height", number(), true, num(180), "tip.visual.height", "tip.visual.height.desc"),
+                f("position", position(), true, str("BOTTOM_CENTER"), "tip.visual.position", "tip.visual.position.desc")
         );
     }
 
@@ -170,7 +175,6 @@ public final class EditorCodecSchemas {
                 f("inner_radius", number(), false, num(55), "radial.menu_settings.inner_radius", "radial.menu_settings.inner_radius.desc"),
                 f("outer_radius", number(), false, num(100), "radial.menu_settings.outer_radius", "radial.menu_settings.outer_radius.desc"),
                 f("animation_speed", number(), false, num(1.0), "radial.menu_settings.animation_speed", "radial.menu_settings.animation_speed.desc"),
-                f("center_icon", rl(), true, rlVal("minecraft:textures/item/diamond.png"), "radial.menu_settings.center_icon", "radial.menu_settings.center_icon.desc"),
                 f("ring_color", string(), true, str("#77FFFFFF"), "radial.menu_settings.ring_color", "radial.menu_settings.ring_color.desc"),
                 f("ring_colors", array(string()), true, listStr("#77FFFFFF", "#33FFFFFF"), "radial.menu_settings.ring_colors", "radial.menu_settings.ring_colors.desc")
         );
