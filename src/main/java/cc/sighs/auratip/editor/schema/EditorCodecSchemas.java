@@ -186,7 +186,7 @@ public final class EditorCodecSchemas {
                 f("icon", rl(), false, rlVal("minecraft:textures/item/paper.png"), "radial.slot.icon", "radial.slot.icon.desc"),
                 f("action", action(), false, actionDefaultRunCommand(), "radial.slot.action", "radial.slot.action.desc"),
                 f("text", component(), true, componentLiteral("Slot"), "radial.slot.text", "radial.slot.text.desc"),
-                f("highlight_color", string(), true, str("#77FFFFFF"), "radial.slot.highlight_color", "radial.slot.highlight_color.desc")
+                f("highlight_color", string(), true, str("#FFFFFF"), "radial.slot.highlight_color", "radial.slot.highlight_color.desc")
         );
     }
 

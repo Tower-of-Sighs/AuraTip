@@ -1223,6 +1223,142 @@
     return area;
   }
 
+  function toHex2(n) {
+    const v = Math.max(0, Math.min(255, Number(n) | 0));
+    return v.toString(16).toUpperCase().padStart(2, '0');
+  }
+
+  function parseHexColor(str) {
+    if (str === null || str === undefined) return null;
+    const raw = String(str).trim();
+    if (!raw) return null;
+    const v = raw.startsWith('#') ? raw.slice(1) : raw;
+    if (!/^[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/.test(v)) return null;
+    if (v.length === 6) {
+      const r = parseInt(v.slice(0, 2), 16);
+      const g = parseInt(v.slice(2, 4), 16);
+      const b = parseInt(v.slice(4, 6), 16);
+      return { r, g, b, a: 255, hasAlpha: false };
+    }
+    // AARRGGBB
+    const a = parseInt(v.slice(0, 2), 16);
+    const r = parseInt(v.slice(2, 4), 16);
+    const g = parseInt(v.slice(4, 6), 16);
+    const b = parseInt(v.slice(6, 8), 16);
+    return { r, g, b, a, hasAlpha: true };
+  }
+
+  function rgbaToHex(rgba, allowAlpha) {
+    if (!rgba) return '';
+    const rr = toHex2(rgba.r);
+    const gg = toHex2(rgba.g);
+    const bb = toHex2(rgba.b);
+    const aa = toHex2(rgba.a);
+    if (!allowAlpha) {
+      return `#${rr}${gg}${bb}`;
+    }
+    if ((rgba.a | 0) === 255) {
+      return `#${rr}${gg}${bb}`;
+    }
+    return `#${aa}${rr}${gg}${bb}`;
+  }
+
+  function colorPalette(value, onChange, opts) {
+    const allowAlpha = !!(opts && opts.allowAlpha);
+
+    // For RGB-only fields (like highlight_color), strip alpha if user pasted AARRGGBB.
+    let rgba = parseHexColor(value);
+    if (!rgba) rgba = { r: 255, g: 255, b: 255, a: 255, hasAlpha: false };
+    if (!allowAlpha && rgba.hasAlpha) {
+      rgba = { r: rgba.r, g: rgba.g, b: rgba.b, a: 255, hasAlpha: false };
+    }
+
+    const wrap = el('div', 'space-y-2');
+    const top = el('div', 'flex items-center gap-2');
+
+    const picker = el('input', 'h-9 w-12 rounded-lg bg-black/20 border border-white/10');
+    picker.type = 'color';
+    picker.value = `#${toHex2(rgba.r)}${toHex2(rgba.g)}${toHex2(rgba.b)}`;
+
+    const txt = el('input', 'code w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    txt.type = 'text';
+    txt.value = rgbaToHex(rgba, allowAlpha);
+    txt.placeholder = allowAlpha ? '#RRGGBB / #AARRGGBB' : '#RRGGBB';
+
+    top.appendChild(picker);
+    top.appendChild(txt);
+    wrap.appendChild(top);
+
+    let alpha = rgba.a | 0;
+    let alphaRow = null;
+    let alphaInput = null;
+    let alphaValue = null;
+
+    function emit() {
+      const hex = rgbaToHex({ r: rgba.r, g: rgba.g, b: rgba.b, a: alpha }, allowAlpha);
+      txt.value = hex;
+      picker.value = `#${toHex2(rgba.r)}${toHex2(rgba.g)}${toHex2(rgba.b)}`;
+      if (alphaValue) alphaValue.textContent = allowAlpha ? String(alpha) : '';
+      onChange(hex);
+    }
+
+    if (allowAlpha) {
+      alphaRow = el('div', 'flex items-center gap-2');
+      alphaInput = el('input', 'w-full');
+      alphaInput.type = 'range';
+      alphaInput.min = '0';
+      alphaInput.max = '255';
+      alphaInput.value = String(alpha);
+      alphaValue = el('div', 'code text-[11px] text-white/40 w-12 text-right', String(alpha));
+      alphaRow.appendChild(el('div', 'text-[11px] text-white/35 w-10', 'alpha'));
+      alphaRow.appendChild(alphaInput);
+      alphaRow.appendChild(alphaValue);
+      wrap.appendChild(alphaRow);
+
+      alphaInput.addEventListener('input', () => {
+        alpha = Number(alphaInput.value || 255) | 0;
+        emit();
+      });
+    }
+
+    picker.addEventListener('input', () => {
+      const pv = String(picker.value || '').trim();
+      const parsed = parseHexColor(pv);
+      if (parsed) {
+        rgba.r = parsed.r;
+        rgba.g = parsed.g;
+        rgba.b = parsed.b;
+        emit();
+      }
+    });
+
+    txt.addEventListener('input', () => {
+      const parsed = parseHexColor(txt.value);
+      if (!parsed) return;
+      rgba.r = parsed.r;
+      rgba.g = parsed.g;
+      rgba.b = parsed.b;
+      alpha = allowAlpha ? (parsed.hasAlpha ? parsed.a : 255) : 255;
+      if (alphaInput) alphaInput.value = String(alpha);
+      emit();
+    });
+
+    return wrap;
+  }
+
+  function isSchemaColorPath(path) {
+    const p = pathNoIndex(path);
+    const s = p.join('.');
+    if (s.endsWith('theme_color')) return { allowAlpha: true };
+    if (s.endsWith('ring_color')) return { allowAlpha: true };
+    if (s.endsWith('ring_colors')) return { allowAlpha: true, arrayItem: true };
+    if (s.endsWith('background.colors')) return { allowAlpha: true, arrayItem: true };
+    if (s.endsWith('highlight_color')) return { allowAlpha: false };
+    if (s.endsWith('divider.color')) return { allowAlpha: true };
+    if (s.endsWith('color') && (s.includes('divider') || s.includes('background'))) return { allowAlpha: true };
+    return null;
+  }
+
   function section(title) {
     const s = el('div', 'glass rounded-2xl p-4 space-y-3');
     s.appendChild(el('div', 'text-sm font-semibold', title));
@@ -1496,7 +1632,13 @@
     }
 
     // string/resource_location/unknown
-    return rowField(fieldLabel(fieldSchema), inputText(value ?? '', v => { parent[k] = v; sendLiveDebounced(); }), fieldSchema, removeFn);
+    {
+      const colorMeta = isSchemaColorPath(path);
+      if (colorMeta && kind === 'string') {
+        return rowField(fieldLabel(fieldSchema), colorPalette(value ?? '', v => { parent[k] = v; sendLiveDebounced(); }, { allowAlpha: !!colorMeta.allowAlpha }), fieldSchema, removeFn);
+      }
+      return rowField(fieldLabel(fieldSchema), inputText(value ?? '', v => { parent[k] = v; sendLiveDebounced(); }), fieldSchema, removeFn);
+    }
   }
 
   function renderSchemaArray(parent, key, arr, typeSchema, path, depth) {
@@ -1541,7 +1683,12 @@
         } else if (typeof item === 'boolean') {
           card.appendChild(row('value', inputBool(item, v => { arr[idx] = !!v; sendLiveDebounced(); })));
         } else {
-          card.appendChild(row('value', inputText(item ?? '', v => { arr[idx] = v; sendLiveDebounced(); })));
+          const meta = isSchemaColorPath(itemPath.slice(0, -1));
+          if (meta && meta.arrayItem) {
+            card.appendChild(row('value', colorPalette(item ?? '', v => { arr[idx] = v; sendLiveDebounced(); }, { allowAlpha: !!meta.allowAlpha })));
+          } else {
+            card.appendChild(row('value', inputText(item ?? '', v => { arr[idx] = v; sendLiveDebounced(); })));
+          }
         }
       }
 
