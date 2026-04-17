@@ -3,6 +3,7 @@ package cc.sighs.auratip.client.render;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.action.ActionExecutor;
+import cc.sighs.auratip.editor.client.EditorClient;
 import cc.sighs.auratip.util.ColorUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.Util;
@@ -233,6 +234,10 @@ public class RadialMenuOverlay {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (menu == null || button != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return false;
+        }
+        if (EditorClient.isOpen()) {
+            // Editor preview mode: never execute actions from a preview radial menu.
+            return true;
         }
         if (hoveredIndex < 0 || hoveredIndex >= slots.size()) {
             close();
