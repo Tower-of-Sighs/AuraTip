@@ -37,3 +37,4 @@ run/kubejs/*
 
 run/kubejs/client_scripts/jsconfig.json
 run/kubejs/server_scripts/jsconfig.json
+.gradle-user-home

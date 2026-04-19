@@ -3,11 +3,13 @@ package cc.sighs.auratip.network;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.data.TipData;
+import cc.sighs.auratip.util.ComponentSerialization;
 import cc.sighs.oelib.network.api.INetworkContext;
 import cc.sighs.oelib.network.api.INetworkPacket;
 import cc.sighs.oelib.network.api.NetworkPacket;
 import cc.sighs.oelib.network.api.Side;
 import cc.sighs.oelib.network.serialization.JsonCodec;
+import com.mojang.serialization.Codec;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
@@ -21,8 +23,11 @@ import java.util.Map;
 )
 public record ShowTipsPacket(
         List<TipEntry> tips,
+        @JsonCodec(holder = ShowTipsPacket.class, field = "VARIABLES_CODEC")
         Map<String, Component> variables
 ) implements INetworkPacket<ShowTipsPacket> {
+    public static final Codec<Map<String, Component>> VARIABLES_CODEC =
+            Codec.unboundedMap(Codec.STRING, ComponentSerialization.COMPONENT_CODEC);
 
     @Override
     public void handle(INetworkContext context) {

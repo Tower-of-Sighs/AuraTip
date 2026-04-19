@@ -19,8 +19,6 @@ public class KJSAuraTipPlugin implements KubeJSPlugin {
     public static final EventGroup TIP_EVENTS = EventGroup.of("TipEvents");
     public static final EventGroup RADIAL_EVENTS = EventGroup.of("RadialMenuEvents");
 
-    public static final EventHandler REGISTER_TIPS_SERVER = TIP_EVENTS.server("register",
-            () -> TipRegistrationEvent.class);
     public static final EventHandler REGISTER_TIPS_CLIENT = TIP_EVENTS.client("register",
             () -> TipRegistrationEvent.class);
     public static final EventHandler REGISTER_RADIAL = RADIAL_EVENTS.client("register",
@@ -44,13 +42,6 @@ public class KJSAuraTipPlugin implements KubeJSPlugin {
 
     @Override
     public void afterScriptsLoaded(ScriptManager manager) {
-        if (manager.scriptType.equals(ScriptType.SERVER)) {
-            TipRegistrationEvent tipEvent = new TipRegistrationEvent();
-            REGISTER_TIPS_SERVER.post(tipEvent);
-            TipScriptRegistry.setTips(tipEvent.buildAll());
-            return;
-        }
-
         if (manager.scriptType.equals(ScriptType.CLIENT)) {
             RadialMenuExtraSlotRegistry.clear();
 
