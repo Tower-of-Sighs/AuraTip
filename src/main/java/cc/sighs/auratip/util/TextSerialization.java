@@ -14,6 +14,7 @@ import java.util.Optional;
 public final class TextSerialization {
     private TextSerialization() {
     }
+
     public static final StreamCodec<RegistryFriendlyByteBuf, Map<String, Component>> VARIABLES_CODEC =
             ByteBufCodecs.fromCodecWithRegistriesTrusted(Codec.unboundedMap(Codec.STRING, ComponentSerialization.CODEC));
 

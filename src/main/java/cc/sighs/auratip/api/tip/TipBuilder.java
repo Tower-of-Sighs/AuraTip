@@ -2,8 +2,8 @@ package cc.sighs.auratip.api.tip;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.TipData;
-import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.auratip.util.SerializationUtil;
+import cc.sighs.auratip.util.TextSerialization;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -254,9 +254,9 @@ public class TipBuilder {
         /**
          * Sets the page title.
          *
-         * @param text         title component
-         * @param scale        scale multiplier (&gt; 0 recommended)
-         * @param lineSpacing  extra line spacing in pixels
+         * @param text        title component
+         * @param scale       scale multiplier (&gt; 0 recommended)
+         * @param lineSpacing extra line spacing in pixels
          * @return this builder
          */
         public PageBuilder title(Component text, float scale, int lineSpacing) {
@@ -343,10 +343,10 @@ public class TipBuilder {
         /**
          * Adds an image element, positioned using a preset position string (e.g. {@code "TOP_CENTER"}).
          *
-         * @param path     texture path (example: {@code minecraft:textures/item/apple.png})
-         * @param preset   preset position name
-         * @param width    width in pixels
-         * @param height   height in pixels
+         * @param path   texture path (example: {@code minecraft:textures/item/apple.png})
+         * @param preset preset position name
+         * @param width  width in pixels
+         * @param height height in pixels
          * @return this builder
          */
         public PageBuilder image(String path, String preset, int width, int height) {

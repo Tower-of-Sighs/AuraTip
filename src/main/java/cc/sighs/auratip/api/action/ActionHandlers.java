@@ -1,5 +1,6 @@
 package cc.sighs.auratip.api.action;
 
+import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.resources.ResourceLocation;
 
@@ -9,8 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 
 /**
  * Registry for custom radial-menu action handlers.

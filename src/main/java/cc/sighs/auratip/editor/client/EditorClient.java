@@ -3,8 +3,8 @@ package cc.sighs.auratip.editor.client;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.editor.net.EditorNettyServer;
 import cc.sighs.auratip.editor.preview.EditorPreviewApplier;
-import cc.sighs.auratip.editor.preview.EditorRadialPreviewApplier;
 import cc.sighs.auratip.editor.preview.EditorPreviewScreen;
+import cc.sighs.auratip.editor.preview.EditorRadialPreviewApplier;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 

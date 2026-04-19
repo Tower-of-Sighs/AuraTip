@@ -34,7 +34,7 @@ public final class RadialMenuBuilder {
 
     public RadialMenuBuilder centerIcon(@Nullable String iconId) {
         if (iconId == null || iconId.isEmpty()) {
-            delegate.centerIcon((ResourceLocation) null);
+            delegate.centerIcon(null);
         } else {
             delegate.centerIcon(ResourceLocation.parse(iconId));
         }

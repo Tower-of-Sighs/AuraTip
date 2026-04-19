@@ -4,8 +4,8 @@ import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.api.util.Params;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.action.ActionRegistry;
-import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.Dynamic;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;

@@ -1,8 +1,8 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu.slot;
 
+import cc.sighs.auratip.api.client.RadialMenuClientApi;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
-import cc.sighs.auratip.api.client.RadialMenuClientApi;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;

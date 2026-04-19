@@ -1,7 +1,7 @@
 package cc.sighs.auratip;
 
-import cc.sighs.auratip.command.ShowTipCommand;
 import cc.sighs.auratip.command.AuraTipEditorCommand;
+import cc.sighs.auratip.command.ShowTipCommand;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.dev.DevEnvironment;

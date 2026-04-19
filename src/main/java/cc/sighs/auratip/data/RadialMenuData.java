@@ -3,7 +3,6 @@ package cc.sighs.auratip.data;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.validator.RadialMenuDataValidator;
-import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.oelib.data.api.DataDriven;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

@@ -4,6 +4,7 @@ import cc.sighs.auratip.AuraTip;
 import cc.sighs.oelib.registry.extra.ShaderRegister;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.ShaderInstance;
+
 public class AuraShaders {
     private static ShaderInstance radialRing;
 

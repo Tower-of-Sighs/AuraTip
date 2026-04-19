@@ -1,15 +1,15 @@
 package cc.sighs.auratip.client.render;
 
+import cc.sighs.auratip.api.animation.HoverAnimation;
+import cc.sighs.auratip.api.animation.TransitionAnimation;
 import cc.sighs.auratip.client.TipClient;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.TipData.VisualSettings;
 import cc.sighs.auratip.data.animation.AnimationType;
-import cc.sighs.auratip.api.animation.HoverAnimation;
-import cc.sighs.auratip.api.animation.TransitionAnimation;
-import cc.sighs.auratip.util.ColorUtil;
-import cc.sighs.auratip.util.TextSerialization;
-import cc.sighs.auratip.util.ResolveUtil;
 import cc.sighs.auratip.editor.client.EditorClient;
+import cc.sighs.auratip.util.ColorUtil;
+import cc.sighs.auratip.util.ResolveUtil;
+import cc.sighs.auratip.util.TextSerialization;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.Util;

@@ -15,6 +15,7 @@ public final class SerializationUtil {
     }
 
     private static final ThreadLocal<ParamCapture> PARAM_CAPTURE = new ThreadLocal<>();
+
     public static Map<String, Dynamic<?>> convertMapToDynamic(Map<String, Object> source) {
         Map<String, Dynamic<?>> result = new HashMap<>();
         if (source == null || source.isEmpty()) return result;

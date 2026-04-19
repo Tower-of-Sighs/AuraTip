@@ -1,8 +1,8 @@
 package cc.sighs.auratip.compat.kubejs.tip;
 
-import cc.sighs.auratip.api.tip.TipServer;
-import cc.sighs.auratip.api.tip.TipRegistry;
 import cc.sighs.auratip.api.client.TipClientApi;
+import cc.sighs.auratip.api.tip.TipRegistry;
+import cc.sighs.auratip.api.tip.TipServer;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.oelib.data.DataManager;
 import dev.latvian.mods.kubejs.typings.Info;

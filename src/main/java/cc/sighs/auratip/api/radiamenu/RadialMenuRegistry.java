@@ -5,12 +5,7 @@ import cc.sighs.oelib.data.DataManager;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Runtime radial menus.
@@ -148,7 +143,7 @@ public final class RadialMenuRegistry {
      * <p>
      * - If {@code menuId} is provided, this searches runtime first, then datapack.
      * - If {@code menuId} is null, this only returns a menu when exactly one menu exists across all sources.
-     *   (If multiple menus exist, the caller must provide an id.)
+     * (If multiple menus exist, the caller must provide an id.)
      */
     public static @Nullable RadialMenuData resolveMenuToOpen(@Nullable ResourceLocation menuId) {
         if (menuId != null) {

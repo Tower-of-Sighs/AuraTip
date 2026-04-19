@@ -4,6 +4,7 @@ import cc.sighs.auratip.dev.DevEnvironment;
 import cc.sighs.oelib.registry.extra.KeyMappingRegister;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+
 public class ClientKeyMappings {
     private static final String CATEGORY = "key.categories.auratip";
 

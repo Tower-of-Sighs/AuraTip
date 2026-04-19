@@ -21,8 +21,8 @@ public class ShowTipCommand {
     }
 
     public static void registerCommand(CommandDispatcher<CommandSourceStack> dispatcher,
-                                CommandBuildContext context,
-                                Commands.CommandSelection environment) {
+                                       CommandBuildContext context,
+                                       Commands.CommandSelection environment) {
 
         dispatcher.register(Commands.literal("showtip")
                 .requires(source -> source.hasPermission(2))

@@ -1,15 +1,14 @@
 package cc.sighs.auratip.client;
 
-import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.api.radiamenu.RadialMenuExtraSlots;
 import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
+import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.data.RadialMenuData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,6 +60,7 @@ public class RadialMenuClient {
 
         return new RadialMenuData(baseMenu.id(), baseMenu.menuSettings(), combinedSlots);
     }
+
     private static void openMenuAtCenter(Minecraft minecraft, RadialMenuData menuData) {
         var window = minecraft.getWindow();
         RadialMenuOverlay.INSTANCE.open(

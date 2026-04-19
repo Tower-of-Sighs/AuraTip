@@ -1,7 +1,7 @@
 package cc.sighs.auratip.compat.kubejs.tip;
 
-import cc.sighs.auratip.api.tip.TipBuilder.PageBuilder;
 import cc.sighs.auratip.api.tip.TipBuilder.BehaviorBuilder;
+import cc.sighs.auratip.api.tip.TipBuilder.PageBuilder;
 import cc.sighs.auratip.data.TipData;
 import net.minecraft.resources.ResourceLocation;
 

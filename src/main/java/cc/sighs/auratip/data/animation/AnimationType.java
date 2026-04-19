@@ -1,12 +1,12 @@
 package cc.sighs.auratip.data.animation;
 
+import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.api.animation.HoverAnimation;
+import cc.sighs.auratip.api.animation.TransitionAnimation;
 import cc.sighs.auratip.data.animation.ha.FloatHoverAnimation;
 import cc.sighs.auratip.data.animation.ha.NoneHoverAnimation;
 import cc.sighs.auratip.data.animation.ha.ShakeHoverAnimation;
 import cc.sighs.auratip.data.animation.ta.*;
-import cc.sighs.auratip.api.animation.HoverAnimation;
-import cc.sighs.auratip.api.animation.TransitionAnimation;
-import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.resources.ResourceLocation;

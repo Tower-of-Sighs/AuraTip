@@ -1,8 +1,9 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu.action;
 
+import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.api.action.ActionHandlers;
 import cc.sighs.auratip.data.action.Action;
-import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
@@ -13,8 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 
 public class ActionsKJS {
     private static final ResourceLocation RUN_COMMAND = AuraTip.id("run_command");

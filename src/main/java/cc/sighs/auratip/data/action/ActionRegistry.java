@@ -1,12 +1,12 @@
 package cc.sighs.auratip.data.action;
 
 import cc.sighs.auratip.AuraTip;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.Dynamic;
-import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.DataResult;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
@@ -102,20 +102,20 @@ public final class ActionRegistry {
 
     private static Map<String, Dynamic<?>> encode(Action action) {
         Map<String, Dynamic<?>> out = new HashMap<>();
-        if (action instanceof Action.RunCommand rc) {
+        if (action instanceof Action.RunCommand(String command)) {
             out.put("type", dynamicOf(RUN_COMMAND.toString()));
-            out.put("command", dynamicOf(rc.command()));
+            out.put("command", dynamicOf(command));
             return out;
         }
-        if (action instanceof Action.SimulateKey sk) {
+        if (action instanceof Action.SimulateKey(int keyCode)) {
             out.put("type", dynamicOf(SIMULATE_KEY.toString()));
-            out.put("key_code", dynamicOf(sk.keyCode()));
+            out.put("key_code", dynamicOf(keyCode));
             return out;
         }
-        if (action instanceof Action.ScriptAction sa) {
-            out.put("type", dynamicOf(sa.type().toString()));
-            if (sa.params() != null && !sa.params().isEmpty()) {
-                out.putAll(sa.params());
+        if (action instanceof Action.ScriptAction(ResourceLocation type1, Map<String, Dynamic<?>> params)) {
+            out.put("type", dynamicOf(type1.toString()));
+            if (params != null && !params.isEmpty()) {
+                out.putAll(params);
             }
             return out;
         }
