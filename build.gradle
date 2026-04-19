@@ -10,7 +10,7 @@ group = mod_group_id
 version = mod_version
 
 base {
-    archivesName = "${mod_name}-forge-${minecraft_version}"
+    archivesName = "${mod_id}-forge-${minecraft_version}"
 }
 
 java {
@@ -114,39 +114,78 @@ dependencies {
 
     modRuntimeOnly ("mezz.jei:jei-1.20.1-forge:15.20.0.104")
 
-    modImplementation ('cc.sighs.oelib:OELib-forge-1.20.1:0.2.4-20260413.075423-2')
+    modImplementation ('cc.sighs.oelib:OELib-forge-1.20.1:0.2.4')
+    modApi ('cc.sighs.oelib:OELib-forge-1.20.1:0.2.4')
+}
+
+def resolveMavenDependencyWhitelist() {
+    return [
+            'cc.sighs.oelib'
+    ]
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-
-            groupId = project.group
+            groupId = project.group.toString()
             artifactId = base.archivesName.get()
-            version = project.version
+            version = project.version.toString()
 
             pom.withXml {
-                def dependenciesNode = asNode().getAt("dependencies")[0]
-                if (dependenciesNode != null) {
-                    // 这里添加你希望保留在 POM 中的 groupId 或 artifactId，也就是从 Maven 拉依赖时会附带的库、模组啥的
-                    def whiteList = [
-                            'cc.sighs.oelib'
-                    ]
+                def whitelist = resolveMavenDependencyWhitelist()
 
-                    def dependencies = dependenciesNode.children()
-                    def toRemove = []
+                def isAllowed = { groupId, artifactId ->
+                    def coordinate = "${groupId}:${artifactId}"
+                    return whitelist.contains(groupId) ||
+                            whitelist.contains(artifactId) ||
+                            whitelist.contains(coordinate)
+                }
 
-                    dependencies.each { dep ->
-                        def artifactId = dep.artifactId.text()
-                        def groupId = dep.groupId.text()
+                def root = asNode()
+                def dependenciesNode = root.dependencies ? root.dependencies[0] : root.appendNode("dependencies")
 
-                        if (!whiteList.contains(artifactId) && !whiteList.contains(groupId)) {
-                            toRemove.add(dep)
+                def toRemove = []
+                dependenciesNode.dependency.each { dep ->
+                    def g = dep.groupId.text()
+                    def a = dep.artifactId.text()
+                    if (!isAllowed(g, a)) {
+                        toRemove.add(dep)
+                    }
+                }
+                toRemove.each { dependenciesNode.remove(it) }
+
+                def configurationMapping = [
+                        "modImplementation": "runtime",
+                        "modApi"        : "compile",
+                        "modCompileOnly": "compile"
+                ]
+
+                configurationMapping.each { confName, scope ->
+                    def configuration = configurations.findByName(confName)
+                    if (configuration) {
+                        configuration.dependencies.each { dep ->
+                            if (dep instanceof ExternalModuleDependency) {
+                                def groupId = dep.group
+                                def artifactId = dep.name
+                                def version = dep.version
+
+                                if (groupId && artifactId && version && isAllowed(groupId, artifactId)) {
+                                    def exists = dependenciesNode.dependency.any {
+                                        it.groupId.text() == groupId && it.artifactId.text() == artifactId
+                                    }
+
+                                    if (!exists) {
+                                        def depNode = dependenciesNode.appendNode("dependency")
+                                        depNode.appendNode("groupId", groupId)
+                                        depNode.appendNode("artifactId", artifactId)
+                                        depNode.appendNode("version", version)
+                                        depNode.appendNode("scope", scope)
+                                    }
+                                }
+                            }
                         }
                     }
-
-                    toRemove.each { dependenciesNode.remove(it) }
                 }
             }
         }
