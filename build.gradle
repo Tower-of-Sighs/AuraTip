@@ -62,7 +62,10 @@ base {
     archivesName = "${mod_id}-neoforge-${minecraft_version}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
 
 neoForge {
     // Specify the version of NeoForge to use.
@@ -188,18 +191,66 @@ tasks.withType(ProcessResources).configureEach {
 }
 
 
-// Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {
-        register('mavenJava', MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
+
+            groupId = project.group
+            artifactId = base.archivesName.get()
+            version = project.version
+
+            pom.withXml {
+                def dependenciesNode = asNode().getAt("dependencies")[0]
+                if (dependenciesNode != null) {
+                    // 这里添加你希望保留在 POM 中的 groupId 或 artifactId，也就是从 Maven 拉依赖时会附带的库、模组啥的
+                    def whiteList = [
+                            'cc.sighs.oelib'
+                    ]
+
+                    def dependencies = dependenciesNode.children()
+                    def toRemove = []
+
+                    dependencies.each { dep ->
+                        def artifactId = dep.artifactId.text()
+                        def groupId = dep.groupId.text()
+
+                        if (!whiteList.contains(artifactId) && !whiteList.contains(groupId)) {
+                            toRemove.add(dep)
+                        }
+                    }
+
+                    toRemove.each { dependenciesNode.remove(it) }
+                }
+            }
         }
     }
+
     repositories {
+        def modVersion = project.findProperty('mod_version') ?: 'unknown'
+
+        boolean isSnapshot = modVersion.toLowerCase().contains('snapshot')
+
+        def publishUrl = isSnapshot ?
+                "https://maven.sighs.cc/repository/maven-snapshots/" :
+                "https://maven.sighs.cc/repository/maven-releases/"
+
+        def publishUser = System.getenv("SIGHS_PUBLISH_USER")
+        def publishPassword = System.getenv("SIGHS_PUBLISH_PASSWORD")
+
         maven {
-            url "file://${project.projectDir}/repo"
+            name = "remoteRepo"
+            url = uri(publishUrl)
+            credentials {
+                username = publishUser
+                password = publishPassword
+            }
         }
     }
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
 }
 
 // IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
