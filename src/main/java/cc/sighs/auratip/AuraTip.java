@@ -23,7 +23,7 @@ public class AuraTip {
     public static final String MOD_ID = "auratip";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public AuraTip(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
+    public AuraTip(IEventBus modEventBus, ModContainer modContainer) {
         DataRegistry.register(TipData.class, TipData.CODEC);
         DataRegistry.register(RadialMenuData.class, RadialMenuData.CODEC);
         NetworkAutoRegistration.registerBasePackage("cc.sighs.auratip.network");
@@ -32,9 +32,6 @@ public class AuraTip {
 
         if (DevEnvironment.isDev()) {
             DevJavaApiSamples.initCommon();
-        }
-        if (dist == Dist.CLIENT) {
-            AuraTipClient.init();
         }
     }
 
