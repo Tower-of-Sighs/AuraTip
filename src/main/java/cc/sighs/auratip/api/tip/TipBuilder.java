@@ -2,7 +2,7 @@ package cc.sighs.auratip.api.tip;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.TipData;
-import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.auratip.util.SerializationUtil;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.network.chat.Component;
@@ -233,9 +233,9 @@ public class TipBuilder {
      * Mutable page state used by {@link PageBuilder}.
      */
     public static class PageData {
-        ComponentSerialization.TextElement title;
-        ComponentSerialization.TextElement subtitle;
-        ComponentSerialization.TextElement content;
+        TextSerialization.TextElement title;
+        TextSerialization.TextElement subtitle;
+        TextSerialization.TextElement content;
         TipData.ImageElement image;
     }
 
@@ -260,7 +260,7 @@ public class TipBuilder {
          * @return this builder
          */
         public PageBuilder title(Component text, float scale, int lineSpacing) {
-            data.title = new ComponentSerialization.TextElement(text, scale, lineSpacing, Optional.empty());
+            data.title = new TextSerialization.TextElement(text, scale, lineSpacing, Optional.empty());
             return this;
         }
 
@@ -278,7 +278,7 @@ public class TipBuilder {
          * Sets the page subtitle.
          */
         public PageBuilder subtitle(Component text, float scale, int lineSpacing) {
-            data.subtitle = new ComponentSerialization.TextElement(text, scale, lineSpacing, Optional.empty());
+            data.subtitle = new TextSerialization.TextElement(text, scale, lineSpacing, Optional.empty());
             return this;
         }
 
@@ -293,7 +293,7 @@ public class TipBuilder {
          * Sets the page content.
          */
         public PageBuilder content(Component text, float scale, int lineSpacing) {
-            data.content = new ComponentSerialization.TextElement(text, scale, lineSpacing, Optional.empty());
+            data.content = new TextSerialization.TextElement(text, scale, lineSpacing, Optional.empty());
             return this;
         }
 
@@ -317,11 +317,11 @@ public class TipBuilder {
          * @return this builder
          */
         public PageBuilder titleDivider(int thickness, int marginTop, int marginBottom, float length, String colorHex) {
-            data.title = new ComponentSerialization.TextElement(
+            data.title = new TextSerialization.TextElement(
                     data.title != null ? data.title.text() : Component.empty(),
                     data.title != null ? data.title.scale() : 1.0f,
                     data.title != null ? data.title.lineSpacing() : 0,
-                    Optional.of(new ComponentSerialization.Divider(thickness, marginTop, marginBottom, length, colorHex == null ? "" : colorHex))
+                    Optional.of(new TextSerialization.Divider(thickness, marginTop, marginBottom, length, colorHex == null ? "" : colorHex))
             );
             return this;
         }

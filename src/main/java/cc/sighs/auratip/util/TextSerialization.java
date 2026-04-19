@@ -2,20 +2,25 @@ package cc.sighs.auratip.util;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
+import java.util.Map;
 import java.util.Optional;
 
-public final class ComponentSerialization {
-    private ComponentSerialization() {
+public final class TextSerialization {
+    private TextSerialization() {
     }
-
-    public static final Codec<Component> COMPONENT_CODEC = net.minecraft.network.chat.ComponentSerialization.CODEC;
+    public static final StreamCodec<RegistryFriendlyByteBuf, Map<String, Component>> VARIABLES_CODEC =
+            ByteBufCodecs.fromCodecWithRegistriesTrusted(Codec.unboundedMap(Codec.STRING, ComponentSerialization.CODEC));
 
     public record TextElement(Component text, float scale, int lineSpacing, Optional<Divider> divider) {
         public static final Codec<TextElement> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
-                        ComponentSerialization.COMPONENT_CODEC.fieldOf("text").forGetter(TextElement::text),
+                        ComponentSerialization.CODEC.fieldOf("text").forGetter(TextElement::text),
                         Codec.FLOAT.optionalFieldOf("scale", 1.0f).forGetter(TextElement::scale),
                         Codec.INT.optionalFieldOf("line_spacing", 0).forGetter(TextElement::lineSpacing),
                         Divider.CODEC.optionalFieldOf("divider").forGetter(TextElement::divider)

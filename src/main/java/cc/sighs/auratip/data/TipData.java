@@ -2,7 +2,7 @@ package cc.sighs.auratip.data;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.validator.TipDataValidator;
-import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.oelib.data.api.DataDriven;
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
@@ -197,17 +197,17 @@ public record TipData(
 
     public record Page(
             int pageIndex,
-            Optional<ComponentSerialization.TextElement> title,
-            Optional<ComponentSerialization.TextElement> subtitle,
-            Optional<ComponentSerialization.TextElement> content,
+            Optional<TextSerialization.TextElement> title,
+            Optional<TextSerialization.TextElement> subtitle,
+            Optional<TextSerialization.TextElement> content,
             Optional<ImageElement> image
     ) {
         public static final Codec<Page> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.INT.fieldOf("page_index").forGetter(Page::pageIndex),
-                        ComponentSerialization.TextElement.CODEC.optionalFieldOf("title").forGetter(Page::title),
-                        ComponentSerialization.TextElement.CODEC.optionalFieldOf("subtitle").forGetter(Page::subtitle),
-                        ComponentSerialization.TextElement.CODEC.optionalFieldOf("content").forGetter(Page::content),
+                        TextSerialization.TextElement.CODEC.optionalFieldOf("title").forGetter(Page::title),
+                        TextSerialization.TextElement.CODEC.optionalFieldOf("subtitle").forGetter(Page::subtitle),
+                        TextSerialization.TextElement.CODEC.optionalFieldOf("content").forGetter(Page::content),
                         ImageElement.CODEC.optionalFieldOf("image").forGetter(Page::image)
                 ).apply(inst, Page::new)
         );

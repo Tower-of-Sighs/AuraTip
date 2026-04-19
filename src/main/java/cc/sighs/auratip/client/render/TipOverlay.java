@@ -7,7 +7,7 @@ import cc.sighs.auratip.data.animation.AnimationType;
 import cc.sighs.auratip.api.animation.HoverAnimation;
 import cc.sighs.auratip.api.animation.TransitionAnimation;
 import cc.sighs.auratip.util.ColorUtil;
-import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.auratip.util.ResolveUtil;
 import cc.sighs.auratip.editor.client.EditorClient;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -246,14 +246,14 @@ public class TipOverlay {
         int contentY = drawY + 12;
 
         if (page.title().isPresent()) {
-            ComponentSerialization.TextElement title = page.title().get();
+            TextSerialization.TextElement title = page.title().get();
             contentY = drawTextElement(graphics, title, contentX, contentY);
             if (title.divider().isPresent()) {
                 contentY = drawDivider(graphics, title.divider().get(), contentX, drawX + w - 12, contentY);
             }
         }
         if (page.subtitle().isPresent()) {
-            ComponentSerialization.TextElement subtitle = page.subtitle().get();
+            TextSerialization.TextElement subtitle = page.subtitle().get();
             contentY = drawTextElement(graphics, subtitle, contentX, contentY + 4);
             if (page.title().isEmpty() && subtitle.divider().isPresent()) {
                 contentY = drawDivider(graphics, subtitle.divider().get(), contentX, drawX + w - 12, contentY);
@@ -554,7 +554,7 @@ public class TipOverlay {
         }
     }
 
-    private int drawTextElement(GuiGraphics graphics, ComponentSerialization.TextElement element, int x, int y) {
+    private int drawTextElement(GuiGraphics graphics, TextSerialization.TextElement element, int x, int y) {
         float scale = element.scale();
         var text = ResolveUtil.resolveVariables(element.text(), this.variables);
         int lineSpacing = element.lineSpacing();
@@ -582,7 +582,7 @@ public class TipOverlay {
         return y + (int) (lines.size() * baseLineHeight * scale);
     }
 
-    private int drawDivider(GuiGraphics graphics, ComponentSerialization.Divider divider, int leftX, int rightX, int y) {
+    private int drawDivider(GuiGraphics graphics, TextSerialization.Divider divider, int leftX, int rightX, int y) {
         int thickness = divider.thickness();
         int marginTop = divider.marginTop();
         int marginBottom = divider.marginBottom();

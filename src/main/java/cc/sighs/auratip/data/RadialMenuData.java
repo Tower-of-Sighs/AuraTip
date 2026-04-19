@@ -3,11 +3,12 @@ package cc.sighs.auratip.data;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.validator.RadialMenuDataValidator;
-import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.oelib.data.api.DataDriven;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public record RadialMenuData(
                         Codec.STRING.fieldOf("name").forGetter(Slot::name),
                         ResourceLocation.CODEC.fieldOf("icon").forGetter(Slot::icon),
                         Action.CODEC.fieldOf("action").forGetter(Slot::action),
-                        ComponentSerialization.COMPONENT_CODEC.optionalFieldOf("text").forGetter(Slot::text),
+                        ComponentSerialization.CODEC.optionalFieldOf("text").forGetter(Slot::text),
                         Codec.STRING.optionalFieldOf("highlight_color").forGetter(Slot::highlightColor)
                 ).apply(inst, Slot::new)
         );

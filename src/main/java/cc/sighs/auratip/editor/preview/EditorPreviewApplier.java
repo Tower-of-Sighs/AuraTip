@@ -3,7 +3,7 @@ package cc.sighs.auratip.editor.preview;
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.client.render.TipOverlay;
 import cc.sighs.auratip.data.TipData;
-import cc.sighs.auratip.util.ComponentSerialization;
+import cc.sighs.auratip.util.TextSerialization;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
@@ -90,14 +90,14 @@ public final class EditorPreviewApplier {
 
         TipData.Page page = new TipData.Page(
                 0,
-                Optional.of(new ComponentSerialization.TextElement(
+                Optional.of(new TextSerialization.TextElement(
                         Component.literal("AuraTip Editor Preview"),
                         0.85f,
                         0,
                         Optional.empty()
                 )),
                 Optional.empty(),
-                Optional.of(new ComponentSerialization.TextElement(
+                Optional.of(new TextSerialization.TextElement(
                         Component.literal("Edit in browser, preview renders here.\nPress ESC to exit editor mode."),
                         0.7f,
                         1,
