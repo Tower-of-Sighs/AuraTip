@@ -1,16 +1,17 @@
 package cc.sighs.auratip.client.render;
 
 import cc.sighs.auratip.util.ColorUtil;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
+import org.joml.Matrix3x2fc;
+import org.jspecify.annotations.Nullable;
 
 public class PanelRenderer {
-    public static void drawRoundedPanel(GuiGraphics graphics,
+    public static void drawRoundedPanel(GuiGraphicsExtractor graphics,
                                         int x, int y, int w, int h,
                                         int topColor, int bottomColor,
                                         float radiusPixels,
@@ -34,59 +35,135 @@ public class PanelRenderer {
             r = maxR;
         }
 
-        int part = Math.max(3, (int) (r / 3.0f + 3.0f));
-
-        var pose = graphics.pose().last().pose();
-        var builder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
-
-        double piece = Math.PI / 2.0 / (part + 1);
-
-        float vx;
-        float vy;
-
-        vx = x - r;
-        vy = y;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        vy = y + h;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        for (int i = 1; i <= part; i++) {
-            float xOff = (float) (Math.cos(piece * i) * r);
-            float yOff = (float) (Math.sin(piece * i) * r);
-            vx = x - xOff;
-            vy = y - yOff;
-            builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-            vy = y + h + yOff;
-            builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
+        RenderPipeline pipeline = AuraTipRenderPipelines.ROUNDED_PANEL;
+        if (pipeline == null) {
+            return;
         }
-        vx = x;
-        vy = y - r;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        vy = y + r + h;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        vx = x + w;
-        vy = y - r;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        vy = y + r + h;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        for (int i = 1; i <= part; i++) {
-            float yOff = (float) (Math.cos(piece * i) * r);
-            float xOff = (float) (Math.sin(piece * i) * r);
-            vx = x + w + xOff;
-            vy = y - yOff;
-            builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-            vy = y + h + yOff;
-            builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        }
-        vx = x + w + r;
-        vy = y;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
-        vy = y + h;
-        builder.addVertex(pose, vx, vy, 0).setColor(baseColor);
 
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        BufferUploader.drawWithShader(builder.buildOrThrow());
-        RenderSystem.disableBlend();
+        graphics.submitGuiElementRenderState(
+                new RoundedPanelRenderState(
+                        pipeline,
+                        TextureSetup.noTexture(),
+                        new org.joml.Matrix3x2f(graphics.pose()),
+                        x,
+                        y,
+                        w,
+                        h,
+                        r,
+                        baseColor,
+                        graphics.peekScissorStack()
+                )
+        );
+    }
+
+    private record RoundedPanelRenderState(
+            RenderPipeline pipeline,
+            TextureSetup textureSetup,
+            org.joml.Matrix3x2fc pose,
+            int x,
+            int y,
+            int w,
+            int h,
+            float r,
+            int color,
+            @Nullable ScreenRectangle scissorArea,
+            @Nullable ScreenRectangle bounds
+    ) implements GuiElementRenderState {
+        private RoundedPanelRenderState(
+                RenderPipeline pipeline,
+                TextureSetup textureSetup,
+                org.joml.Matrix3x2fc pose,
+                int x,
+                int y,
+                int w,
+                int h,
+                float r,
+                int color,
+                @Nullable ScreenRectangle scissorArea
+        ) {
+            this(
+                    pipeline,
+                    textureSetup,
+                    pose,
+                    x,
+                    y,
+                    w,
+                    h,
+                    r,
+                    color,
+                    scissorArea,
+                    getBounds(x, y, w, h, r, pose, scissorArea)
+            );
+        }
+
+        @Override
+        public void buildVertices(VertexConsumer vertexConsumer) {
+            int part = Math.max(3, (int) (this.r / 3.0f + 3.0f));
+            double piece = Math.PI / 2.0 / (part + 1);
+
+            float vx;
+            float vy;
+
+            vx = this.x - this.r;
+            vy = this.y;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+            vy = this.y + this.h;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+
+            for (int i = 1; i <= part; i++) {
+                float xOff = (float) (Math.cos(piece * i) * this.r);
+                float yOff = (float) (Math.sin(piece * i) * this.r);
+                vx = this.x - xOff;
+                vy = this.y - yOff;
+                vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+                vy = this.y + this.h + yOff;
+                vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+            }
+
+            vx = this.x;
+            vy = this.y - this.r;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+            vy = this.y + this.r + this.h;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+
+            vx = this.x + this.w;
+            vy = this.y - this.r;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+            vy = this.y + this.r + this.h;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+
+            for (int i = 1; i <= part; i++) {
+                float yOff = (float) (Math.cos(piece * i) * this.r);
+                float xOff = (float) (Math.sin(piece * i) * this.r);
+                vx = this.x + this.w + xOff;
+                vy = this.y - yOff;
+                vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+                vy = this.y + this.h + yOff;
+                vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+            }
+
+            vx = this.x + this.w + this.r;
+            vy = this.y;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+            vy = this.y + this.h;
+            vertexConsumer.addVertexWith2DPose(this.pose, vx, vy).setColor(this.color);
+        }
+    }
+
+    private static ScreenRectangle getBounds(
+            int x,
+            int y,
+            int w,
+            int h,
+            float r,
+            Matrix3x2fc pose,
+            @Nullable ScreenRectangle scissorArea
+    ) {
+        int x0 = (int) Math.floor(x - r - 1.0f);
+        int y0 = (int) Math.floor(y - r - 1.0f);
+        int x1 = (int) Math.ceil(x + w + r + 1.0f);
+        int y1 = (int) Math.ceil(y + h + r + 1.0f);
+        ScreenRectangle bounds = new ScreenRectangle(x0, y0, x1 - x0, y1 - y0).transformMaxBounds(pose);
+        return scissorArea != null ? scissorArea.intersection(bounds) : bounds;
     }
 }

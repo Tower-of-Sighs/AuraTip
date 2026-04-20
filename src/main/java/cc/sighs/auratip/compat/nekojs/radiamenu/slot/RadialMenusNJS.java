@@ -1,16 +1,15 @@
-package cc.sighs.auratip.compat.kubejs.radiamenu.slot;
+package cc.sighs.auratip.compat.nekojs.radiamenu.slot;
 
 import cc.sighs.auratip.api.client.RadialMenuClientApi;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
-import dev.latvian.mods.kubejs.typings.Info;
+import com.tkisor.nekojs.NekoJS;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Optional;
 
-public class RadialMenusKJS {
-    @Info("Client-only: open a radial menu by id. The id can omit namespace (defaults to kubejs).")
+public class RadialMenusNJS {
     public static void open(String menuId) {
         if (menuId == null || menuId.isEmpty()) {
             return;
@@ -27,7 +26,6 @@ public class RadialMenusKJS {
      * <p>
      * If you only want to append to a specific base menu id, use {@link #addSlot(String, String, String, Action, Component, String)}.
      */
-    @Info("Append an extra slot to all base radial menus. The slot is merged into the final menu at open-time.")
     public static void addSlot(String name, String iconId, Action action, Component text, String highlightColor) {
         if (name == null || name.isEmpty()) {
             return;
@@ -38,7 +36,7 @@ public class RadialMenusKJS {
         if (action == null) {
             return;
         }
-        ResourceLocation icon = ResourceLocation.parse(iconId);
+        Identifier icon = Identifier.parse(iconId);
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
                 icon,
@@ -49,7 +47,6 @@ public class RadialMenusKJS {
         RadialMenuExtraSlotRegistry.addSlot(slot);
     }
 
-    @Info("Remove extra slots by name from all base radial menus. Removes all slots with the same name added via KubeJS.")
     public static void removeSlot(String name) {
         if (name == null || name.isEmpty()) {
             return;
@@ -60,14 +57,13 @@ public class RadialMenusKJS {
     /**
      * Appends a slot to a specific base menu id.
      *
-     * @param menuId         base menu id (ResourceLocation string)
+     * @param menuId         base menu id (Identifier string)
      * @param name           slot name
-     * @param iconId         icon texture location (ResourceLocation string)
+     * @param iconId         icon texture location (Identifier string)
      * @param action         slot action
      * @param text           optional label
      * @param highlightColor optional highlight color (argb hex)
      */
-    @Info("Append an extra slot to a specific base menu id (only affects that menu). menuId is a ResourceLocation string.")
     public static void addSlot(String menuId, String name, String iconId, Action action, Component text, String highlightColor) {
         if (menuId == null || menuId.isEmpty()) {
             return;
@@ -82,8 +78,8 @@ public class RadialMenusKJS {
             return;
         }
 
-        ResourceLocation targetMenuId = ResourceLocation.parse(menuId);
-        ResourceLocation icon = ResourceLocation.parse(iconId);
+        Identifier targetMenuId = Identifier.parse(menuId);
+        Identifier icon = Identifier.parse(iconId);
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
                 icon,
@@ -94,7 +90,6 @@ public class RadialMenusKJS {
         RadialMenuExtraSlotRegistry.addSlotForMenu(targetMenuId, slot);
     }
 
-    @Info("Remove extra slots by name from a specific base menu id. Removes all slots with the same name added via KubeJS for that menu.")
     public static void removeSlotForMenu(String menuId, String name) {
         if (menuId == null || menuId.isEmpty()) {
             return;
@@ -105,14 +100,14 @@ public class RadialMenusKJS {
         RadialMenuExtraSlotRegistry.removeSlotForMenu(normalizeId(menuId), name);
     }
 
-    private static ResourceLocation normalizeId(String id) {
+    private static Identifier normalizeId(String id) {
         if (id == null || id.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", "radial_menu");
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, "radial_menu");
         }
         if (id.indexOf(':') < 0) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", id);
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, id);
         }
-        return ResourceLocation.parse(id);
+        return Identifier.parse(id);
     }
 
 }

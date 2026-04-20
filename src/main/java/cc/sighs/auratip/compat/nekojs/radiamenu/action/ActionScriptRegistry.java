@@ -1,8 +1,9 @@
-package cc.sighs.auratip.compat.kubejs.radiamenu.action;
+package cc.sighs.auratip.compat.nekojs.radiamenu.action;
 
 import cc.sighs.auratip.api.action.ActionHandlers;
 import com.mojang.serialization.Dynamic;
-import net.minecraft.resources.ResourceLocation;
+import com.tkisor.nekojs.NekoJS;
+import net.minecraft.resources.Identifier;
 
 import java.util.Map;
 
@@ -28,13 +29,13 @@ public class ActionScriptRegistry {
         void execute(Map<String, Dynamic<?>> params);
     }
 
-    private static ResourceLocation normalizeType(String type) {
+    private static Identifier normalizeType(String type) {
         if (type == null || type.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", "action");
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, "action");
         }
         if (type.indexOf(':') < 0) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", type);
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, type);
         }
-        return ResourceLocation.parse(type);
+        return Identifier.parse(type);
     }
 }

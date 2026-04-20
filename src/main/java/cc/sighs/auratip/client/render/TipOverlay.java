@@ -11,14 +11,13 @@ import cc.sighs.auratip.util.ColorUtil;
 import cc.sighs.auratip.util.ResolveUtil;
 import cc.sighs.auratip.util.TextSerialization;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -133,7 +132,7 @@ public class TipOverlay {
         }
     }
 
-    public void render(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, int screenWidth, int screenHeight) {
+    public void render(GuiGraphicsExtractor graphics, float partialTick, int mouseX, int mouseY, int screenWidth, int screenHeight) {
         if (tip == null) {
             return;
         }
@@ -270,18 +269,18 @@ public class TipOverlay {
         int closeSize = 10;
         int closeX = drawX + w - closeSize - 4;
         int closeY = drawY + 4;
-        graphics.drawString(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
+        graphics.text(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
 
         int indicatorY = drawY + h - 12;
         String pageInfo = (currentPage + 1) + "/" + pages.size();
         int pageInfoWidth = Minecraft.getInstance().font.width(pageInfo);
-        graphics.drawString(Minecraft.getInstance().font, pageInfo, drawX + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
+        graphics.text(Minecraft.getInstance().font, pageInfo, drawX + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
 
         if (tip.behavior().allowPaging() && pages.size() > 1) {
             String left = "<";
             String right = ">";
-            graphics.drawString(Minecraft.getInstance().font, left, drawX + 8, indicatorY, 0xFFFFFFFF);
-            graphics.drawString(Minecraft.getInstance().font, right, drawX + w - 8 - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
+            graphics.text(Minecraft.getInstance().font, left, drawX + 8, indicatorY, 0xFFFFFFFF);
+            graphics.text(Minecraft.getInstance().font, right, drawX + w - 8 - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
         }
 
         hoveringInteractiveArea = cursorVisible && mouseX >= drawX && mouseX <= drawX + w && mouseY >= drawY && mouseY <= drawY + h;
@@ -451,7 +450,7 @@ public class TipOverlay {
         return new int[]{x, y};
     }
 
-    private void renderPanelShadow(GuiGraphics graphics, int x, int y, int w, int h, float eased) {
+    private void renderPanelShadow(GuiGraphicsExtractor graphics, int x, int y, int w, int h, float eased) {
         int alpha = (int) (eased * 140.0f);
         if (alpha <= 0) {
             return;
@@ -460,7 +459,7 @@ public class TipOverlay {
 //        graphics.fill(x + 2, y + 2, x + w + 2, y + h + 2, shadowColor);
     }
 
-    private void renderPanelBackground(GuiGraphics graphics, int x, int y, int w, int h, float eased) {
+    private void renderPanelBackground(GuiGraphicsExtractor graphics, int x, int y, int w, int h, float eased) {
         int radius = 0;
         VisualSettings.BackgroundType type = null;
         boolean rounded = true;
@@ -481,12 +480,12 @@ public class TipOverlay {
         int bottomColor;
         if (type == TipData.VisualSettings.BackgroundType.GRADIENT && background.colors() != null && !background.colors().isEmpty()) {
             var colors = background.colors();
-            String fromHex = colors.get(0);
-            String toHex = colors.get(colors.size() - 1);
+            String fromHex = colors.getFirst();
+            String toHex = colors.getLast();
             topColor = ColorUtil.parseArgb(fromHex);
             bottomColor = ColorUtil.parseArgb(toHex);
         } else if (type == TipData.VisualSettings.BackgroundType.SOLID && background.colors() != null && !background.colors().isEmpty()) {
-            String hex = background.colors().get(0);
+            String hex = background.colors().getFirst();
             topColor = ColorUtil.parseArgb(hex);
             bottomColor = topColor;
         } else {
@@ -554,7 +553,7 @@ public class TipOverlay {
         }
     }
 
-    private int drawTextElement(GuiGraphics graphics, TextSerialization.TextElement element, int x, int y) {
+    private int drawTextElement(GuiGraphicsExtractor graphics, TextSerialization.TextElement element, int x, int y) {
         float scale = element.scale();
         var text = ResolveUtil.resolveVariables(element.text(), this.variables);
         int lineSpacing = element.lineSpacing();
@@ -567,22 +566,22 @@ public class TipOverlay {
 
         int baseLineHeight = font.lineHeight + lineSpacing;
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(x, y, 0);
-        graphics.pose().scale(scale, scale, 1.0f);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x, y);
+        graphics.pose().scale(scale, scale);
 
         int drawY = 0;
         for (var line : lines) {
-            graphics.drawString(font, line, 0, drawY, 0xFFFFFFFF);
+            graphics.text(font, line, 0, drawY, 0xFFFFFFFF, true);
             drawY += baseLineHeight;
         }
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
         return y + (int) (lines.size() * baseLineHeight * scale);
     }
 
-    private int drawDivider(GuiGraphics graphics, TextSerialization.Divider divider, int leftX, int rightX, int y) {
+    private int drawDivider(GuiGraphicsExtractor graphics, TextSerialization.Divider divider, int leftX, int rightX, int y) {
         int thickness = divider.thickness();
         int marginTop = divider.marginTop();
         int marginBottom = divider.marginBottom();
@@ -614,8 +613,8 @@ public class TipOverlay {
         return lineY + thickness + marginBottom;
     }
 
-    private void drawImage(GuiGraphics graphics, TipData.ImageElement image, int panelX, int panelY, int panelWidth) {
-        ResourceLocation texture = ResourceLocation.parse(image.path());
+    private void drawImage(GuiGraphicsExtractor graphics, TipData.ImageElement image, int panelX, int panelY, int panelWidth) {
+        Identifier texture = Identifier.parse(image.path());
         int[] size = image.size();
         int imgW = size.length > 0 ? size[0] : 64;
         int imgH = size.length > 1 ? size[1] : 64;
@@ -666,10 +665,7 @@ public class TipOverlay {
             }
         }
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, texture);
-
-        graphics.blit(texture, x, y, 0, 0, imgW, imgH, imgW, imgH);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, 0.0f, 0.0f, imgW, imgH, imgW, imgH);
     }
 
     private void startClosing() {

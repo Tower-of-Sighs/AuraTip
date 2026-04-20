@@ -2,7 +2,7 @@ package cc.sighs.auratip.api.animation;
 
 import cc.sighs.auratip.api.util.Params;
 import cc.sighs.auratip.data.animation.AnimationType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Registers tip animations.
@@ -15,11 +15,11 @@ public final class TipAnimations {
     private TipAnimations() {
     }
 
-    public static void register(ResourceLocation id, TransitionFactory factory) {
+    public static void register(Identifier id, TransitionFactory factory) {
         AnimationType.registerInternal(id, raw -> factory.create(new Params(raw)));
     }
 
-    public static void registerHover(ResourceLocation id, HoverFactory factory) {
+    public static void registerHover(Identifier id, HoverFactory factory) {
         AnimationType.registerHoverInternal(id, raw -> factory.create(new Params(raw)));
     }
 

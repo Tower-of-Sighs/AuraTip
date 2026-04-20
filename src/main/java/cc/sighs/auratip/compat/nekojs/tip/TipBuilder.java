@@ -1,9 +1,10 @@
-package cc.sighs.auratip.compat.kubejs.tip;
+package cc.sighs.auratip.compat.nekojs.tip;
 
 import cc.sighs.auratip.api.tip.TipBuilder.BehaviorBuilder;
 import cc.sighs.auratip.api.tip.TipBuilder.PageBuilder;
 import cc.sighs.auratip.data.TipData;
-import net.minecraft.resources.ResourceLocation;
+import com.tkisor.nekojs.NekoJS;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 import java.util.Locale;
@@ -25,7 +26,7 @@ public final class TipBuilder {
     }
 
     public TipBuilder trigger(String type, String mode, int cooldownTicks) {
-        ResourceLocation typeId = normalizeType(type);
+        Identifier typeId = normalizeType(type);
         TipData.Trigger.Mode parsed = TipData.Trigger.Mode.ONCE;
         if (mode != null && !mode.isEmpty()) {
             parsed = TipData.Trigger.Mode.valueOf(mode.toUpperCase(Locale.ROOT));
@@ -175,45 +176,45 @@ public final class TipBuilder {
         }
     }
 
-    private static ResourceLocation normalizeId(String id) {
+    private static Identifier normalizeId(String id) {
         if (id == null || id.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", "tip");
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, "tip");
         }
         if (id.indexOf(':') < 0) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", id);
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, id);
         }
-        return ResourceLocation.parse(id);
+        return Identifier.parse(id);
     }
 
-    private static ResourceLocation normalizeType(String type) {
+    private static Identifier normalizeType(String type) {
         String raw = (type == null) ? "" : type.trim();
         if (raw.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", "trigger");
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, "trigger");
         }
         String lower = raw.toLowerCase(Locale.ROOT);
         if (lower.indexOf(':') >= 0) {
-            ResourceLocation parsed = ResourceLocation.tryParse(lower);
+            Identifier parsed = Identifier.tryParse(lower);
             if (parsed == null) {
                 throw new IllegalStateException("Invalid trigger type id: " + raw);
             }
             return parsed;
         }
-        return ResourceLocation.fromNamespaceAndPath("kubejs", lower);
+        return Identifier.fromNamespaceAndPath(NekoJS.MODID, lower);
     }
 
-    private static ResourceLocation normalizeAnimation(String id) {
+    private static Identifier normalizeAnimation(String id) {
         String raw = (id == null) ? "" : id.trim();
         if (raw.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", "animation");
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, "animation");
         }
         String lower = raw.toLowerCase(Locale.ROOT);
         if (lower.indexOf(':') >= 0) {
-            ResourceLocation parsed = ResourceLocation.tryParse(lower);
+            Identifier parsed = Identifier.tryParse(lower);
             if (parsed == null) {
                 throw new IllegalStateException("Invalid animation id: " + raw);
             }
             return parsed;
         }
-        return ResourceLocation.fromNamespaceAndPath("kubejs", lower);
+        return Identifier.fromNamespaceAndPath(NekoJS.MODID, lower);
     }
 }

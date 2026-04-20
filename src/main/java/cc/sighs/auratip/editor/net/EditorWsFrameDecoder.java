@@ -65,7 +65,7 @@ final class EditorWsFrameDecoder extends ByteToMessageDecoder {
 
         byte[] payload = new byte[(int) len];
         in.readBytes(payload);
-        if (masked && mask != null) {
+        if (masked) {
             for (int i = 0; i < payload.length; i++) {
                 payload[i] = (byte) (payload[i] ^ mask[i & 3]);
             }

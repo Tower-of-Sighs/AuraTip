@@ -11,7 +11,7 @@ import cc.sighs.auratip.dev.DevJavaApiSamples;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -69,7 +69,7 @@ public class ClientInputHandler {
             return;
         }
 
-        InputConstants.Key key = InputConstants.getKey(event.getKey(), event.getScanCode());
+        InputConstants.Key key = InputConstants.getKey(event.getKeyEvent());
 
         if (DevEnvironment.isDev()) {
             if (ClientKeyMappings.DEV_TRIGGER_SHOWTIP.isActiveAndMatches(key)) {
@@ -81,11 +81,11 @@ public class ClientInputHandler {
 
             if (ClientKeyMappings.DEV_ENQUEUE_CLIENT_TIP.isActiveAndMatches(key)) {
                 if (mc.player != null) {
-                    var tip = new TipBuilder(ResourceLocation.fromNamespaceAndPath("auratip", "dev_client_enqueue"))
-                            .triggerRepeatable(ResourceLocation.fromNamespaceAndPath("auratip", "unused_trigger"), 0)
+                    var tip = new TipBuilder(Identifier.fromNamespaceAndPath("auratip", "dev_client_enqueue"))
+                            .triggerRepeatable(Identifier.fromNamespaceAndPath("auratip", "unused_trigger"), 0)
                             .visual(v -> v
-                                    .animationStyle(ResourceLocation.fromNamespaceAndPath("auratip", "fade"))
-                                    .hoverAnimationStyle(ResourceLocation.fromNamespaceAndPath("auratip", "none"))
+                                    .animationStyle(Identifier.fromNamespaceAndPath("auratip", "fade"))
+                                    .hoverAnimationStyle(Identifier.fromNamespaceAndPath("auratip", "none"))
                                     .size(220, 55)
                                     .positionPreset("TOP_LEFT")
                             )
@@ -114,7 +114,7 @@ public class ClientInputHandler {
             }
 
             if (ClientKeyMappings.DEV_OPEN_KJS_MENU.isActiveAndMatches(key)) {
-                RadialMenuClient.openMenu(ResourceLocation.fromNamespaceAndPath("kubejs", "demo_menu"));
+                RadialMenuClient.openMenu(Identifier.fromNamespaceAndPath("nekojs", "demo_menu"));
             }
         }
     }

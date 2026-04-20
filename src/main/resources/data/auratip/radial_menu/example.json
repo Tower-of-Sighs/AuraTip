@@ -3,7 +3,7 @@
   "menu_settings": {
     "inner_radius": 55,
     "outer_radius": 100,
-    "animation_speed": 0.2,
+    "animation_speed": 1.2,
     "ring_colors": [
       "#1A071B10",
       "#D91A6B3A"

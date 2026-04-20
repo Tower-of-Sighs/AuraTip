@@ -2,11 +2,11 @@ package cc.sighs.auratip.data.validator;
 
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.oelib.data.api.DataValidator;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class RadialMenuDataValidator implements DataValidator<RadialMenuData> {
     @Override
-    public ValidationResult validate(RadialMenuData data, ResourceLocation source) {
+    public ValidationResult validate(RadialMenuData data, Identifier source) {
         if (data.id() == null) {
             return ValidationResult.failure("Radial menu has no id in " + source);
         }

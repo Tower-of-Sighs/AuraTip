@@ -6,7 +6,7 @@ import cc.sighs.auratip.util.SerializationUtil;
 import cc.sighs.auratip.util.TextSerialization;
 import com.mojang.serialization.Dynamic;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -20,19 +20,19 @@ import java.util.function.Consumer;
 @SuppressWarnings({"UnusedReturnValue", "unused"})
 public class TipBuilder {
 
-    private final ResourceLocation id;
+    private final Identifier id;
     private final Map<Integer, PageData> pages = new LinkedHashMap<>();
 
-    private ResourceLocation triggerType = AuraTip.id("first_join_world");
+    private Identifier triggerType = AuraTip.id("first_join_world");
     private TipData.Trigger.Mode triggerMode = TipData.Trigger.Mode.ONCE;
     private int triggerCooldown;
 
-    private ResourceLocation animationStyle = AuraTip.id("fade_and_slide");
+    private Identifier animationStyle = AuraTip.id("fade_and_slide");
     private float animationSpeed = 1.0f;
     private final Map<String, Object> animationParams = new HashMap<>();
 
     private final Map<String, Object> hoverAnimationParams = new HashMap<>();
-    private ResourceLocation hoverAnimationStyle = AuraTip.id("none");
+    private Identifier hoverAnimationStyle = AuraTip.id("none");
     private float hoverAnimationSpeed = 1.0f;
     private boolean hoverOnlyOnHover;
 
@@ -63,7 +63,7 @@ public class TipBuilder {
      *
      * @param id unique tip id. This is used for trigger bookkeeping (e.g. "ONCE" mode) and should be stable.
      */
-    public TipBuilder(ResourceLocation id) {
+    public TipBuilder(Identifier id) {
         this.id = Objects.requireNonNull(id, "id");
     }
 
@@ -75,7 +75,7 @@ public class TipBuilder {
      * @param cooldownTicks cooldown in ticks; only applies when {@code mode=REPEATABLE}. Values &lt; 0 are treated as 0.
      * @return this builder
      */
-    public TipBuilder trigger(ResourceLocation type, TipData.Trigger.Mode mode, int cooldownTicks) {
+    public TipBuilder trigger(Identifier type, TipData.Trigger.Mode mode, int cooldownTicks) {
         this.triggerType = Objects.requireNonNull(type, "type");
         this.triggerMode = mode == null ? TipData.Trigger.Mode.ONCE : mode;
         this.triggerCooldown = Math.max(0, cooldownTicks);
@@ -88,7 +88,7 @@ public class TipBuilder {
      * @param type trigger type id
      * @return this builder
      */
-    public TipBuilder triggerOnce(ResourceLocation type) {
+    public TipBuilder triggerOnce(Identifier type) {
         return trigger(type, TipData.Trigger.Mode.ONCE, 0);
     }
 
@@ -99,7 +99,7 @@ public class TipBuilder {
      * @param cooldownTicks cooldown in ticks (values &lt; 0 become 0)
      * @return this builder
      */
-    public TipBuilder triggerRepeatable(ResourceLocation type, int cooldownTicks) {
+    public TipBuilder triggerRepeatable(Identifier type, int cooldownTicks) {
         return trigger(type, TipData.Trigger.Mode.REPEATABLE, cooldownTicks);
     }
 
@@ -400,7 +400,7 @@ public class TipBuilder {
         /**
          * Sets the transition animation id.
          */
-        public VisualBuilder animationStyle(ResourceLocation style) {
+        public VisualBuilder animationStyle(Identifier style) {
             animationStyle = Objects.requireNonNull(style, "style");
             return this;
         }
@@ -416,7 +416,7 @@ public class TipBuilder {
         /**
          * Sets the hover animation id.
          */
-        public VisualBuilder hoverAnimationStyle(ResourceLocation style) {
+        public VisualBuilder hoverAnimationStyle(Identifier style) {
             hoverAnimationStyle = Objects.requireNonNull(style, "style");
             return this;
         }

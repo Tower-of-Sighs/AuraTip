@@ -1,7 +1,6 @@
-package cc.sighs.auratip.compat.kubejs.tip;
+package cc.sighs.auratip.compat.nekojs.tip;
 
 import cc.sighs.auratip.util.ColorUtil;
-import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -11,7 +10,6 @@ import net.minecraft.network.chat.TextColor;
 import java.util.Locale;
 
 public class TipText {
-    @Info("Create a text builder from any object. If base is a Component it's used directly; otherwise it becomes a literal.")
     public static Builder of(Object base) {
         if (base instanceof Component component) {
             return new Builder(component);
@@ -19,12 +17,10 @@ public class TipText {
         return new Builder(Component.literal(String.valueOf(base)));
     }
 
-    @Info("Create a translatable text builder (translation key + args).")
     public static Builder translatable(String key, Object... args) {
         return new Builder(Component.translatable(key, args));
     }
 
-    @Info("Join multiple parts into one Component. Parts can be Builder, Component, or any object (converted to literal).")
     public static Component join(Object... parts) {
         MutableComponent out = Component.empty();
         if (parts == null) {
@@ -50,14 +46,12 @@ public class TipText {
             this.component = base.copy();
         }
 
-        @Info("Set text color from a hex string. Accepts #RRGGBB / RRGGBB / #AARRGGBB, but only RGB is used.")
         public Builder colorHex(String hex) {
             Style style = styleFromHex(hex).applyTo(component.getStyle());
             component.setStyle(style);
             return this;
         }
 
-        @Info("Set text color from 0xRRGGBB.")
         public Builder colorRgb(int rgb) {
             TextColor color = TextColor.fromRgb(rgb & 0xFFFFFF);
             Style style = component.getStyle().withColor(color);
@@ -65,7 +59,6 @@ public class TipText {
             return this;
         }
 
-        @Info("Apply a ChatFormatting by name (case-insensitive, e.g. 'gold'). Invalid values are ignored.")
         public Builder formatting(String formattingName) {
             if (formattingName == null || formattingName.isBlank()) {
                 return this;
@@ -81,42 +74,36 @@ public class TipText {
             return this;
         }
 
-        @Info("Apply bold formatting.")
         public Builder bold() {
             Style style = component.getStyle().applyFormat(ChatFormatting.BOLD);
             component.setStyle(style);
             return this;
         }
 
-        @Info("Apply italic formatting.")
         public Builder italic() {
             Style style = component.getStyle().applyFormat(ChatFormatting.ITALIC);
             component.setStyle(style);
             return this;
         }
 
-        @Info("Apply underlined formatting.")
         public Builder underlined() {
             Style style = component.getStyle().applyFormat(ChatFormatting.UNDERLINE);
             component.setStyle(style);
             return this;
         }
 
-        @Info("Apply strikethrough formatting.")
         public Builder strikethrough() {
             Style style = component.getStyle().applyFormat(ChatFormatting.STRIKETHROUGH);
             component.setStyle(style);
             return this;
         }
 
-        @Info("Apply obfuscated formatting.")
         public Builder obfuscated() {
             Style style = component.getStyle().applyFormat(ChatFormatting.OBFUSCATED);
             component.setStyle(style);
             return this;
         }
 
-        @Info("Append plain text.")
         public Builder appendText(String text) {
             if (text != null && !text.isEmpty()) {
                 component.append(text);
@@ -124,7 +111,6 @@ public class TipText {
             return this;
         }
 
-        @Info("Append a Component.")
         public Builder appendComponent(Component other) {
             if (other != null) {
                 component.append(other);
@@ -132,7 +118,6 @@ public class TipText {
             return this;
         }
 
-        @Info("Build the final Component.")
         public Component build() {
             return component;
         }

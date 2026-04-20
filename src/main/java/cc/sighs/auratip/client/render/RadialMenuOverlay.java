@@ -5,14 +5,13 @@ import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.action.ActionExecutor;
 import cc.sighs.auratip.editor.client.EditorClient;
 import cc.sighs.auratip.util.ColorUtil;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -52,7 +51,7 @@ public class RadialMenuOverlay {
     }
 
     public void open(RadialMenuData menu, int screenWidth, int screenHeight, Minecraft mc) {
-        // Rendering note: this overlay is a singleton. If you try to open another radial menu while one is already
+        // this overlay is a singleton. if you try to open another radial menu while one is already
         // active, the caller should close the current overlay first to avoid overlap.
         this.mc = mc;
         this.menu = menu;
@@ -116,7 +115,7 @@ public class RadialMenuOverlay {
     public void tick() {
     }
 
-    public void render(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, int screenWidth, int screenHeight) {
+    public void render(GuiGraphicsExtractor graphics, float partialTick, int mouseX, int mouseY, int screenWidth, int screenHeight) {
         if (menu == null || slots == null || slots.isEmpty()) {
             return;
         }
@@ -242,7 +241,7 @@ public class RadialMenuOverlay {
             Component text = hovered.text().orElseGet(() -> Component.translatable(hovered.name()));
             int textWidth = Minecraft.getInstance().font.width(text);
             int textY = centerY - Minecraft.getInstance().font.lineHeight / 2;
-            graphics.drawString(Minecraft.getInstance().font, text,
+            graphics.text(Minecraft.getInstance().font, text,
                     centerX - textWidth / 2, textY, 0xFFFFFFFF);
         }
     }
@@ -277,16 +276,13 @@ public class RadialMenuOverlay {
         return true;
     }
 
-    private void drawIcon(GuiGraphics graphics, ResourceLocation texture, int x, int y, float scale) {
+    private void drawIcon(GuiGraphicsExtractor graphics, Identifier texture, int x, int y, float scale) {
         if (scale <= 0.0f) {
             return;
         }
         int size = (int) (24 * scale);
         int drawX = x - size / 2;
         int drawY = y - size / 2;
-
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, texture);
-        graphics.blit(texture, drawX, drawY, 0, 0, size, size, size, size);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, drawX, drawY, 0.0f, 0.0f, size, size, size, size);
     }
 }

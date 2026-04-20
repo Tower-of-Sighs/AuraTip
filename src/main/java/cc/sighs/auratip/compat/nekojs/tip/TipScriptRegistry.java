@@ -1,4 +1,4 @@
-package cc.sighs.auratip.compat.kubejs.tip;
+package cc.sighs.auratip.compat.nekojs.tip;
 
 import cc.sighs.auratip.api.tip.TipRegistry;
 import cc.sighs.auratip.data.TipData;

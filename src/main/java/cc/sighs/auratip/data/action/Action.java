@@ -3,7 +3,7 @@ package cc.sighs.auratip.data.action;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Map;
 
@@ -56,7 +56,7 @@ public interface Action {
         );
     }
 
-    record ScriptAction(ResourceLocation type, Map<String, Dynamic<?>> params) implements Action {
+    record ScriptAction(Identifier type, Map<String, Dynamic<?>> params) implements Action {
         @Override
         public <T> T accept(ActionVisitor<T> visitor) {
             return visitor.visitScript(this);

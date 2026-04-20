@@ -7,7 +7,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,19 +21,19 @@ public final class ActionRegistry {
     private ActionRegistry() {
     }
 
-    private static final ResourceLocation RUN_COMMAND = AuraTip.id("run_command");
-    private static final ResourceLocation SIMULATE_KEY = AuraTip.id("simulate_key");
-    private static final ResourceLocation UNKNOWN = AuraTip.id("unknown");
+    private static final Identifier RUN_COMMAND = AuraTip.id("run_command");
+    private static final Identifier SIMULATE_KEY = AuraTip.id("simulate_key");
+    private static final Identifier UNKNOWN = AuraTip.id("unknown");
 
-    private static final Map<ResourceLocation, Codec<? extends Action>> CUSTOM_CODECS = new ConcurrentHashMap<>();
-    private static final Map<Class<?>, ResourceLocation> CUSTOM_TYPE_BY_CLASS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, Codec<? extends Action>> CUSTOM_CODECS = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Identifier> CUSTOM_TYPE_BY_CLASS = new ConcurrentHashMap<>();
 
     public static Codec<Action> codec() {
         Codec<Map<String, Dynamic<?>>> mapCodec = Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH);
         return mapCodec.xmap(ActionRegistry::decode, ActionRegistry::encode);
     }
 
-    public static synchronized <T extends Action> void registerCustomCodec(ResourceLocation type, Class<T> actionClass, Codec<T> codec) {
+    public static synchronized <T extends Action> void registerCustomCodec(Identifier type, Class<T> actionClass, Codec<T> codec) {
         Objects.requireNonNull(type, "type");
         Objects.requireNonNull(actionClass, "actionClass");
         Objects.requireNonNull(codec, "codec");
@@ -53,7 +53,7 @@ public final class ActionRegistry {
         CUSTOM_TYPE_BY_CLASS.put(actionClass, type);
     }
 
-    public static synchronized void clearCustomCodec(ResourceLocation type) {
+    public static synchronized void clearCustomCodec(Identifier type) {
         if (type == null) {
             return;
         }
@@ -71,9 +71,9 @@ public final class ActionRegistry {
 
         Dynamic<?> typeDyn = raw.get("type");
         String type = typeDyn == null ? "" : typeDyn.asString("");
-        ResourceLocation id = ResourceLocation.tryParse(type);
+        Identifier id = Identifier.tryParse(type);
         if (id == null) {
-            throw new IllegalStateException("Invalid action type id: '" + type + "'. Action.type must be a ResourceLocation string like 'modid:path'.");
+            throw new IllegalStateException("Invalid action type id: '" + type + "'. Action.type must be a Identifier string like 'modid:path'.");
         }
 
         if (RUN_COMMAND.equals(id)) {
@@ -112,7 +112,7 @@ public final class ActionRegistry {
             out.put("key_code", dynamicOf(keyCode));
             return out;
         }
-        if (action instanceof Action.ScriptAction(ResourceLocation type1, Map<String, Dynamic<?>> params)) {
+        if (action instanceof Action.ScriptAction(Identifier type1, Map<String, Dynamic<?>> params)) {
             out.put("type", dynamicOf(type1.toString()));
             if (params != null && !params.isEmpty()) {
                 out.putAll(params);
@@ -120,9 +120,9 @@ public final class ActionRegistry {
             return out;
         }
 
-        ResourceLocation type = CUSTOM_TYPE_BY_CLASS.get(action.getClass());
+        Identifier type = CUSTOM_TYPE_BY_CLASS.get(action.getClass());
         if (type == null) {
-            for (Map.Entry<Class<?>, ResourceLocation> entry : CUSTOM_TYPE_BY_CLASS.entrySet()) {
+            for (Map.Entry<Class<?>, Identifier> entry : CUSTOM_TYPE_BY_CLASS.entrySet()) {
                 if (entry.getKey().isInstance(action)) {
                     type = entry.getValue();
                     break;
@@ -130,7 +130,7 @@ public final class ActionRegistry {
             }
         }
         if (type != null) {
-            final ResourceLocation finalType = type;
+            final Identifier finalType = type;
             @SuppressWarnings("unchecked")
             Codec<Action> codec = (Codec<Action>) CUSTOM_CODECS.get(finalType);
             if (codec == null) {

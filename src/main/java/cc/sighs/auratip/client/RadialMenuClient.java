@@ -5,7 +5,7 @@ import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.data.RadialMenuData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 public class RadialMenuClient {
 
-    public static void openMenu(ResourceLocation menuId) {
+    public static void openMenu(Identifier menuId) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.level == null) return;
 
@@ -29,14 +29,14 @@ public class RadialMenuClient {
         }
     }
 
-    private static RadialMenuData buildMenuData(ResourceLocation menuId) {
+    private static RadialMenuData buildMenuData(Identifier menuId) {
         RadialMenuData baseMenu = getBaseMenu(menuId);
         if (baseMenu == null) return null;
 
         return enhanceWithExtraSlots(baseMenu);
     }
 
-    private static RadialMenuData getBaseMenu(ResourceLocation menuId) {
+    private static RadialMenuData getBaseMenu(Identifier menuId) {
         return RadialMenuRegistry.resolveMenuToOpen(menuId);
     }
 
@@ -51,7 +51,7 @@ public class RadialMenuClient {
                 .collect(Collectors.toMap(
                         RadialMenuData.Slot::name,
                         slot -> slot,
-                        (existing, replacement) -> replacement,
+                        (_, replacement) -> replacement,
                         LinkedHashMap::new
                 ))
                 .values()

@@ -7,7 +7,7 @@ import cc.sighs.auratip.network.ShowTipsPacket;
 import cc.sighs.auratip.util.ResolveUtil;
 import cc.sighs.oelib.data.DataManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public final class TipTriggerManager {
      * @param variables variables for <code>${key}</code> placeholders (nullable). Values can be {@link Component}
      *                  or any other object (converted using {@code toString()}).
      */
-    public static void trigger(ResourceLocation type, ServerPlayer player, Map<String, ?> variables) {
+    public static void trigger(Identifier type, ServerPlayer player, Map<String, ?> variables) {
         if (type == null) return;
 
         List<TipData> toShow = collectTipsToShow(player, tip -> {
@@ -51,13 +51,13 @@ public final class TipTriggerManager {
     /**
      * Triggers tips by {@link TipData#id()}.
      * <p>
-     * This applies the same ONCE / REPEATABLE / cooldown rules as {@link #trigger(ResourceLocation, ServerPlayer, Map)}.
+     * This applies the same ONCE / REPEATABLE / cooldown rules as {@link #trigger(Identifier, ServerPlayer, Map)}.
      *
      * @param tipId     tip id (recommended to be namespaced like {@code modid:my_tip})
      * @param player    player to send tips to
      * @param variables variables for <code>${key}</code> placeholders (nullable)
      */
-    public static void triggerById(ResourceLocation tipId, ServerPlayer player, Map<String, ?> variables) {
+    public static void triggerById(Identifier tipId, ServerPlayer player, Map<String, ?> variables) {
         if (tipId == null) return;
 
         List<TipData> toShow = collectTipsToShow(player, tip ->
@@ -82,7 +82,7 @@ public final class TipTriggerManager {
             return List.of();
         }
 
-        LinkedHashMap<ResourceLocation, TipData> byId = new LinkedHashMap<>();
+        LinkedHashMap<Identifier, TipData> byId = new LinkedHashMap<>();
         if (hasDataTips) {
             for (TipData tip : dataTips) {
                 if (tip == null || tip.id() == null) {
@@ -109,7 +109,7 @@ public final class TipTriggerManager {
         List<TipData> tips = new ArrayList<>(byId.values());
 
         var persistent = player.getPersistentData();
-        var shown = persistent.getCompound(SHOWN_TIPS_TAG);
+        var shown = persistent.getCompoundOrEmpty(SHOWN_TIPS_TAG);
         long now = player.level().getGameTime();
 
         List<TipData> toShow = new ArrayList<>();
@@ -129,13 +129,13 @@ public final class TipTriggerManager {
             var mode = trigger.mode();
             boolean once = mode == Mode.ONCE;
 
-            if (once && shown.getBoolean(id)) {
+            if (once && shown.getBooleanOr(id, false)) {
                 continue;
             }
 
             int cooldown = trigger.cooldown();
             if (!once && cooldown > 0) {
-                long lastShown = shown.getLong(id + "_last");
+                long lastShown = shown.getLongOr(id + "_last", 0L);
                 if (now - lastShown < cooldown) {
                     continue;
                 }

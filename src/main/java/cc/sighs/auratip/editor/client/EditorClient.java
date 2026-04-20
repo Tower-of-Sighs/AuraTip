@@ -5,16 +5,13 @@ import cc.sighs.auratip.editor.net.EditorNettyServer;
 import cc.sighs.auratip.editor.preview.EditorPreviewApplier;
 import cc.sighs.auratip.editor.preview.EditorPreviewScreen;
 import cc.sighs.auratip.editor.preview.EditorRadialPreviewApplier;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Util;
 
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * Client-side entrypoint for the visual editor.
- */
 public final class EditorClient {
     private static final Path DEV_EDITOR_HTML = Path.of("src/main/resources/assets/auratip/web/editor.html");
 
@@ -66,8 +63,6 @@ public final class EditorClient {
     }
 
     private static void openBrowser(int port) {
-        // Prefer opening the dev workspace HTML directly (so edits refresh easily),
-        // but fall back to the embedded HTTP server URL when not available.
         String url;
         if (Files.isRegularFile(DEV_EDITOR_HTML)) {
             url = DEV_EDITOR_HTML.toAbsolutePath().toUri() + "?wsPort=" + port;

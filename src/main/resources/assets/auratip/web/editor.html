@@ -111,7 +111,7 @@
     <div class="col-span-4 h-full overflow-auto space-y-3">
       <div class="space-y-1">
         <div id="animIdLabel" class="text-[11px] text-white/50">id</div>
-        <input id="animId" class="w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-purple-500/40" type="text" placeholder="kubejs:my_animation" />
+        <input id="animId" class="w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-purple-500/40" type="text" placeholder="nekojs:my_animation" />
         <div id="animIdHelp" class="text-[11px] text-white/25">Used for preview + Java snippet id.</div>
       </div>
 
@@ -502,8 +502,8 @@
 
   function normalizeAnimId(raw) {
     const s = String(raw || '').trim();
-    if (!s) return (animKind.value === 'hover') ? 'kubejs:hover_animation' : 'kubejs:transition_animation';
-    if (s.indexOf(':') < 0) return `kubejs:${s}`;
+    if (!s) return (animKind.value === 'hover') ? 'nekojs:hover_animation' : 'nekojs:transition_animation';
+    if (s.indexOf(':') < 0) return `nekojs:${s}`;
     return s;
   }
 
@@ -765,11 +765,11 @@
       const ms = m.menu_settings || {};
       const slots = Array.isArray(m.slots) ? m.slots : [];
 
-      push('// AuraTip Radial Menu (KubeJS)');
-      push('// Put this in: kubejs/client_scripts/*.js');
+      push('// AuraTip Radial Menu (NekoJS)');
+      push('// Put this in: nekojs/client_scripts/*.js');
       push('');
       push('RadialMenuEvents.register(event => {');
-      push(`  const menu = event.create(${JSON.stringify(String(m.id || 'kubejs:radial_menu'))});`);
+      push(`  const menu = event.create(${JSON.stringify(String(m.id || 'nekojs:radial_menu'))});`);
       push('');
       push(`  menu.radii(${Number(ms.inner_radius ?? 55)}, ${Number(ms.outer_radius ?? 100)});`);
       push(`  menu.animationSpeed(${Number(ms.animation_speed ?? 1.0)});`);
@@ -791,7 +791,7 @@
       });
 
       push('});');
-      downloadText('auratip_radial_menu.kubejs.js', lines.join('\n') + '\n', 'text/javascript;charset=utf-8');
+      downloadText('auratip_radial_menu.nekojs.js', lines.join('\n') + '\n', 'text/javascript;charset=utf-8');
       return;
     }
 
@@ -801,11 +801,11 @@
     const beh = tData.behavior || {};
     const pages = Array.isArray(tData.pages) ? tData.pages : [];
 
-    push('// AuraTip Tip (KubeJS)');
-    push('// Put this in: kubejs/client_scripts/*.js');
+    push('// AuraTip Tip (NekoJS)');
+    push('// Put this in: nekojs/client_scripts/*.js');
     push('');
     push('TipEvents.register(event => {');
-    push(`  const tip = event.create(${JSON.stringify(String(tData.id || 'kubejs:tip'))});`);
+    push(`  const tip = event.create(${JSON.stringify(String(tData.id || 'nekojs:tip'))});`);
     push(`  tip.trigger(${JSON.stringify(String(trig.type || 'auratip:first_join_world'))}, ${JSON.stringify(String(trig.mode || 'once'))}, ${Number(trig.cooldown || 0)});`);
     push('');
 
@@ -893,7 +893,7 @@
     });
 
     push('});');
-    downloadText('auratip_tip.kubejs.js', lines.join('\n') + '\n', 'text/javascript;charset=utf-8');
+    downloadText('auratip_tip.nekojs.js', lines.join('\n') + '\n', 'text/javascript;charset=utf-8');
   }
 
   function exportJavaSnippet() {
@@ -2357,7 +2357,7 @@
         tipState = initPayload.defaultTip || null;
         radialState = initPayload.defaultRadialMenu || null;
         if (!animId.value) {
-          animId.value = 'kubejs:editor_animation';
+          animId.value = 'nekojs:editor_animation';
         }
         if (!animDefaults.value) {
           animDefaults.value = JSON.stringify({ offset: 32 }, null, 2);

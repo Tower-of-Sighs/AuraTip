@@ -2,8 +2,9 @@ package cc.sighs.auratip.api.radiamenu;
 
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
+import com.tkisor.nekojs.NekoJS;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -14,12 +15,12 @@ import java.util.*;
 public final class RadialMenuExtraSlots {
 
     private static final String OWNER_DEFAULT = "default";
-    private static final String OWNER_KUBEJS = "kubejs";
+    private static final String OWNER_KUBEJS = NekoJS.MODID;
 
     private static final Map<String, List<RadialMenuData.Slot>> BY_OWNER = new LinkedHashMap<>();
-    private static final Map<String, Map<ResourceLocation, List<RadialMenuData.Slot>>> BY_OWNER_BY_MENU = new LinkedHashMap<>();
+    private static final Map<String, Map<Identifier, List<RadialMenuData.Slot>>> BY_OWNER_BY_MENU = new LinkedHashMap<>();
     private static volatile List<RadialMenuData.Slot> SNAPSHOT = Collections.emptyList();
-    private static volatile Map<ResourceLocation, List<RadialMenuData.Slot>> SNAPSHOT_BY_MENU = Collections.emptyMap();
+    private static volatile Map<Identifier, List<RadialMenuData.Slot>> SNAPSHOT_BY_MENU = Collections.emptyMap();
 
     private RadialMenuExtraSlots() {
     }
@@ -28,7 +29,7 @@ public final class RadialMenuExtraSlots {
      * Adds an extra slot.
      * <p>
      * This is a global append: the slot will be merged into <b>any</b> base menu that gets opened.
-     * If you want to append slots only for a specific base menu id, use {@link #addSlotForMenu(ResourceLocation, RadialMenuData.Slot)}.
+     * If you want to append slots only for a specific base menu id, use {@link #addSlotForMenu(Identifier, RadialMenuData.Slot)}.
      *
      * @param slot slot to add (ignored when null)
      */
@@ -39,7 +40,7 @@ public final class RadialMenuExtraSlots {
     /**
      * Adds an extra slot for a specific owner.
      *
-     * @param owner owner id (recommended: modid). {@code "kubejs"} is reserved for the KubeJS integration.
+     * @param owner owner id (recommended: modid). {@code NekoJS.MODID} is reserved for the NekoJS integration.
      * @param slot  slot to add (ignored when null)
      */
     public static synchronized void addSlot(String owner, RadialMenuData.Slot slot) {
@@ -60,23 +61,23 @@ public final class RadialMenuExtraSlots {
      * @param menuId target base menu id
      * @param slot   slot to add (ignored when null)
      */
-    public static synchronized void addSlotForMenu(ResourceLocation menuId, RadialMenuData.Slot slot) {
+    public static synchronized void addSlotForMenu(Identifier menuId, RadialMenuData.Slot slot) {
         addSlotForMenu(OWNER_DEFAULT, menuId, slot);
     }
 
     /**
      * Adds an extra slot that only applies to one base menu id for a specific owner.
      *
-     * @param owner  owner id (recommended: modid). {@code "kubejs"} is reserved for the KubeJS integration.
+     * @param owner  owner id (recommended: modid). {@code NekoJS.MODID} is reserved for the NekoJS integration.
      * @param menuId target base menu id
      * @param slot   slot to add (ignored when null)
      */
-    public static synchronized void addSlotForMenu(String owner, ResourceLocation menuId, RadialMenuData.Slot slot) {
+    public static synchronized void addSlotForMenu(String owner, Identifier menuId, RadialMenuData.Slot slot) {
         if (menuId == null || slot == null) {
             return;
         }
         String key = normalizeOwner(owner);
-        Map<ResourceLocation, List<RadialMenuData.Slot>> byMenu = BY_OWNER_BY_MENU.computeIfAbsent(key, k -> new LinkedHashMap<>());
+        Map<Identifier, List<RadialMenuData.Slot>> byMenu = BY_OWNER_BY_MENU.computeIfAbsent(key, k -> new LinkedHashMap<>());
         List<RadialMenuData.Slot> list = byMenu.computeIfAbsent(menuId, k -> new ArrayList<>());
         list.add(slot);
         rebuildSnapshot();
@@ -93,7 +94,7 @@ public final class RadialMenuExtraSlots {
      */
     public static void addSlot(
             String name,
-            ResourceLocation icon,
+            Identifier icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor
@@ -121,9 +122,9 @@ public final class RadialMenuExtraSlots {
      * @param highlightColor optional hover highlight color (argb hex)
      */
     public static void addSlotForMenu(
-            ResourceLocation menuId,
+            Identifier menuId,
             String name,
-            ResourceLocation icon,
+            Identifier icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor
@@ -175,7 +176,7 @@ public final class RadialMenuExtraSlots {
      * @param menuId target base menu id
      * @param slot   slot to remove (ignored when null)
      */
-    public static synchronized void removeSlotForMenu(ResourceLocation menuId, RadialMenuData.Slot slot) {
+    public static synchronized void removeSlotForMenu(Identifier menuId, RadialMenuData.Slot slot) {
         removeSlotForMenu(OWNER_DEFAULT, menuId, slot);
     }
 
@@ -186,12 +187,12 @@ public final class RadialMenuExtraSlots {
      * @param menuId target base menu id
      * @param slot   slot to remove (ignored when null)
      */
-    public static synchronized void removeSlotForMenu(String owner, ResourceLocation menuId, RadialMenuData.Slot slot) {
+    public static synchronized void removeSlotForMenu(String owner, Identifier menuId, RadialMenuData.Slot slot) {
         if (menuId == null || slot == null) {
             return;
         }
         String key = normalizeOwner(owner);
-        Map<ResourceLocation, List<RadialMenuData.Slot>> byMenu = BY_OWNER_BY_MENU.get(key);
+        Map<Identifier, List<RadialMenuData.Slot>> byMenu = BY_OWNER_BY_MENU.get(key);
         if (byMenu == null) {
             return;
         }
@@ -250,7 +251,7 @@ public final class RadialMenuExtraSlots {
      * @param menuId target base menu id
      * @param name   slot name
      */
-    public static synchronized void removeSlotForMenu(ResourceLocation menuId, String name) {
+    public static synchronized void removeSlotForMenu(Identifier menuId, String name) {
         removeSlotForMenu(OWNER_DEFAULT, menuId, name);
     }
 
@@ -261,12 +262,12 @@ public final class RadialMenuExtraSlots {
      * @param menuId target base menu id
      * @param name   slot name
      */
-    public static synchronized void removeSlotForMenu(String owner, ResourceLocation menuId, String name) {
+    public static synchronized void removeSlotForMenu(String owner, Identifier menuId, String name) {
         if (menuId == null || name == null || name.isEmpty()) {
             return;
         }
         String key = normalizeOwner(owner);
-        Map<ResourceLocation, List<RadialMenuData.Slot>> byMenu = BY_OWNER_BY_MENU.get(key);
+        Map<Identifier, List<RadialMenuData.Slot>> byMenu = BY_OWNER_BY_MENU.get(key);
         if (byMenu == null) {
             return;
         }
@@ -301,13 +302,13 @@ public final class RadialMenuExtraSlots {
      * This includes both:
      * <ul>
      *     <li>Global extra slots (added via {@link #addSlot(RadialMenuData.Slot)})</li>
-     *     <li>Menu-scoped extra slots (added via {@link #addSlotForMenu(ResourceLocation, RadialMenuData.Slot)})</li>
+     *     <li>Menu-scoped extra slots (added via {@link #addSlotForMenu(Identifier, RadialMenuData.Slot)})</li>
      * </ul>
      *
      * @param menuId base menu id
      * @return immutable list (never null)
      */
-    public static synchronized List<RadialMenuData.Slot> getSlotsForMenu(ResourceLocation menuId) {
+    public static synchronized List<RadialMenuData.Slot> getSlotsForMenu(Identifier menuId) {
         if (menuId == null) {
             return SNAPSHOT;
         }
@@ -360,7 +361,7 @@ public final class RadialMenuExtraSlots {
     }
 
     /**
-     * Owner id reserved for the KubeJS integration.
+     * Owner id reserved for the NekoJS integration.
      */
     public static String ownerKubejs() {
         return OWNER_KUBEJS;
@@ -391,13 +392,13 @@ public final class RadialMenuExtraSlots {
             return;
         }
 
-        Map<ResourceLocation, List<RadialMenuData.Slot>> merged = new LinkedHashMap<>();
-        for (Map<ResourceLocation, List<RadialMenuData.Slot>> byMenu : BY_OWNER_BY_MENU.values()) {
+        Map<Identifier, List<RadialMenuData.Slot>> merged = new LinkedHashMap<>();
+        for (Map<Identifier, List<RadialMenuData.Slot>> byMenu : BY_OWNER_BY_MENU.values()) {
             if (byMenu == null || byMenu.isEmpty()) {
                 continue;
             }
-            for (Map.Entry<ResourceLocation, List<RadialMenuData.Slot>> entry : byMenu.entrySet()) {
-                ResourceLocation menuId = entry.getKey();
+            for (Map.Entry<Identifier, List<RadialMenuData.Slot>> entry : byMenu.entrySet()) {
+                Identifier menuId = entry.getKey();
                 List<RadialMenuData.Slot> list = entry.getValue();
                 if (menuId == null || list == null || list.isEmpty()) {
                     continue;

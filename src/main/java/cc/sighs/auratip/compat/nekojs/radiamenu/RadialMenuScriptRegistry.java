@@ -1,4 +1,4 @@
-package cc.sighs.auratip.compat.kubejs.radiamenu;
+package cc.sighs.auratip.compat.nekojs.radiamenu;
 
 import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
 import cc.sighs.auratip.data.RadialMenuData;

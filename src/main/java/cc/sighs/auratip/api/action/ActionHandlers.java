@@ -2,7 +2,7 @@ package cc.sighs.auratip.api.action;
 
 import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 import com.mojang.serialization.Dynamic;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -21,14 +21,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ActionHandlers {
 
-    private static final Map<ResourceLocation, Handler> HANDLERS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, Handler> HANDLERS = new ConcurrentHashMap<>();
 
     /**
      * Optional parameter schema metadata for tooling (e.g. the visual editor).
      * <p>
      * This does not affect runtime behavior; it is only used to render nicer UIs.
      */
-    private static final Map<ResourceLocation, Map<String, CapturedParam>> PARAM_SCHEMA = new ConcurrentHashMap<>();
+    private static final Map<Identifier, Map<String, CapturedParam>> PARAM_SCHEMA = new ConcurrentHashMap<>();
 
     private ActionHandlers() {
     }
@@ -36,12 +36,9 @@ public final class ActionHandlers {
     /**
      * Registers (or replaces) a handler for the given action type.
      */
-    public static void register(ResourceLocation type, Handler handler) {
+    public static void register(Identifier type, Handler handler) {
         if (type == null || handler == null) {
             return;
-        }
-        if (HANDLERS.containsKey(type)) {
-            throw new IllegalStateException("Duplicate action handler type: " + type);
         }
         HANDLERS.put(type, handler);
     }
@@ -49,7 +46,7 @@ public final class ActionHandlers {
     /**
      * Removes a handler for the given action type.
      */
-    public static void clear(ResourceLocation type) {
+    public static void clear(Identifier type) {
         if (type == null) {
             return;
         }
@@ -68,14 +65,14 @@ public final class ActionHandlers {
     /**
      * Returns all registered handler types.
      */
-    public static Set<ResourceLocation> listTypes() {
+    public static Set<Identifier> listTypes() {
         return Set.copyOf(HANDLERS.keySet());
     }
 
     /**
      * Declares a parameter schema for the given action type (tooling-only).
      */
-    public static void declareParamsInternal(ResourceLocation type, Map<String, CapturedParam> params) {
+    public static void declareParamsInternal(Identifier type, Map<String, CapturedParam> params) {
         if (type == null || params == null || params.isEmpty()) {
             return;
         }
@@ -85,7 +82,7 @@ public final class ActionHandlers {
     /**
      * Returns the declared parameter schema for a type, or an empty map if none is declared.
      */
-    public static Map<String, CapturedParam> getDeclaredParams(ResourceLocation type) {
+    public static Map<String, CapturedParam> getDeclaredParams(Identifier type) {
         if (type == null) {
             return Map.of();
         }
@@ -99,7 +96,7 @@ public final class ActionHandlers {
      * @param type   action type id
      * @param params param map (nullable). The map is defensively copied before invoking the handler.
      */
-    public static void execute(ResourceLocation type, @Nullable Map<String, Dynamic<?>> params) {
+    public static void execute(Identifier type, @Nullable Map<String, Dynamic<?>> params) {
         if (type == null) {
             return;
         }

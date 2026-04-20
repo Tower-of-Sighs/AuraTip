@@ -6,7 +6,7 @@ import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
 import cc.sighs.auratip.data.RadialMenuData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 import java.util.Map;
@@ -29,21 +29,21 @@ public final class DevJavaApiSamplesClient {
                 .ringColors(List.of("#1A1A0E2A", "#D95C2B8F"))
                 .slot(
                         "ShowTip (/showtip)",
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/paper.png"),
+                        Identifier.fromNamespaceAndPath("minecraft", "textures/item/paper.png"),
                         Actions.runCommand("/showtip"),
                         Component.literal("/showtip"),
                         "#77FFFFFF"
                 )
                 .slot(
-                        "KJS Action (open inventory)",
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/apple.png"),
-                        Actions.script(ResourceLocation.fromNamespaceAndPath("kubejs", "open_gui"), Map.of("screen", "inventory_screen")),
-                        Component.literal("kubejs:open_gui"),
+                        "NJS Action (open inventory)",
+                        Identifier.fromNamespaceAndPath("minecraft", "textures/item/apple.png"),
+                        Actions.script(Identifier.fromNamespaceAndPath("nekojs", "open_gui"), Map.of("screen", "inventory_screen")),
+                        Component.literal("nekojs:open_gui"),
                         "#77FFFFFF"
                 )
                 .slot(
                         "Java Script Action",
-                        ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/diamond.png"),
+                        Identifier.fromNamespaceAndPath("minecraft", "textures/item/diamond.png"),
                         Actions.script(DevJavaApiSamples.JAVA_SCRIPT_ACTION, Map.of("message", "Hello from Java runtime menu")),
                         Component.literal("auratip:dev_action"),
                         "#77FFFFFF"
@@ -63,7 +63,7 @@ public final class DevJavaApiSamplesClient {
             if (msg.isBlank()) {
                 msg = "(empty message)";
             }
-            mc.player.displayClientMessage(Component.literal("[AuraTip Dev] " + msg), false);
+            mc.player.sendSystemMessage(Component.literal("[AuraTip Dev] " + msg));
         });
     }
 }

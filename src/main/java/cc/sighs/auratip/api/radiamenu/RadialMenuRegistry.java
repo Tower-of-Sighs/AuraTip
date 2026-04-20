@@ -2,7 +2,8 @@ package cc.sighs.auratip.api.radiamenu;
 
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.oelib.data.DataManager;
-import net.minecraft.resources.ResourceLocation;
+import com.tkisor.nekojs.NekoJS;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -25,16 +26,16 @@ import java.util.*;
 public final class RadialMenuRegistry {
 
     private static final String OWNER_DEFAULT = "default";
-    private static final String OWNER_KUBEJS = "kubejs";
+    private static final String OWNER_KUBEJS = NekoJS.MODID;
 
-    private static final Map<String, Map<ResourceLocation, RadialMenuData>> BY_OWNER = new LinkedHashMap<>();
-    private static volatile Map<ResourceLocation, RadialMenuData> SNAPSHOT_BY_ID = Collections.emptyMap();
+    private static final Map<String, Map<Identifier, RadialMenuData>> BY_OWNER = new LinkedHashMap<>();
+    private static volatile Map<Identifier, RadialMenuData> SNAPSHOT_BY_ID = Collections.emptyMap();
 
     private RadialMenuRegistry() {
     }
 
     /**
-     * Owner id reserved for the KubeJS integration.
+     * Owner id reserved for the NekoJS integration.
      */
     public static String ownerKubejs() {
         return OWNER_KUBEJS;
@@ -52,7 +53,7 @@ public final class RadialMenuRegistry {
      */
     public static synchronized Collection<RadialMenuData> getMenus(@Nullable String owner) {
         String key = normalizeOwner(owner);
-        Map<ResourceLocation, RadialMenuData> map = BY_OWNER.get(key);
+        Map<Identifier, RadialMenuData> map = BY_OWNER.get(key);
         if (map == null || map.isEmpty()) {
             return List.of();
         }
@@ -62,7 +63,7 @@ public final class RadialMenuRegistry {
     /**
      * Returns a runtime menu by id.
      */
-    public static @Nullable RadialMenuData getRuntimeMenu(ResourceLocation id) {
+    public static @Nullable RadialMenuData getRuntimeMenu(Identifier id) {
         if (id == null) {
             return null;
         }
@@ -74,7 +75,7 @@ public final class RadialMenuRegistry {
      * <p>
      * Duplicated datapack ids throw.
      */
-    public static @Nullable RadialMenuData getDataMenu(ResourceLocation id) {
+    public static @Nullable RadialMenuData getDataMenu(Identifier id) {
         if (id == null) {
             return null;
         }
@@ -99,12 +100,12 @@ public final class RadialMenuRegistry {
             return;
         }
 
-        Map<ResourceLocation, RadialMenuData> map = new LinkedHashMap<>();
+        Map<Identifier, RadialMenuData> map = new LinkedHashMap<>();
         for (RadialMenuData menu : menus) {
             if (menu == null) {
                 throw new IllegalStateException("RadialMenuRegistry.setMenus: menu is null (owner='" + key + "')");
             }
-            ResourceLocation id = Objects.requireNonNull(menu.id(), "menu.id()");
+            Identifier id = Objects.requireNonNull(menu.id(), "menu.id()");
             if (map.containsKey(id)) {
                 throw new IllegalStateException("Duplicate radial menu id '" + id + "' within owner '" + key + "'");
             }
@@ -112,8 +113,8 @@ public final class RadialMenuRegistry {
         }
 
         // Ensure no conflict with datapack ids.
-        Map<ResourceLocation, RadialMenuData> data = getDataMenusById();
-        for (ResourceLocation id : map.keySet()) {
+        Map<Identifier, RadialMenuData> data = getDataMenusById();
+        for (Identifier id : map.keySet()) {
             if (data.containsKey(id)) {
                 throw new IllegalStateException("Duplicate radial menu id '" + id + "' detected between runtime and datapack menus.");
             }
@@ -145,7 +146,7 @@ public final class RadialMenuRegistry {
      * - If {@code menuId} is null, this only returns a menu when exactly one menu exists across all sources.
      * (If multiple menus exist, the caller must provide an id.)
      */
-    public static @Nullable RadialMenuData resolveMenuToOpen(@Nullable ResourceLocation menuId) {
+    public static @Nullable RadialMenuData resolveMenuToOpen(@Nullable Identifier menuId) {
         if (menuId != null) {
             RadialMenuData runtime = getRuntimeMenu(menuId);
             if (runtime != null) {
@@ -154,7 +155,7 @@ public final class RadialMenuRegistry {
             return getDataMenu(menuId);
         }
 
-        Map<ResourceLocation, RadialMenuData> data = getDataMenusById();
+        Map<Identifier, RadialMenuData> data = getDataMenusById();
         int runtimeCount = SNAPSHOT_BY_ID.size();
         int dataCount = data.size();
         int total = runtimeCount + dataCount;
@@ -186,15 +187,15 @@ public final class RadialMenuRegistry {
             return;
         }
 
-        Map<ResourceLocation, RadialMenuData> merged = new LinkedHashMap<>();
-        for (Map.Entry<String, Map<ResourceLocation, RadialMenuData>> ownerEntry : BY_OWNER.entrySet()) {
+        Map<Identifier, RadialMenuData> merged = new LinkedHashMap<>();
+        for (Map.Entry<String, Map<Identifier, RadialMenuData>> ownerEntry : BY_OWNER.entrySet()) {
             String owner = ownerEntry.getKey();
-            Map<ResourceLocation, RadialMenuData> map = ownerEntry.getValue();
+            Map<Identifier, RadialMenuData> map = ownerEntry.getValue();
             if (map == null || map.isEmpty()) {
                 continue;
             }
-            for (Map.Entry<ResourceLocation, RadialMenuData> entry : map.entrySet()) {
-                ResourceLocation id = entry.getKey();
+            for (Map.Entry<Identifier, RadialMenuData> entry : map.entrySet()) {
+                Identifier id = entry.getKey();
                 if (merged.containsKey(id)) {
                     throw new IllegalStateException("Duplicate radial menu id '" + id + "' detected across runtime owners (at least '" + owner + "').");
                 }
@@ -204,17 +205,17 @@ public final class RadialMenuRegistry {
         SNAPSHOT_BY_ID = merged.isEmpty() ? Collections.emptyMap() : Map.copyOf(merged);
     }
 
-    private static Map<ResourceLocation, RadialMenuData> getDataMenusById() {
+    private static Map<Identifier, RadialMenuData> getDataMenusById() {
         List<RadialMenuData> data = DataManager.getDataList(RadialMenuData.class);
         if (data == null || data.isEmpty()) {
             return Map.of();
         }
-        Map<ResourceLocation, RadialMenuData> out = new LinkedHashMap<>();
+        Map<Identifier, RadialMenuData> out = new LinkedHashMap<>();
         for (RadialMenuData menu : data) {
             if (menu == null) {
                 continue;
             }
-            ResourceLocation id = Objects.requireNonNull(menu.id(), "datapack radial menu id");
+            Identifier id = Objects.requireNonNull(menu.id(), "datapack radial menu id");
             if (out.containsKey(id)) {
                 throw new IllegalStateException("Duplicate datapack radial menu id '" + id + "' detected.");
             }

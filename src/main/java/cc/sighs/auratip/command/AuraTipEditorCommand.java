@@ -8,6 +8,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 
 /**
  * Dev-facing visual editor entrypoint.
@@ -29,7 +31,7 @@ public final class AuraTipEditorCommand {
             Commands.CommandSelection environment
     ) {
         dispatcher.register(Commands.literal("auratip")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(2))))
                 .then(Commands.literal("editor")
                         .executes(ctx -> {
                             ServerPlayer player = ctx.getSource().getPlayerOrException();

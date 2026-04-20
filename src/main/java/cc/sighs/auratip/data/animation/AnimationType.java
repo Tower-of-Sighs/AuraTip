@@ -9,15 +9,15 @@ import cc.sighs.auratip.data.animation.ha.ShakeHoverAnimation;
 import cc.sighs.auratip.data.animation.ta.*;
 import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 import com.mojang.serialization.Dynamic;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public final class AnimationType {
-    private static final Map<ResourceLocation, AnimationFactory> ANIMATIONS = new HashMap<>();
-    private static final Map<ResourceLocation, HoverAnimationFactory> HOVER_ANIMATIONS = new HashMap<>();
+    private static final Map<Identifier, AnimationFactory> ANIMATIONS = new HashMap<>();
+    private static final Map<Identifier, HoverAnimationFactory> HOVER_ANIMATIONS = new HashMap<>();
 
     /**
      * Optional parameter schema metadata for the visual editor / tooling.
@@ -25,11 +25,11 @@ public final class AnimationType {
      * Built-in animations may rely on editor-side inference (capturing SerializationUtil.get* calls),
      * but script-registered animations can declare their params explicitly.
      */
-    private static final Map<ResourceLocation, Map<String, CapturedParam>> ANIMATION_PARAM_SCHEMA = new HashMap<>();
-    private static final Map<ResourceLocation, Map<String, CapturedParam>> HOVER_PARAM_SCHEMA = new HashMap<>();
+    private static final Map<Identifier, Map<String, CapturedParam>> ANIMATION_PARAM_SCHEMA = new HashMap<>();
+    private static final Map<Identifier, Map<String, CapturedParam>> HOVER_PARAM_SCHEMA = new HashMap<>();
 
-    private static final ResourceLocation DEFAULT_ID = AuraTip.id("fade_and_slide");
-    private static final ResourceLocation DEFAULT_HOVER_ID = AuraTip.id("none");
+    private static final Identifier DEFAULT_ID = AuraTip.id("fade_and_slide");
+    private static final Identifier DEFAULT_HOVER_ID = AuraTip.id("none");
 
     static {
         registerInternal(DEFAULT_ID, FadeAndSlideTransitionAnimation::create);
@@ -48,12 +48,12 @@ public final class AnimationType {
     private AnimationType() {
     }
 
-    public static TransitionAnimation resolve(ResourceLocation id) {
+    public static TransitionAnimation resolve(Identifier id) {
         return resolve(id, Map.of());
     }
 
-    public static TransitionAnimation resolve(ResourceLocation id, Map<String, Dynamic<?>> params) {
-        ResourceLocation key = (id == null) ? DEFAULT_ID : id;
+    public static TransitionAnimation resolve(Identifier id, Map<String, Dynamic<?>> params) {
+        Identifier key = (id == null) ? DEFAULT_ID : id;
         AnimationFactory factory = ANIMATIONS.get(key);
         if (factory == null) {
             factory = ANIMATIONS.get(DEFAULT_ID);
@@ -61,12 +61,12 @@ public final class AnimationType {
         return factory.create(params == null ? Map.of() : params);
     }
 
-    public static HoverAnimation resolveHover(ResourceLocation id) {
+    public static HoverAnimation resolveHover(Identifier id) {
         return resolveHover(id, Map.of());
     }
 
-    public static HoverAnimation resolveHover(ResourceLocation id, Map<String, Dynamic<?>> params) {
-        ResourceLocation key = (id == null) ? DEFAULT_HOVER_ID : id;
+    public static HoverAnimation resolveHover(Identifier id, Map<String, Dynamic<?>> params) {
+        Identifier key = (id == null) ? DEFAULT_HOVER_ID : id;
         HoverAnimationFactory factory = HOVER_ANIMATIONS.get(key);
         if (factory == null) {
             factory = HOVER_ANIMATIONS.get(DEFAULT_HOVER_ID);
@@ -74,7 +74,7 @@ public final class AnimationType {
         return factory.create(params == null ? Map.of() : params);
     }
 
-    public static void registerInternal(ResourceLocation id, AnimationFactory factory) {
+    public static void registerInternal(Identifier id, AnimationFactory factory) {
         if (id == null || factory == null) {
             return;
         }
@@ -89,7 +89,7 @@ public final class AnimationType {
      * <p>
      * This does not affect runtime behavior; it is consumed by tooling (e.g. the visual editor).
      */
-    public static void declareParamsInternal(ResourceLocation id, Map<String, CapturedParam> params) {
+    public static void declareParamsInternal(Identifier id, Map<String, CapturedParam> params) {
         if (id == null || params == null || params.isEmpty()) {
             return;
         }
@@ -101,14 +101,27 @@ public final class AnimationType {
      * <p>
      * Intended for dev tooling (e.g. editor hot-reload).
      */
-    public static void registerOrReplaceInternal(ResourceLocation id, AnimationFactory factory) {
+    public static void registerOrReplaceInternal(Identifier id, AnimationFactory factory) {
         if (id == null || factory == null) {
             return;
         }
         ANIMATIONS.put(id, factory);
     }
 
-    public static void registerHoverInternal(ResourceLocation id, HoverAnimationFactory factory) {
+    /**
+     * Removes a transition animation factory and its declared param schema (if any).
+     * <p>
+     * Intended for script hot-reload (clearing entries that might reference a closed JS context).
+     */
+    public static void clearTransitionInternal(Identifier id) {
+        if (id == null) {
+            return;
+        }
+        ANIMATIONS.remove(id);
+        ANIMATION_PARAM_SCHEMA.remove(id);
+    }
+
+    public static void registerHoverInternal(Identifier id, HoverAnimationFactory factory) {
         if (id == null || factory == null) {
             return;
         }
@@ -123,7 +136,7 @@ public final class AnimationType {
      * <p>
      * This does not affect runtime behavior; it is consumed by tooling (e.g. the visual editor).
      */
-    public static void declareHoverParamsInternal(ResourceLocation id, Map<String, CapturedParam> params) {
+    public static void declareHoverParamsInternal(Identifier id, Map<String, CapturedParam> params) {
         if (id == null || params == null || params.isEmpty()) {
             return;
         }
@@ -135,11 +148,24 @@ public final class AnimationType {
      * <p>
      * Intended for dev tooling (e.g. editor hot-reload).
      */
-    public static void registerOrReplaceHoverInternal(ResourceLocation id, HoverAnimationFactory factory) {
+    public static void registerOrReplaceHoverInternal(Identifier id, HoverAnimationFactory factory) {
         if (id == null || factory == null) {
             return;
         }
         HOVER_ANIMATIONS.put(id, factory);
+    }
+
+    /**
+     * Removes a hover animation factory and its declared param schema (if any).
+     * <p>
+     * Intended for script hot-reload (clearing entries that might reference a closed JS context).
+     */
+    public static void clearHoverInternal(Identifier id) {
+        if (id == null) {
+            return;
+        }
+        HOVER_ANIMATIONS.remove(id);
+        HOVER_PARAM_SCHEMA.remove(id);
     }
 
     public interface AnimationFactory {
@@ -153,21 +179,21 @@ public final class AnimationType {
     /**
      * Returns all registered transition animation ids (including KubeJS-registered ones).
      */
-    public static Set<ResourceLocation> listTransitionIds() {
+    public static Set<Identifier> listTransitionIds() {
         return Set.copyOf(ANIMATIONS.keySet());
     }
 
     /**
      * Returns all registered hover animation ids (including KubeJS-registered ones).
      */
-    public static Set<ResourceLocation> listHoverIds() {
+    public static Set<Identifier> listHoverIds() {
         return Set.copyOf(HOVER_ANIMATIONS.keySet());
     }
 
     /**
      * Returns declared parameter schema metadata for a transition animation type, if any.
      */
-    public static Map<String, CapturedParam> getDeclaredParams(ResourceLocation id) {
+    public static Map<String, CapturedParam> getDeclaredParams(Identifier id) {
         if (id == null) {
             return Map.of();
         }
@@ -178,7 +204,7 @@ public final class AnimationType {
     /**
      * Returns declared parameter schema metadata for a hover animation type, if any.
      */
-    public static Map<String, CapturedParam> getDeclaredHoverParams(ResourceLocation id) {
+    public static Map<String, CapturedParam> getDeclaredHoverParams(Identifier id) {
         if (id == null) {
             return Map.of();
         }

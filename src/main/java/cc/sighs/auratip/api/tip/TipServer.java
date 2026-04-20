@@ -3,7 +3,7 @@ package cc.sighs.auratip.api.tip;
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.trigger.TipTriggerManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Server-side tip helpers.
  * <p>
- * Use {@link #trigger(ResourceLocation, ServerPlayer, Map)} to trigger tips by type, or {@link #show(ServerPlayer, List, Map)}
+ * Use {@link #trigger(Identifier, ServerPlayer, Map)} to trigger tips by type, or {@link #show(ServerPlayer, List, Map)}
  * to show tips immediately.
  * <p>
  * Variables: tip text supports <code>${key}</code> placeholders; pass variables as a map (values can be
@@ -32,7 +32,7 @@ public final class TipServer {
      * @param type   trigger type id
      * @param player target player
      */
-    public static void trigger(ResourceLocation type, ServerPlayer player) {
+    public static void trigger(Identifier type, ServerPlayer player) {
         TipTriggerManager.trigger(type, player, Map.of());
     }
 
@@ -45,14 +45,14 @@ public final class TipServer {
      * @param player    target player
      * @param variables variables used for <code>${key}</code> placeholders (nullable)
      */
-    public static void trigger(ResourceLocation type, ServerPlayer player, @Nullable Map<String, ?> variables) {
+    public static void trigger(Identifier type, ServerPlayer player, @Nullable Map<String, ?> variables) {
         TipTriggerManager.trigger(type, player, variables);
     }
 
     /**
      * Triggers tips by {@link cc.sighs.auratip.data.TipData#id()} (applies ONCE / cooldown rules).
      */
-    public static void triggerById(ResourceLocation tipId, ServerPlayer player, @Nullable Map<String, ?> variables) {
+    public static void triggerById(Identifier tipId, ServerPlayer player, @Nullable Map<String, ?> variables) {
         TipTriggerManager.triggerById(tipId, player, variables);
     }
 

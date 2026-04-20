@@ -6,7 +6,7 @@ import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.action.ActionRegistry;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -20,8 +20,8 @@ import static cc.sighs.auratip.util.SerializationUtil.convertMapToDynamic;
  * Action helpers.
  * <p>
  * - Built-ins: {@link #runCommand(String)} / {@link #simulateKey(int)}
- * - Script actions: {@link #script(ResourceLocation, Map)} + {@link #register(ResourceLocation, ParamsHandler)}
- * - Datapack codecs: {@link #registerCodec(ResourceLocation, Class, Codec)}
+ * - Script actions: {@link #script(Identifier, Map)} + {@link #register(Identifier, ParamsHandler)}
+ * - Datapack codecs: {@link #registerCodec(Identifier, Class, Codec)}
  * - Java actions: implement {@link Action} and {@link #register(Class, Consumer)}
  */
 public final class Actions {
@@ -52,10 +52,10 @@ public final class Actions {
     /**
      * Creates a custom action with {@code type} and arbitrary params.
      * <p>
-     * The action will be executed only if you register a handler for {@code type} via {@link #register(ResourceLocation, ParamsHandler)}
-     * (or {@link #registerRaw(ResourceLocation, RawHandler)}).
+     * The action will be executed only if you register a handler for {@code type} via {@link #register(Identifier, ParamsHandler)}
+     * (or {@link #registerRaw(Identifier, RawHandler)}).
      */
-    public static Action script(ResourceLocation type, @Nullable Map<String, ?> params) {
+    public static Action script(Identifier type, @Nullable Map<String, ?> params) {
         if (type == null) {
             return new Action.ScriptAction(AuraTip.id("unknown"), Map.of());
         }
@@ -77,7 +77,7 @@ public final class Actions {
     /**
      * Creates a custom script action using an already-built {@code Map<String, Dynamic<?>>}.
      */
-    public static Action scriptRaw(ResourceLocation type, @Nullable Map<String, Dynamic<?>> params) {
+    public static Action scriptRaw(Identifier type, @Nullable Map<String, Dynamic<?>> params) {
         if (type == null) {
             return new Action.ScriptAction(AuraTip.id("unknown"), Map.of());
         }
@@ -93,7 +93,7 @@ public final class Actions {
      * @param type    action type id
      * @param handler handler implementation
      */
-    public static void register(ResourceLocation type, ParamsHandler handler) {
+    public static void register(Identifier type, ParamsHandler handler) {
         if (type == null || handler == null) {
             return;
         }
@@ -103,7 +103,7 @@ public final class Actions {
     /**
      * Registers a custom action handler using the raw {@code Map<String, Dynamic<?>>} params.
      */
-    public static void registerRaw(ResourceLocation type, RawHandler handler) {
+    public static void registerRaw(Identifier type, RawHandler handler) {
         if (type == null || handler == null) {
             return;
         }
@@ -113,7 +113,7 @@ public final class Actions {
     /**
      * Clears a custom action handler by {@code type}.
      */
-    public static void clear(ResourceLocation type) {
+    public static void clear(Identifier type) {
         if (type == null) {
             return;
         }
@@ -143,14 +143,14 @@ public final class Actions {
      * @param actionClass action implementation class
      * @param codec       codec for fields excluding {@code type}
      */
-    public static <T extends Action> void registerCodec(ResourceLocation type, Class<T> actionClass, Codec<T> codec) {
+    public static <T extends Action> void registerCodec(Identifier type, Class<T> actionClass, Codec<T> codec) {
         ActionRegistry.registerCustomCodec(type, actionClass, codec);
     }
 
     /**
      * Clears a custom action codec by {@code type}.
      */
-    public static void clearCodec(ResourceLocation type) {
+    public static void clearCodec(Identifier type) {
         ActionRegistry.clearCustomCodec(type);
     }
 

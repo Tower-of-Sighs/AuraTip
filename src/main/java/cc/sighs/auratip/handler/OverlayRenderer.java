@@ -20,10 +20,8 @@ public class OverlayRenderer {
         }
 
         var gg = event.getGuiGraphics();
-        var pose = gg.pose();
-
-        pose.pushPose();
-        pose.translate(0, 0, 5000);
+        // Use a new stratum to ensure our overlay is drawn on top.
+        gg.nextStratum();
 
         int width = minecraft.getWindow().getGuiScaledWidth();
         int height = minecraft.getWindow().getGuiScaledHeight();
@@ -38,7 +36,6 @@ public class OverlayRenderer {
         if (RadialMenuOverlay.INSTANCE.isActive()) {
             RadialMenuOverlay.INSTANCE.render(event.getGuiGraphics(), event.getPartialTick().getRealtimeDeltaTicks(), (int) mouseX, (int) mouseY, width, height);
         }
-        pose.popPose();
     }
 }
 

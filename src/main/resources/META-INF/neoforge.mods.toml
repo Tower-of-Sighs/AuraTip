@@ -33,5 +33,9 @@ versionRange = "[0.2.3,)"
 ordering = "NONE"
 side = "BOTH"
 
-[features."${mod_id}"]
-openGLVersion = "[3.2,)"
+[[dependencies."${mod_id}"]]
+modId = "nekojs"
+type = "optional"
+versionRange = "[1.0.0,)"
+ordering = "AFTER"
+side = "CLIENT"

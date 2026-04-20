@@ -7,12 +7,12 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public final class EditorRadialPreviewApplier {
-    private static final ResourceLocation PREVIEW_ID = AuraTip.id("editor_preview_menu");
+    private static final Identifier PREVIEW_ID = AuraTip.id("editor_preview_menu");
 
     private EditorRadialPreviewApplier() {
     }
@@ -29,7 +29,7 @@ public final class EditorRadialPreviewApplier {
 
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 "Preview",
-                ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/paper.png"),
+                Identifier.fromNamespaceAndPath("minecraft", "textures/item/paper.png"),
                 new cc.sighs.auratip.data.action.Action.RunCommand("/say AuraTip Editor Preview"),
                 java.util.Optional.of(net.minecraft.network.chat.Component.literal("Preview")),
                 java.util.Optional.of("#77FFFFFF")

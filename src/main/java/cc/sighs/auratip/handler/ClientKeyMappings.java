@@ -1,12 +1,18 @@
 package cc.sighs.auratip.handler;
 
+import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.dev.DevEnvironment;
-import cc.sighs.oelib.registry.extra.KeyMappingRegister;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
+@EventBusSubscriber(modid = AuraTip.MOD_ID, value = Dist.CLIENT)
 public class ClientKeyMappings {
-    private static final String CATEGORY = "key.categories.auratip";
+    public static final KeyMapping.Category CATEGORY = new KeyMapping.Category(AuraTip.id(AuraTip.MOD_ID));
 
     public static final KeyMapping CLOSE_TIP = new KeyMapping(
             "key.auratip.close_tip",
@@ -50,15 +56,17 @@ public class ClientKeyMappings {
             CATEGORY
     );
 
-    public static void register() {
-        KeyMappingRegister.register(CLOSE_TIP);
+    @SubscribeEvent
+    private static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        event.registerCategory(CATEGORY);
+        event.register(CLOSE_TIP);
 
         if (DevEnvironment.isDev()) {
-            KeyMappingRegister.register(DEV_OPEN_DATAPACK_MENU);
-            KeyMappingRegister.register(DEV_OPEN_JAVA_MENU);
-            KeyMappingRegister.register(DEV_OPEN_KJS_MENU);
-            KeyMappingRegister.register(DEV_ENQUEUE_CLIENT_TIP);
-            KeyMappingRegister.register(DEV_TRIGGER_SHOWTIP);
+            event.register(DEV_OPEN_DATAPACK_MENU);
+            event.register(DEV_OPEN_JAVA_MENU);
+            event.register(DEV_OPEN_KJS_MENU);
+            event.register(DEV_ENQUEUE_CLIENT_TIP);
+            event.register(DEV_TRIGGER_SHOWTIP);
         }
     }
 }

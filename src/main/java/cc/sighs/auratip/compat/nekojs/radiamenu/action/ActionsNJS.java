@@ -1,4 +1,4 @@
-package cc.sighs.auratip.compat.kubejs.radiamenu.action;
+package cc.sighs.auratip.compat.nekojs.radiamenu.action;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.api.action.ActionHandlers;
@@ -9,28 +9,25 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.JsonOps;
-import dev.latvian.mods.kubejs.typings.Info;
-import net.minecraft.resources.ResourceLocation;
+import com.tkisor.nekojs.NekoJS;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ActionsKJS {
-    private static final ResourceLocation RUN_COMMAND = AuraTip.id("run_command");
-    private static final ResourceLocation SIMULATE_KEY = AuraTip.id("simulate_key");
+public class ActionsNJS {
+    private static final Identifier RUN_COMMAND = AuraTip.id("run_command");
+    private static final Identifier SIMULATE_KEY = AuraTip.id("simulate_key");
 
-    @Info("Register a script-backed action handler. The type can then be used as a radial menu slot action to invoke the callback.")
     public static void register(String type, ActionScriptRegistry.ScriptHandler handler) {
         ActionScriptRegistry.register(type, handler);
     }
 
-    @Info("Register a script-backed action handler with parameter defaults (tooling-only). paramDefaults is a map of key -> default value.")
     public static void register(String type, Map<?, ?> paramDefaults, ActionScriptRegistry.ScriptHandler handler) {
         ActionScriptRegistry.register(type, handler);
         ActionHandlers.declareParamsInternal(normalizeType(type), schemaFrom(paramDefaults));
     }
 
-    @Info("Create an Action without params. Built-in run_command / simulate_key create the matching Action; other types create a script action.")
     public static Action of(String type) {
         if ("run_command".equals(type) || RUN_COMMAND.toString().equals(type)) {
             return new Action.RunCommand("");
@@ -41,7 +38,6 @@ public class ActionsKJS {
         return new Action.ScriptAction(normalizeType(type), Map.of());
     }
 
-    @Info("Create an Action with params. run_command uses params.command; simulate_key uses params.key_code; other types pass params as dynamic values.")
     public static Action of(String type, Map<?, ?> params) {
         if ("run_command".equals(type) || RUN_COMMAND.toString().equals(type)) {
             Object cmd = params == null ? null : params.get("command");
@@ -82,16 +78,12 @@ public class ActionsKJS {
     }
 
     private static Dynamic<?> wrap(Object value) {
-        JsonElement element;
-        if (value == null) {
-            element = JsonNull.INSTANCE;
-        } else if (value instanceof Number number) {
-            element = new JsonPrimitive(number);
-        } else if (value instanceof Boolean bool) {
-            element = new JsonPrimitive(bool);
-        } else {
-            element = new JsonPrimitive(String.valueOf(value));
-        }
+        JsonElement element = switch (value) {
+            case null -> JsonNull.INSTANCE;
+            case Number number -> new JsonPrimitive(number);
+            case Boolean bool -> new JsonPrimitive(bool);
+            default -> new JsonPrimitive(String.valueOf(value));
+        };
         return new Dynamic<>(JsonOps.INSTANCE, element);
     }
 
@@ -119,13 +111,13 @@ public class ActionsKJS {
         return schema.isEmpty() ? Map.of() : Map.copyOf(schema);
     }
 
-    private static ResourceLocation normalizeType(String type) {
+    private static Identifier normalizeType(String type) {
         if (type == null || type.isEmpty()) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", "action");
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, "action");
         }
         if (type.indexOf(':') < 0) {
-            return ResourceLocation.fromNamespaceAndPath("kubejs", type);
+            return Identifier.fromNamespaceAndPath(NekoJS.MODID, type);
         }
-        return ResourceLocation.parse(type);
+        return Identifier.parse(type);
     }
 }

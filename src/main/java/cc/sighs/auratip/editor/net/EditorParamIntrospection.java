@@ -6,7 +6,7 @@ import cc.sighs.auratip.data.animation.AnimationType;
 import cc.sighs.auratip.util.SerializationUtil;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -39,20 +39,20 @@ final class EditorParamIntrospection {
         return buildAnimationParams(AnimationType.listHoverIds(), true);
     }
 
-    private static JsonObject buildAnimationParams(Set<ResourceLocation> ids, boolean hover) {
+    private static JsonObject buildAnimationParams(Set<Identifier> ids, boolean hover) {
         JsonObject out = new JsonObject();
         if (ids == null || ids.isEmpty()) {
             return out;
         }
 
         ids.stream()
-                .sorted(Comparator.comparing(ResourceLocation::toString))
+                .sorted(Comparator.comparing(Identifier::toString))
                 .forEach(id -> {
                     Map<String, SerializationUtil.CapturedParam> captured = hover
                             ? AnimationType.getDeclaredHoverParams(id)
                             : AnimationType.getDeclaredParams(id);
                     try {
-                        if (captured == null || captured.isEmpty()) {
+                        if (captured.isEmpty()) {
                             captured = SerializationUtil.captureParams(() -> {
                                 try {
                                     if (hover) {
@@ -61,7 +61,6 @@ final class EditorParamIntrospection {
                                         AnimationType.resolve(id, Map.of());
                                     }
                                 } catch (Throwable ignored) {
-                                    // Custom factories (e.g. KubeJS) may require non-empty params or otherwise throw.
                                 }
                             });
                         }
@@ -107,13 +106,13 @@ final class EditorParamIntrospection {
         ));
 
         // Tooling schemas for custom script actions (declared at registration time).
-        Set<ResourceLocation> types = ActionHandlers.listTypes();
-        if (types != null && !types.isEmpty()) {
+        Set<Identifier> types = ActionHandlers.listTypes();
+        if (!types.isEmpty()) {
             types.stream()
-                    .sorted(Comparator.comparing(ResourceLocation::toString))
+                    .sorted(Comparator.comparing(Identifier::toString))
                     .forEach(type -> {
                         Map<String, SerializationUtil.CapturedParam> schema = ActionHandlers.getDeclaredParams(type);
-                        if (schema == null || schema.isEmpty()) {
+                        if (schema.isEmpty()) {
                             return;
                         }
                         JsonArray arr = new JsonArray();
@@ -142,14 +141,13 @@ final class EditorParamIntrospection {
     }
 
     static JsonArray listActionTypes() {
-        // Built-ins + registered script handlers (KubeJS Actions.register).
-        Set<ResourceLocation> custom = ActionHandlers.listTypes();
+        Set<Identifier> custom = ActionHandlers.listTypes();
         LinkedHashMap<String, Boolean> ordered = new LinkedHashMap<>();
         ordered.put("auratip:run_command", true);
         ordered.put("auratip:simulate_key", true);
-        if (custom != null && !custom.isEmpty()) {
+        if (!custom.isEmpty()) {
             custom.stream()
-                    .sorted(Comparator.comparing(ResourceLocation::toString))
+                    .sorted(Comparator.comparing(Identifier::toString))
                     .forEach(id -> ordered.put(id.toString(), true));
         }
 

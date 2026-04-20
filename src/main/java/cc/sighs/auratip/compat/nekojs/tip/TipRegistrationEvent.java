@@ -1,4 +1,4 @@
-package cc.sighs.auratip.compat.kubejs.tip;
+package cc.sighs.auratip.compat.nekojs.tip;
 
 import cc.sighs.auratip.data.TipData;
 import com.google.gson.Gson;
@@ -6,21 +6,18 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
-import dev.latvian.mods.kubejs.event.KubeEvent;
-import dev.latvian.mods.kubejs.typings.Info;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TipRegistrationEvent implements KubeEvent {
+public class TipRegistrationEvent {
 
     private final Map<String, TipBuilder> tips = new LinkedHashMap<>();
     private final Map<String, TipData> imported = new LinkedHashMap<>();
     private static final Gson GSON = new Gson();
 
-    @Info("Create a new Tip and return its builder. The id can omit namespace (defaults to kubejs). Duplicate ids will throw.")
     public TipBuilder create(String id) {
         String key = normalizeId(id);
         if (tips.containsKey(key)) {
@@ -34,14 +31,12 @@ public class TipRegistrationEvent implements KubeEvent {
         return builder;
     }
 
-    @Info("Remove a previously created Tip by id. The id can omit namespace (defaults to kubejs).")
     public void remove(String id) {
         String key = normalizeId(id);
         tips.remove(key);
         imported.remove(key);
     }
 
-    @Info("Import a TipData from a JSON object (or JSON string) that matches TipData.CODEC. The tip id comes from the JSON.")
     public void importJson(Object json) {
         JsonElement element = toJsonElement(json);
         TipData data = TipData.CODEC.parse(JsonOps.INSTANCE, element)
@@ -56,7 +51,6 @@ public class TipRegistrationEvent implements KubeEvent {
         imported.put(key, data);
     }
 
-    @Info("Internal: build all Tips created in this event into data objects.")
     public List<TipData> buildAll() {
         List<TipData> result = new ArrayList<>(imported.values());
         for (TipBuilder builder : tips.values()) {
@@ -85,10 +79,10 @@ public class TipRegistrationEvent implements KubeEvent {
 
     private static String normalizeId(String id) {
         if (id == null || id.isEmpty()) {
-            return "kubejs:tip";
+            return "nekojs:tip";
         }
         if (id.indexOf(':') < 0) {
-            return "kubejs:" + id;
+            return "nekojs:" + id;
         }
         return id;
     }

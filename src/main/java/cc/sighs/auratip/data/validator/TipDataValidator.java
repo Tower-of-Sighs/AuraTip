@@ -2,7 +2,7 @@ package cc.sighs.auratip.data.validator;
 
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.oelib.data.api.DataValidator;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashSet;
 import java.util.Locale;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class TipDataValidator implements DataValidator<TipData> {
     @Override
-    public ValidationResult validate(TipData data, ResourceLocation source) {
+    public ValidationResult validate(TipData data, Identifier source) {
         if (data.id() == null) {
             return ValidationResult.failure("Tip id is empty in " + source);
         }

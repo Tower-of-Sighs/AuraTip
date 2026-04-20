@@ -1,6 +1,7 @@
 package cc.sighs.auratip.api.tip;
 
 import cc.sighs.auratip.data.TipData;
+import com.tkisor.nekojs.NekoJS;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -12,7 +13,7 @@ import java.util.*;
  */
 public final class TipRegistry {
 
-    private static final String OWNER_KUBEJS = "kubejs";
+    private static final String OWNER_KUBEJS = NekoJS.MODID;
 
     private static final Map<String, List<TipData>> BY_OWNER = new LinkedHashMap<>();
     private static volatile List<TipData> SNAPSHOT = Collections.emptyList();
@@ -44,7 +45,7 @@ public final class TipRegistry {
     /**
      * Replaces runtime tips for a single owner.
      *
-     * @param owner   owner id (recommended: modid). {@code \"kubejs\"} is reserved for the KubeJS integration.
+     * @param owner   owner id (recommended: modid). {@code \"nekojs\"} is reserved for the NekoJS integration.
      * @param newTips tip collection; when null/empty, that owner becomes empty
      */
     public static synchronized void setTips(@Nullable String owner, @Nullable Collection<TipData> newTips) {
@@ -87,7 +88,7 @@ public final class TipRegistry {
     }
 
     /**
-     * Owner id reserved for the KubeJS integration.
+     * Owner id reserved for the NekoJS integration.
      */
     public static String ownerKubejs() {
         return OWNER_KUBEJS;

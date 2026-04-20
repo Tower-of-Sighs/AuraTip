@@ -8,7 +8,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,13 +21,13 @@ import java.util.Optional;
         validator = RadialMenuDataValidator.class
 )
 public record RadialMenuData(
-        ResourceLocation id,
+        Identifier id,
         MenuSettings menuSettings,
         List<Slot> slots
 ) {
     public static final Codec<RadialMenuData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                    ResourceLocation.CODEC.fieldOf("id").forGetter(RadialMenuData::id),
+                    Identifier.CODEC.fieldOf("id").forGetter(RadialMenuData::id),
                     MenuSettings.CODEC.fieldOf("menu_settings").forGetter(RadialMenuData::menuSettings),
                     Slot.CODEC.listOf().fieldOf("slots").forGetter(RadialMenuData::slots)
             ).apply(instance, RadialMenuData::new)
@@ -35,7 +35,7 @@ public record RadialMenuData(
 
     public record Slot(
             String name,
-            ResourceLocation icon,
+            Identifier icon,
             Action action,
             Optional<Component> text,
             Optional<String> highlightColor
@@ -43,7 +43,7 @@ public record RadialMenuData(
         public static final Codec<Slot> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.STRING.fieldOf("name").forGetter(Slot::name),
-                        ResourceLocation.CODEC.fieldOf("icon").forGetter(Slot::icon),
+                        Identifier.CODEC.fieldOf("icon").forGetter(Slot::icon),
                         Action.CODEC.fieldOf("action").forGetter(Slot::action),
                         ComponentSerialization.CODEC.optionalFieldOf("text").forGetter(Slot::text),
                         Codec.STRING.optionalFieldOf("highlight_color").forGetter(Slot::highlightColor)
@@ -55,7 +55,7 @@ public record RadialMenuData(
             int innerRadius,
             int outerRadius,
             float animationSpeed,
-            Optional<ResourceLocation> centerIcon,
+            Optional<Identifier> centerIcon,
             Optional<String> ringColor,
             Optional<List<String>> ringColors
     ) {
@@ -64,7 +64,7 @@ public record RadialMenuData(
                         Codec.INT.fieldOf("inner_radius").forGetter(MenuSettings::innerRadius),
                         Codec.INT.fieldOf("outer_radius").forGetter(MenuSettings::outerRadius),
                         Codec.FLOAT.fieldOf("animation_speed").forGetter(MenuSettings::animationSpeed),
-                        ResourceLocation.CODEC.optionalFieldOf("center_icon").forGetter(MenuSettings::centerIcon),
+                        Identifier.CODEC.optionalFieldOf("center_icon").forGetter(MenuSettings::centerIcon),
                         Codec.STRING.optionalFieldOf("ring_color").forGetter(MenuSettings::ringColor),
                         Codec.list(Codec.STRING).optionalFieldOf("ring_colors").forGetter(MenuSettings::ringColors)
                 ).apply(inst, MenuSettings::new)

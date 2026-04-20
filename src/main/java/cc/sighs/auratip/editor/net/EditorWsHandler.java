@@ -1,21 +1,21 @@
 package cc.sighs.auratip.editor.net;
 
 import cc.sighs.auratip.AuraTip;
-import cc.sighs.auratip.compat.kubejs.tip.animation.JsHoverAnimation;
-import cc.sighs.auratip.compat.kubejs.tip.animation.JsTransitionAnimation;
+import cc.sighs.auratip.compat.nekojs.tip.animation.JsHoverAnimation;
+import cc.sighs.auratip.compat.nekojs.tip.animation.JsTransitionAnimation;
 import cc.sighs.auratip.data.RadialMenuData;
+import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.animation.AnimationType;
 import cc.sighs.auratip.editor.preview.EditorPreviewApplier;
 import cc.sighs.auratip.editor.preview.EditorRadialPreviewApplier;
 import cc.sighs.auratip.editor.schema.EditorCodecSchemas;
 import com.google.gson.*;
-import dev.latvian.mods.rhino.Context;
-import dev.latvian.mods.rhino.ContextFactory;
-import dev.latvian.mods.rhino.Function;
-import dev.latvian.mods.rhino.Scriptable;
+import com.mojang.serialization.JsonOps;
+import graal.graalvm.polyglot.Context;
+import graal.graalvm.polyglot.Value;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -23,9 +23,8 @@ import java.util.Set;
 
 final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
     private static final Gson GSON = new Gson();
-    private static final ContextFactory CONTEXT_FACTORY = new ContextFactory();
-    private static final ResourceLocation TEMP_TRANSITION_ID = AuraTip.id("editor_temp_transition");
-    private static final ResourceLocation TEMP_HOVER_ID = AuraTip.id("editor_temp_hover");
+    private static final Identifier TEMP_TRANSITION_ID = AuraTip.id("editor_temp_transition");
+    private static final Identifier TEMP_HOVER_ID = AuraTip.id("editor_temp_hover");
 
     private final EditorWsHub hub;
 
@@ -125,7 +124,7 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
                 result.addProperty("type", "animation_apply_result");
 
                 try {
-                    ResourceLocation id = normalizeIdOrTemp(kind, idRaw);
+                    Identifier id = normalizeIdOrTemp(kind, idRaw);
                     JsonElement base = lastTipJson != null ? lastTipJson : EditorPreviewCodec.encodeTip(EditorPreviewApplier.defaultTip());
 
                     if ("hover".equalsIgnoreCase(kind)) {
@@ -179,7 +178,7 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         result.addProperty("kind", kind == null ? "" : kind);
 
         try {
-            ResourceLocation id = normalizeIdOrTemp(kind, idRaw);
+            Identifier id = normalizeIdOrTemp(kind, idRaw);
             JsEval eval = evalJs(js);
 
             if ("hover".equalsIgnoreCase(kind)) {
@@ -202,54 +201,62 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         send(ctx, result);
     }
 
-    private record JsEval(Scriptable scope, Object value) {
+    private record JsEval(Context context, Value value) {
     }
 
     private static JsEval evalJs(String js) {
         if (js == null || js.isBlank()) {
             throw new IllegalStateException("Empty JS");
         }
-        Context cx = CONTEXT_FACTORY.enter();
-        Scriptable scope = cx.initStandardObjects();
-        Object out = cx.evaluateString(scope, "(" + js + ")", "auratip_editor_anim", 1, null);
-        return new JsEval(scope, out);
+        // Editor-side animation prototyping runs in an isolated GraalJS context.
+        // We keep the context alive because the returned {@link Value} will be wrapped into
+        // {@link JsTransitionAnimation}/{@link JsHoverAnimation} and invoked during preview rendering.
+        Context ctx = Context.newBuilder("js")
+                .allowAllAccess(true)
+                .build();
+        Value out = ctx.eval("js", "(" + js + ")");
+        return new JsEval(ctx, out);
     }
 
-    private static Scriptable resolveAnimationObject(JsEval eval, Map<String, ?> params) {
-        Context cx = CONTEXT_FACTORY.enter();
-        Object value = eval.value();
-        if (value instanceof Function factory) {
-            return callFactory(cx, eval.scope(), factory, eval.scope(), params);
-        }
-        if (value instanceof Scriptable scriptable) {
-            Object create = scriptable.get(cx, "create", scriptable);
-            if (create instanceof Function f) {
-                return callFactory(cx, eval.scope(), f, scriptable, params);
+    private static Value resolveAnimationObject(JsEval eval, Map<String, ?> params) {
+        Value value = eval.value();
+
+        // Case 1: JS evaluates to a factory function: (params) => ({ ...methods... })
+        if (value != null && value.canExecute()) {
+            Value result = value.execute(params);
+            if (result != null && (result.hasMembers() || result.canExecute())) {
+                return result;
             }
-            return scriptable;
+            throw new IllegalStateException("Factory did not return an object");
         }
+
+        // Case 2: JS evaluates to an object with optional create(params) method.
+        if (value != null && value.hasMembers()) {
+            Value create = value.getMember("create");
+            if (create != null && create.canExecute()) {
+                Value result = create.execute(params);
+                if (result != null && (result.hasMembers() || result.canExecute())) {
+                    return result;
+                }
+                throw new IllegalStateException("create(params) did not return an object");
+            }
+            return value;
+        }
+
         throw new IllegalStateException("JS did not evaluate to an object or factory function");
     }
 
-    private static Scriptable callFactory(Context cx, Scriptable scope, Function fn, Scriptable thisObj, Map<String, ?> params) {
-        Object result = fn.call(cx, scope, thisObj, new Object[]{params});
-        if (result instanceof Scriptable s) {
-            return s;
-        }
-        throw new IllegalStateException("Factory did not return an object");
-    }
-
-    private static ResourceLocation normalizeIdOrTemp(String kind, String raw) {
+    private static Identifier normalizeIdOrTemp(String kind, String raw) {
         String s = raw == null ? "" : raw.trim();
         if (s.isEmpty()) {
             return "hover".equalsIgnoreCase(kind) ? TEMP_HOVER_ID : TEMP_TRANSITION_ID;
         }
         if (s.indexOf(':') < 0) {
-            s = "kubejs:" + s;
+            s = "nekojs:" + s;
         }
-        ResourceLocation parsed = ResourceLocation.tryParse(s);
+        Identifier parsed = Identifier.tryParse(s);
         if (parsed == null) {
-            throw new IllegalStateException("Invalid ResourceLocation: " + s);
+            throw new IllegalStateException("Invalid Identifier: " + s);
         }
         return parsed;
     }
@@ -273,10 +280,10 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         EditorPreviewApplier.applyTipJson(copy);
     }
 
-    private static JsonArray encodeAnimationIds(Set<ResourceLocation> ids) {
+    private static JsonArray encodeAnimationIds(Set<Identifier> ids) {
         JsonArray arr = new JsonArray();
         ids.stream()
-                .sorted(Comparator.comparing(ResourceLocation::toString))
+                .sorted(Comparator.comparing(Identifier::toString))
                 .forEach(id -> arr.add(id.toString()));
         return arr;
     }
@@ -298,11 +305,11 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         private AnimationTypeIds() {
         }
 
-        static Set<ResourceLocation> transition() {
+        static Set<Identifier> transition() {
             return AnimationType.listTransitionIds();
         }
 
-        static Set<ResourceLocation> hover() {
+        static Set<Identifier> hover() {
             return AnimationType.listHoverIds();
         }
     }
@@ -311,14 +318,14 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         private EditorPreviewCodec() {
         }
 
-        static JsonElement encodeTip(cc.sighs.auratip.data.TipData tip) {
-            var encoded = cc.sighs.auratip.data.TipData.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, tip);
+        static JsonElement encodeTip(TipData tip) {
+            var encoded = TipData.CODEC.encodeStart(JsonOps.INSTANCE, tip);
             return encoded.resultOrPartial(msg -> AuraTip.LOGGER.warn("Editor tip encode error: {}", msg))
                     .orElseGet(() -> GSON.toJsonTree(Map.of()));
         }
 
         static JsonElement encodeRadial(RadialMenuData menu) {
-            var encoded = RadialMenuData.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, menu);
+            var encoded = RadialMenuData.CODEC.encodeStart(JsonOps.INSTANCE, menu);
             return encoded.resultOrPartial(msg -> AuraTip.LOGGER.warn("Editor radial encode error: {}", msg))
                     .orElseGet(() -> GSON.toJsonTree(Map.of()));
         }

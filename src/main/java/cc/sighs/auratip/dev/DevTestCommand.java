@@ -8,10 +8,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.Map;
 
@@ -30,13 +32,13 @@ public final class DevTestCommand {
             Commands.CommandSelection environment
     ) {
         dispatcher.register(Commands.literal("auratipdev")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(2))))
                 .then(Commands.literal("tip")
                         .then(Commands.literal("trigger")
-                                .then(Commands.argument("type", ResourceLocationArgument.id())
+                                .then(Commands.argument("type", IdentifierArgument.id())
                                         .executes(ctx -> {
                                             ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                            ResourceLocation type = ResourceLocationArgument.getId(ctx, "type");
+                                            Identifier type = IdentifierArgument.getId(ctx, "type");
                                             TipServer.trigger(type, player, buildVariables(player));
                                             ctx.getSource().sendSuccess(() -> Component.literal("TipServer.trigger: " + type), true);
                                             return 1;
@@ -44,10 +46,10 @@ public final class DevTestCommand {
                                 )
                         )
                         .then(Commands.literal("trigger_id")
-                                .then(Commands.argument("id", ResourceLocationArgument.id())
+                                .then(Commands.argument("id", IdentifierArgument.id())
                                         .executes(ctx -> {
                                             ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                            ResourceLocation id = ResourceLocationArgument.getId(ctx, "id");
+                                            Identifier id = IdentifierArgument.getId(ctx, "id");
                                             TipServer.triggerById(id, player, buildVariables(player));
                                             ctx.getSource().sendSuccess(() -> Component.literal("TipServer.triggerById: " + id), true);
                                             return 1;
@@ -58,12 +60,12 @@ public final class DevTestCommand {
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
 
-                                    ResourceLocation id = ResourceLocation.fromNamespaceAndPath("auratip", "dev_show_direct");
+                                    Identifier id = Identifier.fromNamespaceAndPath("auratip", "dev_show_direct");
                                     var tip = new TipBuilder(id)
-                                            .triggerRepeatable(ResourceLocation.fromNamespaceAndPath("auratip", "unused_trigger"), 0)
+                                            .triggerRepeatable(Identifier.fromNamespaceAndPath("auratip", "unused_trigger"), 0)
                                             .visual(v -> v
-                                                    .animationStyle(ResourceLocation.fromNamespaceAndPath("auratip", "fade_and_slide"))
-                                                    .hoverAnimationStyle(ResourceLocation.fromNamespaceAndPath("auratip", "none"))
+                                                    .animationStyle(Identifier.fromNamespaceAndPath("auratip", "fade_and_slide"))
+                                                    .hoverAnimationStyle(Identifier.fromNamespaceAndPath("auratip", "none"))
                                                     .size(220, 62)
                                                     .positionPreset("BOTTOM_RIGHT")
                                             )

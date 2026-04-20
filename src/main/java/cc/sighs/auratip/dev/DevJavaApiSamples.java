@@ -5,22 +5,22 @@ import cc.sighs.auratip.api.tip.TipBuilder;
 import cc.sighs.auratip.api.tip.TipRegistry;
 import cc.sighs.auratip.data.TipData;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public final class DevJavaApiSamples {
 
     private static final String OWNER = "auratip_dev";
-    public static final ResourceLocation DATAPACK_TIP = AuraTip.id("showtip_demo_intro");
-    public static final ResourceLocation DATAPACK_MENU = AuraTip.id("example_menu");
-    public static final ResourceLocation TRIGGER_SHOWTIP = AuraTip.id("showtip_command");
-    public static final ResourceLocation TRIGGER_FIRST_JOIN = AuraTip.id("first_join_world");
-    public static final ResourceLocation JAVA_TIP_SHOWTIP = AuraTip.id("dev_java_showtip");
-    public static final ResourceLocation JAVA_TIP_FIRST_JOIN = AuraTip.id("dev_java_first_join");
-    public static final ResourceLocation JAVA_TIP_BY_ID = AuraTip.id("dev_java_by_id");
-    public static final ResourceLocation JAVA_MENU = AuraTip.id("dev_java_menu");
-    public static final ResourceLocation JAVA_SCRIPT_ACTION = AuraTip.id("dev_action");
+    public static final Identifier DATAPACK_TIP = AuraTip.id("showtip_demo_intro");
+    public static final Identifier DATAPACK_MENU = AuraTip.id("example_menu");
+    public static final Identifier TRIGGER_SHOWTIP = AuraTip.id("showtip_command");
+    public static final Identifier TRIGGER_FIRST_JOIN = AuraTip.id("first_join_world");
+    public static final Identifier JAVA_TIP_SHOWTIP = AuraTip.id("dev_java_showtip");
+    public static final Identifier JAVA_TIP_FIRST_JOIN = AuraTip.id("dev_java_first_join");
+    public static final Identifier JAVA_TIP_BY_ID = AuraTip.id("dev_java_by_id");
+    public static final Identifier JAVA_MENU = AuraTip.id("dev_java_menu");
+    public static final Identifier JAVA_SCRIPT_ACTION = AuraTip.id("dev_action");
 
     private DevJavaApiSamples() {
     }

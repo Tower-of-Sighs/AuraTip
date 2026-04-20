@@ -3,7 +3,7 @@ package cc.sighs.auratip.api.radiamenu;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -18,13 +18,13 @@ import java.util.Optional;
  */
 public class RadialMenuBuilder {
 
-    private final ResourceLocation id;
+    private final Identifier id;
     private final List<RadialMenuData.Slot> slots = new ArrayList<>();
 
     private int innerRadius = 40;
     private int outerRadius = 80;
     private float animationSpeed = 1.0f;
-    private ResourceLocation centerIcon;
+    private Identifier centerIcon;
     private String ringColor;
     private List<String> ringColors = new ArrayList<>();
 
@@ -33,14 +33,14 @@ public class RadialMenuBuilder {
      *
      * @param id logical id for this menu
      */
-    public RadialMenuBuilder(ResourceLocation id) {
+    public RadialMenuBuilder(Identifier id) {
         this.id = Objects.requireNonNull(id, "id");
     }
 
     /**
      * Returns the logical id passed to the constructor.
      */
-    public ResourceLocation id() {
+    public Identifier id() {
         return id;
     }
 
@@ -69,7 +69,7 @@ public class RadialMenuBuilder {
      *
      * @param icon icon texture location; pass null to clear
      */
-    public RadialMenuBuilder centerIcon(@Nullable ResourceLocation icon) {
+    public RadialMenuBuilder centerIcon(@Nullable Identifier icon) {
         this.centerIcon = icon;
         return this;
     }
@@ -103,7 +103,7 @@ public class RadialMenuBuilder {
      */
     public RadialMenuBuilder slot(
             String name,
-            ResourceLocation icon,
+            Identifier icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor

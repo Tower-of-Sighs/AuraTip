@@ -1,7 +1,7 @@
 package cc.sighs.auratip.api.client;
 
 import cc.sighs.auratip.client.RadialMenuClient;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Client-side helpers for interacting with AuraTip's radial menu UI.
@@ -16,7 +16,7 @@ public final class RadialMenuClientApi {
     /**
      * Opens a specific radial menu by id.
      */
-    public static void open(ResourceLocation menuId) {
+    public static void open(Identifier menuId) {
         RadialMenuClient.openMenu(menuId);
     }
 }
