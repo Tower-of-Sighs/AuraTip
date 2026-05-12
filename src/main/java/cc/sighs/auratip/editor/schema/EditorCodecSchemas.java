@@ -181,11 +181,59 @@ public final class EditorCodecSchemas {
     private static JsonObject radialSlot() {
         return obj(
                 f("name", string(), false, str("Slot"), "radial.slot.name", "radial.slot.name.desc"),
-                f("icon", rl(), false, rlVal("minecraft:textures/item/paper.png"), "radial.slot.icon", "radial.slot.icon.desc"),
+                f("icon", radialIcon(), false, rlVal("minecraft:textures/item/paper.png"), "radial.slot.icon", "radial.slot.icon.desc"),
                 f("action", action(), false, actionDefaultRunCommand(), "radial.slot.action", "radial.slot.action.desc"),
                 f("text", component(), true, componentLiteral("Slot"), "radial.slot.text", "radial.slot.text.desc"),
                 f("highlight_color", string(), true, str("#FFFFFF"), "radial.slot.highlight_color", "radial.slot.highlight_color.desc")
         );
+    }
+
+    private static JsonObject radialIcon() {
+        // Variant 1: plain Identifier → TextureIcon
+        JsonObject texture = new JsonObject();
+        texture.addProperty("label", "texture");
+        texture.add("type", rl());
+
+        // Variant 2: object with type/id/count/components → ItemIcon
+        JsonObject item = new JsonObject();
+        item.addProperty("label", "item");
+        item.add("type", itemIconType());
+        item.add("default", itemIconDefault());
+
+        JsonArray variants = new JsonArray();
+        variants.add(texture);
+        variants.add(item);
+
+        JsonObject out = new JsonObject();
+        out.addProperty("kind", "either");
+        out.add("variants", variants);
+        return out;
+    }
+
+    private static JsonObject itemIconType() {
+        return obj(
+                f("type", enumOf(AuraTip.MOD_ID + ":item"), false, str(AuraTip.MOD_ID + ":item"), "radial.slot.icon.item.type", "radial.slot.icon.item.type.desc"),
+                f("stack", itemStackType(), false, null, "radial.slot.icon.item.stack", "radial.slot.icon.item.stack.desc")
+        );
+    }
+
+    private static JsonObject itemStackType() {
+        return obj(
+                f("id", rl(), false, rlVal("minecraft:chest"), "radial.slot.icon.item.stack.id", "radial.slot.icon.item.stack.id.desc"),
+                f("count", number(), true, num(1), "radial.slot.icon.item.stack.count", "radial.slot.icon.item.stack.count.desc"),
+                f("components", dynamicMap(), true, new JsonObject(), "radial.slot.icon.item.stack.components", "radial.slot.icon.item.stack.components.desc")
+        );
+    }
+
+    private static JsonObject itemIconDefault() {
+        JsonObject o = new JsonObject();
+        o.addProperty("type", AuraTip.MOD_ID + ":item");
+        JsonObject st = new JsonObject();
+        st.addProperty("id", "minecraft:chest");
+        st.addProperty("count", 1);
+        st.add("components", new JsonObject());
+        o.add("stack", st);
+        return o;
     }
 
     private static JsonObject action() {
