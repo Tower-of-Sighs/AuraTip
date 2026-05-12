@@ -29,4 +29,13 @@ public final class TipClientApi {
     public static void enqueue(List<TipData> tips, @Nullable Map<String, ?> variables) {
         TipClient.enqueueTips(tips, ResolveUtil.toComponentMap(variables));
     }
+
+    /**
+     * Closes the currently displayed tip on the client, if any.
+     * <p>
+     * If a tip queue is active, the next queued tip will be shown after the current one is closed.
+     */
+    public static void close() {
+        TipClient.closeCurrentTip();
+    }
 }

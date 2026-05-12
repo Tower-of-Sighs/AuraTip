@@ -85,6 +85,16 @@ public class TipTriggers {
         TipClientApi.enqueue(tips, variables);
     }
 
+    @Info("Closes the currently displayed tip on the client, if any. Client-side only; if a queue is active, the next tip will be shown.")
+    public static void close() {
+        TipClientApi.close();
+    }
+
+    @Info("Closes the currently displayed tip for the given player, if any. Server-side; sends a packet to the client.")
+    public static void close(ServerPlayer player) {
+        TipServer.close(player);
+    }
+
     private static ResourceLocation normalizeType(String type) {
         if (type == null || type.isEmpty()) {
             return ResourceLocation.fromNamespaceAndPath("kubejs", "trigger");
