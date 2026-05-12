@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 public final class EditorRadialPreviewApplier {
-    private static final ResourceLocation PREVIEW_ID = new ResourceLocation(AuraTip.MODID, "editor_preview_menu");
+    private static final ResourceLocation PREVIEW_ID = new ResourceLocation(AuraTip.MOD_ID, "editor_preview_menu");
 
     private EditorRadialPreviewApplier() {
     }

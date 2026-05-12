@@ -31,7 +31,7 @@ public class ShowTipCommand {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
 
                     TipServer.trigger(
-                            new ResourceLocation(AuraTip.MODID, "showtip_command"),
+                            new ResourceLocation(AuraTip.MOD_ID, "showtip_command"),
                             player,
                             buildVariables(player)
                     );

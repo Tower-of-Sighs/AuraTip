@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @NetworkPacket(
-        modId = AuraTip.MODID,
+        modId = AuraTip.MOD_ID,
         id = "show_tips",
         side = Side.CLIENT,
         chunkThreshold = 8192

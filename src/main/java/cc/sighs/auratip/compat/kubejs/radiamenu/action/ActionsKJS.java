@@ -17,8 +17,8 @@ import java.util.Map;
 import cc.sighs.auratip.util.SerializationUtil.CapturedParam;
 
 public class ActionsKJS {
-    private static final ResourceLocation RUN_COMMAND = new ResourceLocation(AuraTip.MODID, "run_command");
-    private static final ResourceLocation SIMULATE_KEY = new ResourceLocation(AuraTip.MODID, "simulate_key");
+    private static final ResourceLocation RUN_COMMAND = new ResourceLocation(AuraTip.MOD_ID, "run_command");
+    private static final ResourceLocation SIMULATE_KEY = new ResourceLocation(AuraTip.MOD_ID, "simulate_key");
 
     @Info("Register a script-backed action handler. The type can then be used as a radial menu slot action to invoke the callback.")
     public static void register(String type, ActionScriptRegistry.ScriptHandler handler) {

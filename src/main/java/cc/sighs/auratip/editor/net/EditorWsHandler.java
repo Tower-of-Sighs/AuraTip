@@ -27,8 +27,8 @@ import java.util.Set;
 
 final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
     private static final Gson GSON = new Gson();
-    private static final ResourceLocation TEMP_TRANSITION_ID = new ResourceLocation(AuraTip.MODID, "editor_temp_transition");
-    private static final ResourceLocation TEMP_HOVER_ID = new ResourceLocation(AuraTip.MODID, "editor_temp_hover");
+    private static final ResourceLocation TEMP_TRANSITION_ID = new ResourceLocation(AuraTip.MOD_ID, "editor_temp_transition");
+    private static final ResourceLocation TEMP_HOVER_ID = new ResourceLocation(AuraTip.MOD_ID, "editor_temp_hover");
 
     private final EditorWsHub hub;
 

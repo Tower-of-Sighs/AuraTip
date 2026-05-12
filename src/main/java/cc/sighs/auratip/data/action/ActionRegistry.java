@@ -21,9 +21,9 @@ public final class ActionRegistry {
     private ActionRegistry() {
     }
 
-    private static final ResourceLocation RUN_COMMAND = new ResourceLocation(AuraTip.MODID, "run_command");
-    private static final ResourceLocation SIMULATE_KEY = new ResourceLocation(AuraTip.MODID, "simulate_key");
-    private static final ResourceLocation UNKNOWN = new ResourceLocation(AuraTip.MODID, "unknown");
+    private static final ResourceLocation RUN_COMMAND = new ResourceLocation(AuraTip.MOD_ID, "run_command");
+    private static final ResourceLocation SIMULATE_KEY = new ResourceLocation(AuraTip.MOD_ID, "simulate_key");
+    private static final ResourceLocation UNKNOWN = new ResourceLocation(AuraTip.MOD_ID, "unknown");
 
     private static final Map<ResourceLocation, Codec<? extends Action>> CUSTOM_CODECS = new ConcurrentHashMap<>();
     private static final Map<Class<?>, ResourceLocation> CUSTOM_TYPE_BY_CLASS = new ConcurrentHashMap<>();

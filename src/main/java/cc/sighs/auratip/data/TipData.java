@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @DataDriven(
-        modid = AuraTip.MODID,
+        modid = AuraTip.MOD_ID,
         folder = "tips",
         syncToClient = true,
         supportArray = true,
@@ -103,7 +103,7 @@ public record TipData(
     ) {
         public static final Codec<VisualSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
-                        ResourceLocation.CODEC.optionalFieldOf("animation_style", new ResourceLocation(AuraTip.MODID, "fade_and_slide"))
+                        ResourceLocation.CODEC.optionalFieldOf("animation_style", new ResourceLocation(AuraTip.MOD_ID, "fade_and_slide"))
                                 .forGetter(VisualSettings::animationStyle),
                         Background.CODEC.optionalFieldOf("background", new Background(BackgroundType.GRADIENT, List.of("#FFE0F7FF", "#FFB3E5FC"), 8, true, Optional.empty()))
                                 .forGetter(VisualSettings::background),
@@ -121,7 +121,7 @@ public record TipData(
                                 .forGetter(VisualSettings::animationFrom),
                         Position.CODEC.optionalFieldOf("animation_to")
                                 .forGetter(VisualSettings::animationTo),
-                        ResourceLocation.CODEC.optionalFieldOf("hover_animation_style", new ResourceLocation(AuraTip.MODID, "none"))
+                        ResourceLocation.CODEC.optionalFieldOf("hover_animation_style", new ResourceLocation(AuraTip.MOD_ID, "none"))
                                 .forGetter(VisualSettings::hoverAnimationStyle),
                         Codec.FLOAT.optionalFieldOf("hover_animation_speed", 1.0f)
                                 .forGetter(VisualSettings::hoverAnimationSpeed),

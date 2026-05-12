@@ -18,9 +18,9 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 
-@Mod(AuraTip.MODID)
+@Mod(AuraTip.MOD_ID)
 public class AuraTip {
-    public static final String MODID = "auratip";
+    public static final String MOD_ID = "auratip";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public AuraTip() {

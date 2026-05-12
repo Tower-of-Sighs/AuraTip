@@ -3,7 +3,6 @@ package cc.sighs.auratip.api.radiamenu.icon;
 import cc.sighs.auratip.AuraTip;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -15,7 +14,7 @@ import net.minecraft.world.item.ItemStack;
  */
 public record ItemIcon(ItemStack stack) implements IRadialIcon {
 
-    public static final ResourceLocation TYPE = new ResourceLocation(AuraTip.MODID, "item");
+    public static final ResourceLocation TYPE = new ResourceLocation(AuraTip.MOD_ID, "item");
 
     public static final Codec<ItemIcon> CODEC = RecordCodecBuilder.create(inst ->
             inst.group(

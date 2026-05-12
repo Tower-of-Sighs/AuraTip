@@ -6,8 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import java.util.List;
-
 /**
  * Json schemas for the visual editor UI.
  * <p>
@@ -39,7 +37,7 @@ public final class EditorCodecSchemas {
 
     private static JsonObject tipTrigger() {
         return obj(
-                f("type", rl(), false, rlVal(AuraTip.MODID + ":first_join_world"), "tip.trigger.type", "tip.trigger.type.desc"),
+                f("type", rl(), false, rlVal(AuraTip.MOD_ID + ":first_join_world"), "tip.trigger.type", "tip.trigger.type.desc"),
                 f("mode", enumOf("once", "repeatable"), true, str("once"), "tip.trigger.mode", "tip.trigger.mode.desc"),
                 f("cooldown", number(), true, num(0), "tip.trigger.cooldown", "tip.trigger.cooldown.desc")
         );
@@ -57,14 +55,14 @@ public final class EditorCodecSchemas {
 
         return obj(
                 // Transition animation (grouped for editing convenience).
-                f("animation_style", rl(), true, rlVal(AuraTip.MODID + ":fade_and_slide"), "tip.visual.animation_style", "tip.visual.animation_style.desc"),
+                f("animation_style", rl(), true, rlVal(AuraTip.MOD_ID + ":fade_and_slide"), "tip.visual.animation_style", "tip.visual.animation_style.desc"),
                 f("animation_params", dynamicMap(), true, new JsonObject(), "tip.visual.animation_params", "tip.visual.animation_params.desc"),
                 f("animation_speed", number(), true, num(1.0), "tip.visual.animation_speed", "tip.visual.animation_speed.desc"),
                 f("animation_from", position(), true, str("BOTTOM_CENTER"), "tip.visual.animation_from", "tip.visual.animation_from.desc"),
                 f("animation_to", position(), true, str("BOTTOM_CENTER"), "tip.visual.animation_to", "tip.visual.animation_to.desc"),
 
                 // Hover animation (grouped).
-                f("hover_animation_style", rl(), true, rlVal(AuraTip.MODID + ":none"), "tip.visual.hover_animation_style", "tip.visual.hover_animation_style.desc"),
+                f("hover_animation_style", rl(), true, rlVal(AuraTip.MOD_ID + ":none"), "tip.visual.hover_animation_style", "tip.visual.hover_animation_style.desc"),
                 f("hover_animation_params", dynamicMap(), true, new JsonObject(), "tip.visual.hover_animation_params", "tip.visual.hover_animation_params.desc"),
                 f("hover_animation_speed", number(), true, num(1.0), "tip.visual.hover_animation_speed", "tip.visual.hover_animation_speed.desc"),
                 f("hover_only_on_hover", bool(), true, boolVal(false), "tip.visual.hover_only_on_hover", "tip.visual.hover_only_on_hover.desc"),
@@ -164,7 +162,7 @@ public final class EditorCodecSchemas {
 
     private static JsonObject radial() {
         return obj(
-                f("id", rl(), false, rlVal(AuraTip.MODID + ":menu"), "radial.id", "radial.id.desc"),
+                f("id", rl(), false, rlVal(AuraTip.MOD_ID + ":menu"), "radial.id", "radial.id.desc"),
                 f("menu_settings", radialSettings(), false, null, "radial.menu_settings", "radial.menu_settings.desc"),
                 f("slots", array(radialSlot()), false, null, "radial.slots", "radial.slots.desc")
         );
@@ -398,7 +396,7 @@ public final class EditorCodecSchemas {
 
     private static JsonObject actionDefaultRunCommand() {
         JsonObject o = new JsonObject();
-        o.addProperty("type", AuraTip.MODID + ":run_command");
+        o.addProperty("type", AuraTip.MOD_ID + ":run_command");
         o.addProperty("command", "/say hello");
         return o;
     }

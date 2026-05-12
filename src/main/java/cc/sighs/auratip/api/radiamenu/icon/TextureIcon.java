@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public record TextureIcon(ResourceLocation location) implements IRadialIcon {
 
-    public static final ResourceLocation TYPE = new ResourceLocation(AuraTip.MODID, "texture");
+    public static final ResourceLocation TYPE = new ResourceLocation(AuraTip.MOD_ID, "texture");
 
     public static final Codec<TextureIcon> CODEC = ResourceLocation.CODEC
             .xmap(TextureIcon::new, TextureIcon::location)

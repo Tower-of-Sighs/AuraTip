@@ -16,7 +16,7 @@ public class AuraShaders {
 
     public static void register() {
         ShaderRegister.register(
-                new ResourceLocation(AuraTip.MODID, "radial_ring"),
+                new ResourceLocation(AuraTip.MOD_ID, "radial_ring"),
                 DefaultVertexFormat.POSITION_TEX,
                 shader -> radialRing = shader
         );

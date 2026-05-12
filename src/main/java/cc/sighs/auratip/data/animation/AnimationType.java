@@ -28,21 +28,21 @@ public final class AnimationType {
     private static final Map<ResourceLocation, Map<String, CapturedParam>> ANIMATION_PARAM_SCHEMA = new HashMap<>();
     private static final Map<ResourceLocation, Map<String, CapturedParam>> HOVER_PARAM_SCHEMA = new HashMap<>();
 
-    private static final ResourceLocation DEFAULT_ID = new ResourceLocation(AuraTip.MODID, "fade_and_slide");
-    private static final ResourceLocation DEFAULT_HOVER_ID = new ResourceLocation(AuraTip.MODID, "none");
+    private static final ResourceLocation DEFAULT_ID = new ResourceLocation(AuraTip.MOD_ID, "fade_and_slide");
+    private static final ResourceLocation DEFAULT_HOVER_ID = new ResourceLocation(AuraTip.MOD_ID, "none");
 
     static {
         registerInternal(DEFAULT_ID, FadeAndSlideTransitionAnimation::create);
-        registerInternal(new ResourceLocation(AuraTip.MODID, "fade"), FadeTransitionAnimation::create);
-        registerInternal(new ResourceLocation(AuraTip.MODID, "slide"), SlideTransitionAnimation::create);
-        registerInternal(new ResourceLocation(AuraTip.MODID, "slide_in_left"), SlideInLeftTransitionAnimation::create);
-        registerInternal(new ResourceLocation(AuraTip.MODID, "slide_in_right"), SlideInRightTransitionAnimation::create);
-        registerInternal(new ResourceLocation(AuraTip.MODID, "slide_in_top"), SlideInTopTransitionAnimation::create);
-        registerInternal(new ResourceLocation(AuraTip.MODID, "slide_in_bottom"), SlideTransitionAnimation::create);
+        registerInternal(new ResourceLocation(AuraTip.MOD_ID, "fade"), FadeTransitionAnimation::create);
+        registerInternal(new ResourceLocation(AuraTip.MOD_ID, "slide"), SlideTransitionAnimation::create);
+        registerInternal(new ResourceLocation(AuraTip.MOD_ID, "slide_in_left"), SlideInLeftTransitionAnimation::create);
+        registerInternal(new ResourceLocation(AuraTip.MOD_ID, "slide_in_right"), SlideInRightTransitionAnimation::create);
+        registerInternal(new ResourceLocation(AuraTip.MOD_ID, "slide_in_top"), SlideInTopTransitionAnimation::create);
+        registerInternal(new ResourceLocation(AuraTip.MOD_ID, "slide_in_bottom"), SlideTransitionAnimation::create);
 
         registerHoverInternal(DEFAULT_HOVER_ID, params -> NoneHoverAnimation.INSTANCE);
-        registerHoverInternal(new ResourceLocation(AuraTip.MODID, "hover_float"), FloatHoverAnimation::create);
-        registerHoverInternal(new ResourceLocation(AuraTip.MODID, "hover_shake"), ShakeHoverAnimation::create);
+        registerHoverInternal(new ResourceLocation(AuraTip.MOD_ID, "hover_float"), FloatHoverAnimation::create);
+        registerHoverInternal(new ResourceLocation(AuraTip.MOD_ID, "hover_shake"), ShakeHoverAnimation::create);
     }
 
     private AnimationType() {

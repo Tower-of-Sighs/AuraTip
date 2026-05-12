@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public final class EditorPreviewApplier {
 
-    private static final ResourceLocation PREVIEW_ID = new ResourceLocation(AuraTip.MODID, "editor_preview");
+    private static final ResourceLocation PREVIEW_ID = new ResourceLocation(AuraTip.MOD_ID, "editor_preview");
 
     private EditorPreviewApplier() {
     }
@@ -49,7 +49,7 @@ public final class EditorPreviewApplier {
 
     public static TipData defaultTip() {
         TipData.Trigger trigger = new TipData.Trigger(
-                new ResourceLocation(AuraTip.MODID, "editor"),
+                new ResourceLocation(AuraTip.MOD_ID, "editor"),
                 TipData.Trigger.Mode.REPEATABLE,
                 0
         );
@@ -63,7 +63,7 @@ public final class EditorPreviewApplier {
         );
 
         TipData.VisualSettings visual = new TipData.VisualSettings(
-                new ResourceLocation(AuraTip.MODID, "fade_and_slide"),
+                new ResourceLocation(AuraTip.MOD_ID, "fade_and_slide"),
                 background,
                 Optional.empty(),
                 280,
@@ -72,7 +72,7 @@ public final class EditorPreviewApplier {
                 1.0f,
                 Optional.empty(),
                 Optional.empty(),
-                new ResourceLocation(AuraTip.MODID, "none"),
+                new ResourceLocation(AuraTip.MOD_ID, "none"),
                 1.0f,
                 false,
                 4,

@@ -7,21 +7,20 @@ import cc.sighs.auratip.data.TipData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.Collection;
 import java.util.List;
 
 public final class DevJavaApiSamples {
 
     private static final String OWNER = "auratip_dev";
-    public static final ResourceLocation DATAPACK_TIP = new ResourceLocation(AuraTip.MODID, "showtip_demo_intro");
-    public static final ResourceLocation DATAPACK_MENU = new ResourceLocation(AuraTip.MODID, "example_menu");
-    public static final ResourceLocation TRIGGER_SHOWTIP = new ResourceLocation(AuraTip.MODID, "showtip_command");
-    public static final ResourceLocation TRIGGER_FIRST_JOIN = new ResourceLocation(AuraTip.MODID, "first_join_world");
-    public static final ResourceLocation JAVA_TIP_SHOWTIP = new ResourceLocation(AuraTip.MODID, "dev_java_showtip");
-    public static final ResourceLocation JAVA_TIP_FIRST_JOIN = new ResourceLocation(AuraTip.MODID, "dev_java_first_join");
-    public static final ResourceLocation JAVA_TIP_BY_ID = new ResourceLocation(AuraTip.MODID, "dev_java_by_id");
-    public static final ResourceLocation JAVA_MENU = new ResourceLocation(AuraTip.MODID, "dev_java_menu");
-    public static final ResourceLocation JAVA_SCRIPT_ACTION = new ResourceLocation(AuraTip.MODID, "dev_action");
+    public static final ResourceLocation DATAPACK_TIP = new ResourceLocation(AuraTip.MOD_ID, "showtip_demo_intro");
+    public static final ResourceLocation DATAPACK_MENU = new ResourceLocation(AuraTip.MOD_ID, "example_menu");
+    public static final ResourceLocation TRIGGER_SHOWTIP = new ResourceLocation(AuraTip.MOD_ID, "showtip_command");
+    public static final ResourceLocation TRIGGER_FIRST_JOIN = new ResourceLocation(AuraTip.MOD_ID, "first_join_world");
+    public static final ResourceLocation JAVA_TIP_SHOWTIP = new ResourceLocation(AuraTip.MOD_ID, "dev_java_showtip");
+    public static final ResourceLocation JAVA_TIP_FIRST_JOIN = new ResourceLocation(AuraTip.MOD_ID, "dev_java_first_join");
+    public static final ResourceLocation JAVA_TIP_BY_ID = new ResourceLocation(AuraTip.MOD_ID, "dev_java_by_id");
+    public static final ResourceLocation JAVA_MENU = new ResourceLocation(AuraTip.MOD_ID, "dev_java_menu");
+    public static final ResourceLocation JAVA_SCRIPT_ACTION = new ResourceLocation(AuraTip.MOD_ID, "dev_action");
 
     private DevJavaApiSamples() {
     }
@@ -35,8 +34,8 @@ public final class DevJavaApiSamples {
         TipData a = new TipBuilder(JAVA_TIP_SHOWTIP)
                 .triggerRepeatable(TRIGGER_SHOWTIP, 0)
                 .visual(v -> v
-                        .animationStyle(new ResourceLocation(AuraTip.MODID, "slide_in_left"))
-                        .hoverAnimationStyle(new ResourceLocation(AuraTip.MODID, "hover_float"))
+                        .animationStyle(new ResourceLocation(AuraTip.MOD_ID, "slide_in_left"))
+                        .hoverAnimationStyle(new ResourceLocation(AuraTip.MOD_ID, "hover_float"))
                         .size(190, 60)
                         .positionAbsolute(12, 220)
                 )
@@ -53,8 +52,8 @@ public final class DevJavaApiSamples {
         TipData b = new TipBuilder(JAVA_TIP_FIRST_JOIN)
                 .triggerRepeatable(TRIGGER_FIRST_JOIN, 0)
                 .visual(v -> v
-                        .animationStyle(new ResourceLocation(AuraTip.MODID, "fade_and_slide"))
-                        .hoverAnimationStyle(new ResourceLocation(AuraTip.MODID, "none"))
+                        .animationStyle(new ResourceLocation(AuraTip.MOD_ID, "fade_and_slide"))
+                        .hoverAnimationStyle(new ResourceLocation(AuraTip.MOD_ID, "none"))
                         .size(180, 48)
                         .positionPreset("TOP_RIGHT")
                 )
@@ -69,10 +68,10 @@ public final class DevJavaApiSamples {
                 .build();
 
         TipData c = new TipBuilder(JAVA_TIP_BY_ID)
-                .triggerRepeatable(new ResourceLocation(AuraTip.MODID, "unused_trigger"), 0)
+                .triggerRepeatable(new ResourceLocation(AuraTip.MOD_ID, "unused_trigger"), 0)
                 .visual(v -> v
-                        .animationStyle(new ResourceLocation(AuraTip.MODID, "slide_in_right"))
-                        .hoverAnimationStyle(new ResourceLocation(AuraTip.MODID, "hover_shake"))
+                        .animationStyle(new ResourceLocation(AuraTip.MOD_ID, "slide_in_right"))
+                        .hoverAnimationStyle(new ResourceLocation(AuraTip.MOD_ID, "hover_shake"))
                         .size(200, 55)
                         .positionPreset("CENTER")
                 )

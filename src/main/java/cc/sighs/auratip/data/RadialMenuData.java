@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @DataDriven(
-        modid = AuraTip.MODID,
+        modid = AuraTip.MOD_ID,
         folder = "radial_menu",
         syncToClient = true,
         supportArray = true,

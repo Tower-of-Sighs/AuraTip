@@ -23,16 +23,16 @@ public class TipBuilder {
     private final ResourceLocation id;
     private final Map<Integer, PageData> pages = new LinkedHashMap<>();
 
-    private ResourceLocation triggerType = new ResourceLocation(AuraTip.MODID, "first_join_world");
+    private ResourceLocation triggerType = new ResourceLocation(AuraTip.MOD_ID, "first_join_world");
     private TipData.Trigger.Mode triggerMode = TipData.Trigger.Mode.ONCE;
     private int triggerCooldown;
 
-    private ResourceLocation animationStyle = new ResourceLocation(AuraTip.MODID, "fade_and_slide");
+    private ResourceLocation animationStyle = new ResourceLocation(AuraTip.MOD_ID, "fade_and_slide");
     private float animationSpeed = 1.0f;
     private final Map<String, Object> animationParams = new HashMap<>();
 
     private final Map<String, Object> hoverAnimationParams = new HashMap<>();
-    private ResourceLocation hoverAnimationStyle = new ResourceLocation(AuraTip.MODID, "none");
+    private ResourceLocation hoverAnimationStyle = new ResourceLocation(AuraTip.MOD_ID, "none");
     private float hoverAnimationSpeed = 1.0f;
     private boolean hoverOnlyOnHover;
 
