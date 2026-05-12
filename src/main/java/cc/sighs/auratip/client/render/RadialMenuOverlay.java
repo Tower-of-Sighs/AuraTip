@@ -1,5 +1,6 @@
 package cc.sighs.auratip.client.render;
 
+import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.action.ActionExecutor;
@@ -233,7 +234,7 @@ public class RadialMenuOverlay {
 
             float hoverScale = (i == activeIndex) ? activeFill : 0.0f;
             float scale = 1.0f + 0.25f * hoverScale;
-            drawIcon(graphics, slot.icon(), iconX, iconY, scale * eased);
+            drawIcon(graphics, slot.icon(), iconX, iconY, scale * eased, eased);
         }
 
         if (hoveredIndex >= 0 && hoveredIndex < slots.size()) {
@@ -276,13 +277,7 @@ public class RadialMenuOverlay {
         return true;
     }
 
-    private void drawIcon(GuiGraphicsExtractor graphics, Identifier texture, int x, int y, float scale) {
-        if (scale <= 0.0f) {
-            return;
-        }
-        int size = (int) (24 * scale);
-        int drawX = x - size / 2;
-        int drawY = y - size / 2;
-        graphics.blit(RenderPipelines.GUI_TEXTURED, texture, drawX, drawY, 0.0f, 0.0f, size, size, size, size);
+    private void drawIcon(GuiGraphicsExtractor graphics, IRadialIcon icon, int x, int y, float scale, float alpha) {
+        icon.render(graphics, x, y, scale, alpha);
     }
 }

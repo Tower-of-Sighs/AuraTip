@@ -1,5 +1,8 @@
 package cc.sighs.auratip;
 
+import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
+import cc.sighs.auratip.api.radiamenu.icon.ItemIcon;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.command.AuraTipEditorCommand;
 import cc.sighs.auratip.command.ShowTipCommand;
 import cc.sighs.auratip.data.RadialMenuData;
@@ -24,6 +27,8 @@ public class AuraTip {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public AuraTip(IEventBus modEventBus, ModContainer modContainer) {
+        IRadialIcon.register(ItemIcon.TYPE, ItemIcon.class, ItemIcon.CODEC);
+        IRadialIcon.register(TextureIcon.TYPE, TextureIcon.class, TextureIcon.CODEC);
         DataRegistry.register(TipData.class, TipData.CODEC);
         DataRegistry.register(RadialMenuData.class, RadialMenuData.CODEC);
         NetworkAutoRegistration.registerBasePackage("cc.sighs.auratip.network");

@@ -1,8 +1,8 @@
 package cc.sighs.auratip.api.radiamenu;
 
+import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
-import com.tkisor.nekojs.NekoJS;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -15,7 +15,7 @@ import java.util.*;
 public final class RadialMenuExtraSlots {
 
     private static final String OWNER_DEFAULT = "default";
-    private static final String OWNER_KUBEJS = NekoJS.MODID;
+    private static final String OWNER_KUBEJS = "kubejs";
 
     private static final Map<String, List<RadialMenuData.Slot>> BY_OWNER = new LinkedHashMap<>();
     private static final Map<String, Map<Identifier, List<RadialMenuData.Slot>>> BY_OWNER_BY_MENU = new LinkedHashMap<>();
@@ -40,7 +40,7 @@ public final class RadialMenuExtraSlots {
     /**
      * Adds an extra slot for a specific owner.
      *
-     * @param owner owner id (recommended: modid). {@code NekoJS.MODID} is reserved for the NekoJS integration.
+     * @param owner owner id (recommended: modid). {@code "kubejs"} is reserved for the KubeJS integration.
      * @param slot  slot to add (ignored when null)
      */
     public static synchronized void addSlot(String owner, RadialMenuData.Slot slot) {
@@ -68,7 +68,7 @@ public final class RadialMenuExtraSlots {
     /**
      * Adds an extra slot that only applies to one base menu id for a specific owner.
      *
-     * @param owner  owner id (recommended: modid). {@code NekoJS.MODID} is reserved for the NekoJS integration.
+     * @param owner  owner id (recommended: modid). {@code "kubejs"} is reserved for the KubeJS integration.
      * @param menuId target base menu id
      * @param slot   slot to add (ignored when null)
      */
@@ -87,14 +87,14 @@ public final class RadialMenuExtraSlots {
      * Convenience helper to build and add an extra slot.
      *
      * @param name           slot name (must be non-empty)
-     * @param icon           icon texture location
+     * @param icon           slot icon
      * @param action         slot action (required)
      * @param text           optional slot label
      * @param highlightColor optional hover highlight color (argb hex)
      */
     public static void addSlot(
             String name,
-            Identifier icon,
+            IRadialIcon icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor
@@ -116,7 +116,7 @@ public final class RadialMenuExtraSlots {
      *
      * @param menuId         target base menu id
      * @param name           slot name (must be non-empty)
-     * @param icon           icon texture location
+     * @param icon           slot icon
      * @param action         slot action (required)
      * @param text           optional slot label
      * @param highlightColor optional hover highlight color (argb hex)
@@ -124,7 +124,7 @@ public final class RadialMenuExtraSlots {
     public static void addSlotForMenu(
             Identifier menuId,
             String name,
-            Identifier icon,
+            IRadialIcon icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor
@@ -361,7 +361,7 @@ public final class RadialMenuExtraSlots {
     }
 
     /**
-     * Owner id reserved for the NekoJS integration.
+     * Owner id reserved for the KubeJS integration.
      */
     public static String ownerKubejs() {
         return OWNER_KUBEJS;
