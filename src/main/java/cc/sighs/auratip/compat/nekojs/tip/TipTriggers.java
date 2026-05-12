@@ -73,6 +73,14 @@ public class TipTriggers {
         TipClientApi.enqueue(tips, variables);
     }
 
+    public static void close() {
+        TipClientApi.close();
+    }
+
+    public static void close(ServerPlayer player) {
+        TipServer.close(player);
+    }
+
     private static Identifier normalizeType(String type) {
         if (type == null || type.isEmpty()) {
             return Identifier.fromNamespaceAndPath(NekoJS.MODID, "trigger");

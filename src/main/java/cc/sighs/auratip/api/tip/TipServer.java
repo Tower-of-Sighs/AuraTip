@@ -2,6 +2,7 @@ package cc.sighs.auratip.api.tip;
 
 import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.trigger.TipTriggerManager;
+import cc.sighs.auratip.network.CloseTipPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
@@ -77,5 +78,17 @@ public final class TipServer {
             return;
         }
         show(player, List.of(tip), variables);
+    }
+
+    /**
+     * Closes the currently displayed tip for the given player, if any.
+     * <p>
+     * Sends a packet to the client requesting the tip overlay to close.
+     * If a tip queue is active on the client, the next queued tip will be shown after closing.
+     *
+     * @param player target player
+     */
+    public static void close(ServerPlayer player) {
+        new CloseTipPacket().sendTo(player);
     }
 }
