@@ -779,14 +779,28 @@
 
       slots.forEach(s => {
         const name = String(s.name || 'Slot');
-        const icon = String(s.icon || 'minecraft:textures/item/paper.png');
-        push('  menu.slot(');
-        push(`    ${JSON.stringify(name)},`);
-        push(`    ${JSON.stringify(icon)},`);
-        push(`    ${actionExpr(s.action)},`);
-        push(`    ${s.text ? compExpr(s.text) : 'null'},`);
-        push(`    ${s.highlight_color ? JSON.stringify(s.highlight_color) : 'null'}`);
-        push('  );');
+        const icon = s.icon;
+        if (icon && typeof icon === 'object' && !Array.isArray(icon)) {
+          // Item icon → slotItem(name, ItemStack, ...)
+          const itemId = String(icon.id || 'minecraft:air');
+          push('  menu.slotItem(');
+          push(`    ${JSON.stringify(name)},`);
+          push(`    Item.of(${JSON.stringify(itemId)}),`);
+          push(`    ${actionExpr(s.action)},`);
+          push(`    ${s.text ? compExpr(s.text) : 'null'},`);
+          push(`    ${s.highlight_color ? JSON.stringify(s.highlight_color) : 'null'}`);
+          push('  );');
+        } else {
+          // Texture icon → slot(name, iconId, ...)
+          const iconId = String(icon || 'minecraft:textures/item/paper.png');
+          push('  menu.slot(');
+          push(`    ${JSON.stringify(name)},`);
+          push(`    ${JSON.stringify(iconId)},`);
+          push(`    ${actionExpr(s.action)},`);
+          push(`    ${s.text ? compExpr(s.text) : 'null'},`);
+          push(`    ${s.highlight_color ? JSON.stringify(s.highlight_color) : 'null'}`);
+          push('  );');
+        }
         push('');
       });
 
@@ -1043,7 +1057,18 @@
         else if (type === 'auratip:simulate_key') actionExpr = `Actions.simulateKey(${Number(params.key_code || 0) | 0})`;
         else actionExpr = `Actions.script(${javaRlExpr(type)}, ${javaMapExpr(params)})`;
 
-        push(`  .slot(${javaStr(String(s.name || 'Slot'))}, ${javaRlExpr(String(s.icon || 'minecraft:textures/item/paper.png'))}, ${actionExpr}, ${s.text ? javaCompExpr(s.text) : 'null'}, ${s.highlight_color ? javaStr(s.highlight_color) : 'null'})`);
+        const iconRaw = s.icon;
+        let iconExpr;
+        if (iconRaw && typeof iconRaw === 'object' && !Array.isArray(iconRaw)) {
+          const itemId = String(iconRaw.id || 'minecraft:air');
+          const count = Number(iconRaw.count || 1) | 0;
+          iconExpr = `new ItemIcon(new ItemStack(Items.${itemId.split(':')[1].toUpperCase()}, ${count}))`;
+        } else {
+          const texId = String(iconRaw || 'minecraft:textures/item/paper.png');
+          iconExpr = `new TextureIcon(Identifier.parse(${javaStr(texId)}))`;
+        }
+
+        push(`  .slot(${javaStr(String(s.name || 'Slot'))}, ${iconExpr}, ${actionExpr}, ${s.text ? javaCompExpr(s.text) : 'null'}, ${s.highlight_color ? javaStr(s.highlight_color) : 'null'})`);
       });
 
       push('  .build();');
@@ -1723,6 +1748,18 @@
 
   function renderEither(parent, key, value, typeSchema, path) {
     const variants = Array.isArray(typeSchema.variants) ? typeSchema.variants : [];
+
+    function detectVariant(val) {
+      if (variants.length > 1) {
+        const v1 = variants[1];
+        if (v1 && v1.type) {
+          if (v1.type.kind === 'fixed_int_array2' && Array.isArray(val)) return 1;
+          if (v1.type.kind === 'object' && val && typeof val === 'object' && !Array.isArray(val)) return 1;
+        }
+      }
+      return 0;
+    }
+
     const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
     variants.forEach((v, idx) => {
       const o = el('option', '', v.label || String(idx));
@@ -1730,8 +1767,7 @@
       sel.appendChild(o);
     });
 
-    const isAbs = Array.isArray(value);
-    sel.value = isAbs ? '1' : '0';
+    sel.value = String(detectVariant(value));
 
     const body = el('div', 'space-y-2');
 
@@ -1740,13 +1776,26 @@
       const idx = Number(sel.value || 0);
       const variant = variants[idx] || variants[0];
       const vt = variant ? variant.type : null;
-      if (idx === 1) {
-        // absolute: fixed [x,y]
+      if (idx === 0) {
+        // Variant 0: string
+        if (typeof parent[key] !== 'string') parent[key] = schemaDefaultValue(vt, null);
+        body.appendChild(inputText(parent[key] ?? '', v => { parent[key] = v; sendLiveDebounced(); }));
+      } else if (vt && vt.kind === 'object') {
+        // Variant 1: object — render fields from schema
+        const obj = (parent[key] && typeof parent[key] === 'object' && !Array.isArray(parent[key]))
+          ? parent[key] : (parent[key] = schemaDefaultValue(vt, null));
+        const fields = Array.isArray(vt.fields) ? vt.fields : [];
+        fields.forEach(f => {
+          if (!f || !f.name) return;
+          if (!(f.name in obj)) obj[f.name] = schemaDefaultValue(f.type, f);
+          body.appendChild(renderSchemaField(obj, f.name, f.type, path.concat(key, f.name), () => {
+            if (f.optional) { delete obj[f.name]; renderBody(); sendLiveDebounced(); }
+          }));
+        });
+      } else {
+        // Fallback: fixed int array (position)
         if (!Array.isArray(parent[key])) parent[key] = [0, 0];
         body.appendChild(renderFixedIntArray2(parent, key, parent[key]));
-      } else {
-        if (Array.isArray(parent[key])) parent[key] = 'BOTTOM_CENTER';
-        body.appendChild(inputText(parent[key] ?? '', v => { parent[key] = v; sendLiveDebounced(); }));
       }
     }
 
@@ -2181,6 +2230,65 @@
     formRoot.appendChild(secPage);
   }
 
+  function renderSlotIcon(slot) {
+    const isItem = (slot.icon && typeof slot.icon === 'object' && !Array.isArray(slot.icon));
+    const wrap = el('div', 'space-y-2');
+
+    const sel = el('select', 'w-full text-xs px-3 py-2 rounded-xl bg-black/20 border border-white/10 outline-none focus:border-blue-500/40');
+    [{l:'texture (ResourceLocation)', i:0},{l:'item (ItemStack)', i:1}].forEach(v => {
+      const o=el('option','',v.l); o.value=String(v.i); sel.appendChild(o);
+    });
+    sel.value = isItem ? '1' : '0';
+
+    const body = el('div', 'space-y-2');
+
+    function ensureItemIcon() {
+      if (!slot.icon || typeof slot.icon !== 'object' || Array.isArray(slot.icon)) {
+        slot.icon = { type:'auratip:item', id:'minecraft:chest', count:1, components:{} };
+      }
+      const obj = slot.icon;
+      if (typeof obj.type !== 'string') obj.type = 'auratip:item';
+      if (typeof obj.id !== 'string') obj.id = 'minecraft:chest';
+      if (typeof obj.count !== 'number') obj.count = 1;
+      if (!obj.components || typeof obj.components !== 'object' || Array.isArray(obj.components)) obj.components = {};
+      return obj;
+    }
+
+    function ensureTextureIcon() {
+      if (typeof slot.icon !== 'string') slot.icon = 'minecraft:textures/item/paper.png';
+      return slot.icon;
+    }
+
+    function renderBody() {
+      body.innerHTML = '';
+      if (sel.value === '1') {
+        const obj = ensureItemIcon();
+        body.appendChild(row('type', inputText(obj.type, v => { obj.type=v; sendLiveDebounced(); }), 'auratip:item'));
+        body.appendChild(row('id', inputText(obj.id, v => { obj.id=v; sendLiveDebounced(); }), 'minecraft:chest'));
+        body.appendChild(row('count', inputNumber(obj.count, v => { obj.count=v|0; sendLiveDebounced(); }), '1~99'));
+        body.appendChild(row('components', inputJson(obj.components, v => { obj.components=v; sendLiveDebounced(); }, 4), 'optional DataComponentPatch'));
+      } else {
+        const tex = ensureTextureIcon();
+        body.appendChild(row('texture', inputText(tex, v => { slot.icon=v; sendLiveDebounced(); }), 'minecraft:textures/item/...'));
+      }
+    }
+
+    sel.addEventListener('change', () => {
+      if (sel.value === '1') {
+        slot.icon = { type:'auratip:item', id:'minecraft:chest', count:1, components:{} };
+      } else {
+        slot.icon = 'minecraft:textures/item/paper.png';
+      }
+      renderBody();
+      sendLiveDebounced();
+    });
+
+    renderBody();
+    wrap.appendChild(sel);
+    wrap.appendChild(body);
+    return row('icon', wrap, undefined);
+  }
+
   function renderRadialForm() {
     const menu = radialState; if (!menu) return;
     const settings = ensureObj(menu,'menu_settings',{});
@@ -2213,7 +2321,7 @@
       card.appendChild(head);
 
       card.appendChild(row('name', inputText(slot.name ?? '', v => { slot.name=v; renderForm(); sendLiveDebounced(); })));
-      card.appendChild(row('icon', inputText(slot.icon ?? '', v => { slot.icon=v; sendLiveDebounced(); }), 'ResourceLocation'));
+      card.appendChild(renderSlotIcon(slot));
       card.appendChild(row('highlight_color', inputText(slot.highlight_color ?? '', v => { if(!v) delete slot.highlight_color; else slot.highlight_color=v; sendLiveDebounced(); }), 'ARGB'));
 
       slot.text = (slot.text && typeof slot.text === 'object') ? slot.text : { text:'' };
