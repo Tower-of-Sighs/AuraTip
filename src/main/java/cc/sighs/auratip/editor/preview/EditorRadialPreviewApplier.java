@@ -1,6 +1,7 @@
 package cc.sighs.auratip.editor.preview;
 
 import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.data.RadialMenuData;
 import com.google.gson.JsonElement;
@@ -29,7 +30,7 @@ public final class EditorRadialPreviewApplier {
 
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 "Preview",
-                new ResourceLocation("minecraft", "textures/item/paper.png"),
+                new TextureIcon(new ResourceLocation("minecraft", "textures/item/paper.png")),
                 new cc.sighs.auratip.data.action.Action.RunCommand("/say AuraTip Editor Preview"),
                 java.util.Optional.of(net.minecraft.network.chat.Component.literal("Preview")),
                 java.util.Optional.of("#77FFFFFF")
@@ -50,7 +51,7 @@ public final class EditorRadialPreviewApplier {
     }
 
     public static void closePreview() {
-        Minecraft.getInstance().execute(() -> RadialMenuOverlay.INSTANCE.close());
+        Minecraft.getInstance().execute(RadialMenuOverlay.INSTANCE::close);
     }
 
     public static void applyMenuJson(JsonElement menuJson) {

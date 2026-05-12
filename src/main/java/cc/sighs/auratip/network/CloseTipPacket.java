@@ -8,7 +8,7 @@ import cc.sighs.oelib.network.api.NetworkPacket;
 import cc.sighs.oelib.network.api.Side;
 
 @NetworkPacket(
-        modId = AuraTip.MOD_ID,
+        modId = AuraTip.MODID,
         id = "close_tip",
         side = Side.CLIENT
 )
