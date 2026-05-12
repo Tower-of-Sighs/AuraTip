@@ -1,9 +1,12 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu;
 
+import cc.sighs.auratip.api.radiamenu.icon.ItemIcon;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -59,7 +62,19 @@ public final class RadialMenuBuilder {
             @Nullable String highlightColor
     ) {
         Objects.requireNonNull(iconId, "iconId");
-        delegate.slot(name, ResourceLocation.parse(iconId), action, text, highlightColor);
+        delegate.slot(name, new TextureIcon(ResourceLocation.parse(iconId)), action, text, highlightColor);
+        return this;
+    }
+
+    public RadialMenuBuilder slotItem(
+            String name,
+            ItemStack icon,
+            Action action,
+            @Nullable Component text,
+            @Nullable String highlightColor
+    ) {
+        Objects.requireNonNull(icon, "icon");
+        delegate.slot(name, new ItemIcon(icon), action, text, highlightColor);
         return this;
     }
 

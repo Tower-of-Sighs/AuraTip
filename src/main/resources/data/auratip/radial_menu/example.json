@@ -41,6 +41,21 @@
         "underlined": true
       },
       "highlight_color": "#FF69B4"
+    },
+    {
+      "name": "Chest",
+      "icon": {
+        "type": "auratip:item",
+        "stack": {
+          "id": "minecraft:chest",
+          "count": 1
+        }
+      },
+      "action": {
+        "type": "auratip:run_command",
+        "command": "give @p minecraft:diamond 1"
+      },
+      "highlight_color": "#55FFFF"
     }
   ]
 }

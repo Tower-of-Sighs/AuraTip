@@ -1,11 +1,14 @@
 package cc.sighs.auratip.compat.kubejs.radiamenu.slot;
 
 import cc.sighs.auratip.api.client.RadialMenuClientApi;
+import cc.sighs.auratip.api.radiamenu.icon.ItemIcon;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
 
@@ -38,10 +41,30 @@ public class RadialMenusKJS {
         if (action == null) {
             return;
         }
-        ResourceLocation icon = ResourceLocation.parse(iconId);
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
-                icon,
+                new TextureIcon(ResourceLocation.parse(iconId)),
+                action,
+                Optional.ofNullable(text),
+                Optional.ofNullable(highlightColor)
+        );
+        RadialMenuExtraSlotRegistry.addSlot(slot);
+    }
+
+    @Info("Append an extra slot with an item icon to all base radial menus.")
+    public static void addSlotItem(String name, ItemStack icon, Action action, Component text, String highlightColor) {
+        if (name == null || name.isEmpty()) {
+            return;
+        }
+        if (icon == null || icon.isEmpty()) {
+            return;
+        }
+        if (action == null) {
+            return;
+        }
+        RadialMenuData.Slot slot = new RadialMenuData.Slot(
+                name,
+                new ItemIcon(icon),
                 action,
                 Optional.ofNullable(text),
                 Optional.ofNullable(highlightColor)
@@ -83,10 +106,35 @@ public class RadialMenusKJS {
         }
 
         ResourceLocation targetMenuId = ResourceLocation.parse(menuId);
-        ResourceLocation icon = ResourceLocation.parse(iconId);
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
-                icon,
+                new TextureIcon(ResourceLocation.parse(iconId)),
+                action,
+                Optional.ofNullable(text),
+                Optional.ofNullable(highlightColor)
+        );
+        RadialMenuExtraSlotRegistry.addSlotForMenu(targetMenuId, slot);
+    }
+
+    @Info("Append an extra slot with an item icon to a specific base menu id.")
+    public static void addSlotItem(String menuId, String name, ItemStack icon, Action action, Component text, String highlightColor) {
+        if (menuId == null || menuId.isEmpty()) {
+            return;
+        }
+        if (name == null || name.isEmpty()) {
+            return;
+        }
+        if (icon == null || icon.isEmpty()) {
+            return;
+        }
+        if (action == null) {
+            return;
+        }
+
+        ResourceLocation targetMenuId = ResourceLocation.parse(menuId);
+        RadialMenuData.Slot slot = new RadialMenuData.Slot(
+                name,
+                new ItemIcon(icon),
                 action,
                 Optional.ofNullable(text),
                 Optional.ofNullable(highlightColor)

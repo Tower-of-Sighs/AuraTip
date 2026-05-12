@@ -1,5 +1,6 @@
 package cc.sighs.auratip.api.radiamenu;
 
+import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import net.minecraft.network.chat.Component;
@@ -86,14 +87,14 @@ public final class RadialMenuExtraSlots {
      * Convenience helper to build and add an extra slot.
      *
      * @param name           slot name (must be non-empty)
-     * @param icon           icon texture location
+     * @param icon           slot icon
      * @param action         slot action (required)
      * @param text           optional slot label
      * @param highlightColor optional hover highlight color (argb hex)
      */
     public static void addSlot(
             String name,
-            ResourceLocation icon,
+            IRadialIcon icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor
@@ -115,7 +116,7 @@ public final class RadialMenuExtraSlots {
      *
      * @param menuId         target base menu id
      * @param name           slot name (must be non-empty)
-     * @param icon           icon texture location
+     * @param icon           slot icon
      * @param action         slot action (required)
      * @param text           optional slot label
      * @param highlightColor optional hover highlight color (argb hex)
@@ -123,7 +124,7 @@ public final class RadialMenuExtraSlots {
     public static void addSlotForMenu(
             ResourceLocation menuId,
             String name,
-            ResourceLocation icon,
+            IRadialIcon icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor

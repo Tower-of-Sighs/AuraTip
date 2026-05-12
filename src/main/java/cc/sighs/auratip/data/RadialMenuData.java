@@ -1,6 +1,7 @@
 package cc.sighs.auratip.data;
 
 import cc.sighs.auratip.AuraTip;
+import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.validator.RadialMenuDataValidator;
 import cc.sighs.oelib.data.api.DataDriven;
@@ -35,7 +36,7 @@ public record RadialMenuData(
 
     public record Slot(
             String name,
-            ResourceLocation icon,
+            IRadialIcon icon,
             Action action,
             Optional<Component> text,
             Optional<String> highlightColor
@@ -43,7 +44,7 @@ public record RadialMenuData(
         public static final Codec<Slot> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Codec.STRING.fieldOf("name").forGetter(Slot::name),
-                        ResourceLocation.CODEC.fieldOf("icon").forGetter(Slot::icon),
+                        IRadialIcon.CODEC.fieldOf("icon").forGetter(Slot::icon),
                         Action.CODEC.fieldOf("action").forGetter(Slot::action),
                         ComponentSerialization.CODEC.optionalFieldOf("text").forGetter(Slot::text),
                         Codec.STRING.optionalFieldOf("highlight_color").forGetter(Slot::highlightColor)

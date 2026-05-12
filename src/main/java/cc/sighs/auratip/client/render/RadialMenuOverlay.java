@@ -1,17 +1,15 @@
 package cc.sighs.auratip.client.render;
 
+import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import cc.sighs.auratip.data.action.ActionExecutor;
 import cc.sighs.auratip.editor.client.EditorClient;
 import cc.sighs.auratip.util.ColorUtil;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
@@ -234,7 +232,7 @@ public class RadialMenuOverlay {
 
             float hoverScale = (i == activeIndex) ? activeFill : 0.0f;
             float scale = 1.0f + 0.25f * hoverScale;
-            drawIcon(graphics, slot.icon(), iconX, iconY, scale * eased);
+            drawIcon(graphics, slot.icon(), iconX, iconY, scale * eased, eased);
         }
 
         if (hoveredIndex >= 0 && hoveredIndex < slots.size()) {
@@ -277,16 +275,7 @@ public class RadialMenuOverlay {
         return true;
     }
 
-    private void drawIcon(GuiGraphics graphics, ResourceLocation texture, int x, int y, float scale) {
-        if (scale <= 0.0f) {
-            return;
-        }
-        int size = (int) (24 * scale);
-        int drawX = x - size / 2;
-        int drawY = y - size / 2;
-
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, texture);
-        graphics.blit(texture, drawX, drawY, 0, 0, size, size, size, size);
+    private void drawIcon(GuiGraphics graphics, IRadialIcon icon, int x, int y, float scale, float alpha) {
+        icon.render(graphics, x, y, scale, alpha);
     }
 }
