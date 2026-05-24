@@ -57,6 +57,8 @@ public class TipBuilder {
     private boolean pauseOnHover = true;
     private String closeKey;
     private boolean allowPaging = true;
+    private boolean showCloseButton = true;
+    private boolean showPageIndicator = true;
 
     /**
      * Creates a new tip builder.
@@ -203,7 +205,9 @@ public class TipBuilder {
                 defaultDuration,
                 pauseOnHover,
                 Optional.ofNullable(closeKey),
-                allowPaging
+                allowPaging,
+                showCloseButton,
+                showPageIndicator
         );
 
         List<TipData.Page> pageList = new ArrayList<>();
@@ -632,6 +636,22 @@ public class TipBuilder {
          */
         public BehaviorBuilder allowPaging(boolean allow) {
             allowPaging = allow;
+            return this;
+        }
+
+        /**
+         * Sets whether to show the close "X" button (default {@code true}).
+         */
+        public BehaviorBuilder showCloseButton(boolean show) {
+            showCloseButton = show;
+            return this;
+        }
+
+        /**
+         * Sets whether to show the page number and arrows (default {@code true}).
+         */
+        public BehaviorBuilder showPageIndicator(boolean show) {
+            showPageIndicator = show;
             return this;
         }
     }
