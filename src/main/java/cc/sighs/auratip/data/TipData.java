@@ -179,7 +179,9 @@ public record TipData(
             int defaultDuration,
             boolean pauseTimerOnHover,
             Optional<String> closableByKey,
-            boolean allowPaging
+            boolean allowPaging,
+            boolean showCloseButton,
+            boolean showPageIndicator
     ) {
         public static final Codec<Behavior> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
@@ -190,7 +192,11 @@ public record TipData(
                         Codec.STRING.optionalFieldOf("closable_by_key")
                                 .forGetter(Behavior::closableByKey),
                         Codec.BOOL.optionalFieldOf("allow_paging", true)
-                                .forGetter(Behavior::allowPaging)
+                                .forGetter(Behavior::allowPaging),
+                        Codec.BOOL.optionalFieldOf("show_close_button", true)
+                                .forGetter(Behavior::showCloseButton),
+                        Codec.BOOL.optionalFieldOf("show_page_indicator", true)
+                                .forGetter(Behavior::showPageIndicator)
                 ).apply(inst, Behavior::new)
         );
     }
