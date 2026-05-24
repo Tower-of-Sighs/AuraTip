@@ -267,15 +267,19 @@ public class TipOverlay {
             drawImage(graphics, page.image().get(), drawX, drawY, w);
         }
 
-        int closeSize = 10;
-        int closeX = drawX + w - closeSize - 4;
-        int closeY = drawY + 4;
-        graphics.drawString(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
+        if (tip.behavior().showCloseButton()) {
+            int closeSize = 10;
+            int closeX = drawX + w - closeSize - 4;
+            int closeY = drawY + 4;
+            graphics.drawString(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
+        }
 
-        int indicatorY = drawY + h - 12;
-        String pageInfo = (currentPage + 1) + "/" + pages.size();
-        int pageInfoWidth = Minecraft.getInstance().font.width(pageInfo);
-        graphics.drawString(Minecraft.getInstance().font, pageInfo, drawX + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
+        if (tip.behavior().showPageIndicator()) {
+            int indicatorY = drawY + h - 12;
+            String pageInfo = (currentPage + 1) + "/" + pages.size();
+            int pageInfoWidth = Minecraft.getInstance().font.width(pageInfo);
+            graphics.drawString(Minecraft.getInstance().font, pageInfo, drawX + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
+        }
 
         if (tip.behavior().allowPaging() && pages.size() > 1) {
             String left = "<";
@@ -346,15 +350,17 @@ public class TipOverlay {
         int y = panelY + offsetY + hoverOffsetY;
         int w = panelWidth;
 
-        int closeSize = 10;
-        int closeX = x + w - closeSize - 4;
-        int closeY = y + 4;
-        if (mouseX >= closeX && mouseX <= closeX + closeSize * 2 && mouseY >= closeY && mouseY <= closeY + closeSize * 2) {
-            startClosing();
-            return true;
+        if (tip.behavior().showCloseButton()) {
+            int closeSize = 10;
+            int closeX = x + w - closeSize - 4;
+            int closeY = y + 4;
+            if (mouseX >= closeX && mouseX <= closeX + closeSize * 2 && mouseY >= closeY && mouseY <= closeY + closeSize * 2) {
+                startClosing();
+                return true;
+            }
         }
 
-        if (tip.behavior().allowPaging() && pages.size() > 1) {
+        if (tip.behavior().showPageIndicator() && tip.behavior().allowPaging() && pages.size() > 1) {
             int indicatorY = y + panelHeight - 12;
             String left = "<";
             String right = ">";

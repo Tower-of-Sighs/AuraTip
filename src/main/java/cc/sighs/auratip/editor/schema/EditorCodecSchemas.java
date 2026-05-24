@@ -93,7 +93,9 @@ public final class EditorCodecSchemas {
                 f("default_duration", number(), true, num(200), "tip.behavior.default_duration", "tip.behavior.default_duration.desc"),
                 f("pause_timer_on_hover", bool(), true, boolVal(true), "tip.behavior.pause_timer_on_hover", "tip.behavior.pause_timer_on_hover.desc"),
                 f("closable_by_key", string(), true, str("key.keyboard.escape"), "tip.behavior.closable_by_key", "tip.behavior.closable_by_key.desc"),
-                f("allow_paging", bool(), true, boolVal(true), "tip.behavior.allow_paging", "tip.behavior.allow_paging.desc")
+                f("allow_paging", bool(), true, boolVal(true), "tip.behavior.allow_paging", "tip.behavior.allow_paging.desc"),
+                f("show_close_button", bool(), true, boolVal(true), "tip.behavior.show_close_button", "tip.behavior.show_close_button.desc"),
+                f("show_page_indicator", bool(), true, boolVal(true), "tip.behavior.show_page_indicator", "tip.behavior.show_page_indicator.desc")
         );
     }
 
