@@ -176,7 +176,8 @@ public final class EditorCodecSchemas {
                 f("outer_radius", number(), false, num(100), "radial.menu_settings.outer_radius", "radial.menu_settings.outer_radius.desc"),
                 f("animation_speed", number(), false, num(1.0), "radial.menu_settings.animation_speed", "radial.menu_settings.animation_speed.desc"),
                 f("ring_color", string(), true, str("#77FFFFFF"), "radial.menu_settings.ring_color", "radial.menu_settings.ring_color.desc"),
-                f("ring_colors", array(string()), true, listStr("#77FFFFFF", "#33FFFFFF"), "radial.menu_settings.ring_colors", "radial.menu_settings.ring_colors.desc")
+                f("ring_colors", array(string()), true, listStr("#77FFFFFF", "#33FFFFFF"), "radial.menu_settings.ring_colors", "radial.menu_settings.ring_colors.desc"),
+                f("close_key", string(), true, str("key.keyboard.escape"), "radial.menu_settings.close_key", "radial.menu_settings.close_key.desc")
         );
     }
 

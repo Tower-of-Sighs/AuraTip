@@ -31,6 +31,7 @@ public class RadialMenuBuilder {
     private Identifier centerIcon;
     private String ringColor;
     private List<String> ringColors = new ArrayList<>();
+    private String closeKey;
 
     /**
      * Creates a new radial menu builder.
@@ -93,6 +94,15 @@ public class RadialMenuBuilder {
      */
     public RadialMenuBuilder ringColors(@Nullable List<String> colors) {
         this.ringColors = colors == null ? new ArrayList<>() : new ArrayList<>(colors);
+        return this;
+    }
+
+    /**
+     * Sets a custom close key binding id (e.g. {@code "key.keyboard.escape"}).
+     * Defaults to {@code ESC} when unset.
+     */
+    public RadialMenuBuilder closeKey(@Nullable String key) {
+        this.closeKey = key;
         return this;
     }
 
@@ -182,7 +192,8 @@ public class RadialMenuBuilder {
                 animationSpeed,
                 Optional.ofNullable(centerIcon),
                 Optional.ofNullable(ringColor),
-                ringColors == null || ringColors.isEmpty() ? Optional.empty() : Optional.of(List.copyOf(ringColors))
+                ringColors == null || ringColors.isEmpty() ? Optional.empty() : Optional.of(List.copyOf(ringColors)),
+                Optional.ofNullable(closeKey)
         );
         return new RadialMenuData(id, settings, List.copyOf(slots));
     }

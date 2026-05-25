@@ -12,6 +12,7 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 @EventBusSubscriber(modid = AuraTip.MOD_ID, value = Dist.CLIENT)
 public class OverlayRenderer {
 
+
     @SubscribeEvent
     public static void onRenderOverlay(RenderGuiEvent.Post event) {
         var minecraft = Minecraft.getInstance();
