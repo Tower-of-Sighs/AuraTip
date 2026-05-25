@@ -85,6 +85,8 @@ public final class EditorPreviewApplier {
                 -1,
                 true,
                 Optional.empty(),
+                true,
+                true,
                 true
         );
 
@@ -122,7 +124,9 @@ public final class EditorPreviewApplier {
                 -1,
                 beh.pauseTimerOnHover(),
                 beh.closableByKey(),
-                beh.allowPaging()
+                beh.allowPaging(),
+                beh.showCloseButton(),
+                beh.showPageIndicator()
         );
         return new TipData(
                 PREVIEW_ID,

@@ -13,6 +13,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import java.util.List;
 
 public class RadialMenuOverlay {
@@ -41,6 +43,7 @@ public class RadialMenuOverlay {
     private float activeFill;
     private long lastFillUpdateMs;
     private Minecraft mc;
+    private InputConstants.Key closeKey;
 
     private RadialMenuOverlay() {
     }
@@ -91,6 +94,13 @@ public class RadialMenuOverlay {
         }
         this.openDurationMs = Math.max(1, (int) (OPEN_MS_BASE / speed));
         this.closeDurationMs = Math.max(1, (int) (CLOSE_MS_BASE / speed));
+        this.closeKey = null;
+        menu.menuSettings().closeKey().ifPresent(key -> {
+            try {
+                this.closeKey = InputConstants.getKey(key);
+            } catch (Exception ignored) {
+            }
+        });
         this.hoveredIndex = -1;
         this.activeIndex = -1;
         this.activeFill = 0.0f;
@@ -250,6 +260,10 @@ public class RadialMenuOverlay {
             return false;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            close();
+            return true;
+        }
+        if (closeKey != null && keyCode == closeKey.getValue()) {
             close();
             return true;
         }

@@ -274,14 +274,15 @@ public class TipOverlay {
             graphics.drawString(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
         }
 
+        int indicatorY = drawY + h - 12;
+
         if (tip.behavior().showPageIndicator()) {
-            int indicatorY = drawY + h - 12;
             String pageInfo = (currentPage + 1) + "/" + pages.size();
             int pageInfoWidth = Minecraft.getInstance().font.width(pageInfo);
             graphics.drawString(Minecraft.getInstance().font, pageInfo, drawX + (w - pageInfoWidth) / 2, indicatorY, 0xFFFFFFFF);
         }
 
-        if (tip.behavior().allowPaging() && pages.size() > 1) {
+        if (tip.behavior().showPageIndicator() && tip.behavior().allowPaging() && pages.size() > 1) {
             String left = "<";
             String right = ">";
             graphics.drawString(Minecraft.getInstance().font, left, drawX + 8, indicatorY, 0xFFFFFFFF);
