@@ -12,6 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = AuraTip.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class OverlayRenderer {
 
+
     @SubscribeEvent
     public static void onRenderOverlay(RenderGuiEvent.Post event) {
         var minecraft = Minecraft.getInstance();

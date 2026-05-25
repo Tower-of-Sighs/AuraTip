@@ -54,6 +54,11 @@ public final class RadialMenuBuilder {
         return this;
     }
 
+    public RadialMenuBuilder closeKey(@Nullable String key) {
+        delegate.closeKey(key);
+        return this;
+    }
+
     public RadialMenuBuilder slot(
             String name,
             String iconId,

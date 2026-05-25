@@ -4,13 +4,16 @@ import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.client.render.RadialMenuOverlay;
 import cc.sighs.auratip.data.RadialMenuData;
+import cc.sighs.auratip.data.action.Action;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
+import java.util.Optional;
 
 public final class EditorRadialPreviewApplier {
     private static final ResourceLocation PREVIEW_ID = new ResourceLocation(AuraTip.MOD_ID, "editor_preview_menu");
@@ -23,17 +26,18 @@ public final class EditorRadialPreviewApplier {
                 55,
                 100,
                 1.0f,
-                java.util.Optional.empty(),
-                java.util.Optional.of("#CC101010"),
-                java.util.Optional.empty()
+                Optional.empty(),
+                Optional.of("#CC101010"),
+                Optional.empty(),
+                Optional.empty()
         );
 
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 "Preview",
                 new TextureIcon(new ResourceLocation("minecraft", "textures/item/paper.png")),
-                new cc.sighs.auratip.data.action.Action.RunCommand("/say AuraTip Editor Preview"),
-                java.util.Optional.of(net.minecraft.network.chat.Component.literal("Preview")),
-                java.util.Optional.of("#77FFFFFF")
+                new Action.RunCommand("/say AuraTip Editor Preview"),
+                Optional.of(Component.literal("Preview")),
+                Optional.of("#77FFFFFF")
         );
 
         return new RadialMenuData(PREVIEW_ID, settings, List.of(slot));

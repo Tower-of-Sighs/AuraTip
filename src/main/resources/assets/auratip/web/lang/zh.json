@@ -161,6 +161,10 @@
   "tip.behavior.closable_by_key.desc": "可选关闭按键 id（例如 key.keyboard.delete）。",
   "tip.behavior.allow_paging": "allow_paging",
   "tip.behavior.allow_paging.desc": "多页时是否允许翻页。",
+  "tip.behavior.show_close_button": "show_close_button",
+  "tip.behavior.show_close_button.desc": "是否显示右上角关闭 X 按钮。",
+  "tip.behavior.show_page_indicator": "show_page_indicator",
+  "tip.behavior.show_page_indicator.desc": "是否显示底部页码指示器。",
 
   "tip.page.page_index": "page_index",
   "tip.page.page_index.desc": "页码（从 0 开始）。",
@@ -219,6 +223,8 @@
   "radial.menu_settings.ring_color.desc": "可选环形颜色（ARGB）。",
   "radial.menu_settings.ring_colors": "ring_colors",
   "radial.menu_settings.ring_colors.desc": "可选渐变颜色数组（ARGB）。",
+  "radial.menu_settings.close_key": "close_key",
+  "radial.menu_settings.close_key.desc": "关闭轮盘的按键 id（例如 key.keyboard.escape）。",
 
   "radial.slot.name": "name",
   "radial.slot.name.desc": "槽位名称（字符串）。",

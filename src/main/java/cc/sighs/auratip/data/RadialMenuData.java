@@ -58,7 +58,8 @@ public record RadialMenuData(
             float animationSpeed,
             Optional<ResourceLocation> centerIcon,
             Optional<String> ringColor,
-            Optional<List<String>> ringColors
+            Optional<List<String>> ringColors,
+            Optional<String> closeKey
     ) {
         public static final Codec<MenuSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
@@ -67,7 +68,8 @@ public record RadialMenuData(
                         Codec.FLOAT.fieldOf("animation_speed").forGetter(MenuSettings::animationSpeed),
                         ResourceLocation.CODEC.optionalFieldOf("center_icon").forGetter(MenuSettings::centerIcon),
                         Codec.STRING.optionalFieldOf("ring_color").forGetter(MenuSettings::ringColor),
-                        Codec.list(Codec.STRING).optionalFieldOf("ring_colors").forGetter(MenuSettings::ringColors)
+                        Codec.list(Codec.STRING).optionalFieldOf("ring_colors").forGetter(MenuSettings::ringColors),
+                        Codec.STRING.optionalFieldOf("close_key").forGetter(MenuSettings::closeKey)
                 ).apply(inst, MenuSettings::new)
         );
     }
