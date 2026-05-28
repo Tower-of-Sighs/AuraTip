@@ -1,6 +1,7 @@
 package cc.sighs.auratip.dev;
 
 import cc.sighs.auratip.api.action.Actions;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.api.radiamenu.RadialMenuBuilder;
 import cc.sighs.auratip.api.radiamenu.RadialMenuRegistry;
 import cc.sighs.auratip.data.RadialMenuData;
@@ -29,21 +30,21 @@ public final class DevJavaApiSamplesClient {
                 .ringColors(List.of("#1A1A0E2A", "#D95C2B8F"))
                 .slot(
                         "ShowTip (/showtip)",
-                        Identifier.fromNamespaceAndPath("minecraft", "textures/item/paper.png"),
+                        new TextureIcon(Identifier.fromNamespaceAndPath("minecraft", "textures/item/paper.png"), 1.0f),
                         Actions.runCommand("/showtip"),
                         Component.literal("/showtip"),
                         "#77FFFFFF"
                 )
                 .slot(
                         "NJS Action (open inventory)",
-                        Identifier.fromNamespaceAndPath("minecraft", "textures/item/apple.png"),
+                        new TextureIcon(Identifier.fromNamespaceAndPath("minecraft", "textures/item/apple.png"), 1.0f),
                         Actions.script(Identifier.fromNamespaceAndPath("nekojs", "open_gui"), Map.of("screen", "inventory_screen")),
                         Component.literal("nekojs:open_gui"),
                         "#77FFFFFF"
                 )
                 .slot(
                         "Java Script Action",
-                        Identifier.fromNamespaceAndPath("minecraft", "textures/item/diamond.png"),
+                        new TextureIcon(Identifier.fromNamespaceAndPath("minecraft", "textures/item/diamond.png"), 1.0f),
                         Actions.script(DevJavaApiSamples.JAVA_SCRIPT_ACTION, Map.of("message", "Hello from Java runtime menu")),
                         Component.literal("auratip:dev_action"),
                         "#77FFFFFF"

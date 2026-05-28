@@ -34,7 +34,7 @@ public final class EditorRadialPreviewApplier {
 
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 "Preview",
-                new TextureIcon(Identifier.fromNamespaceAndPath("minecraft", "textures/item/paper.png")),
+                new TextureIcon(Identifier.fromNamespaceAndPath("minecraft", "textures/item/paper.png"), 1.0f),
                 new Action.RunCommand("/say AuraTip Editor Preview"),
                 Optional.of(Component.literal("Preview")),
                 Optional.of("#77FFFFFF")

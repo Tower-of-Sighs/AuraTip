@@ -8,7 +8,7 @@ import cc.sighs.auratip.data.action.Action;
 import com.tkisor.nekojs.NekoJS;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 
 import java.util.Optional;
 
@@ -41,7 +41,7 @@ public class RadialMenusNJS {
         }
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
-                new TextureIcon(Identifier.parse(iconId)),
+                new TextureIcon(Identifier.parse(iconId), 1.0f),
                 action,
                 Optional.ofNullable(text),
                 Optional.ofNullable(highlightColor)
@@ -49,11 +49,11 @@ public class RadialMenusNJS {
         RadialMenuExtraSlotRegistry.addSlot(slot);
     }
 
-    public static void addSlotItem(String name, ItemStack icon, Action action, Component text, String highlightColor) {
+    public static void addSlotWithIcon(String name, TextureIcon icon, Action action, Component text, String highlightColor) {
         if (name == null || name.isEmpty()) {
             return;
         }
-        if (icon == null || icon.isEmpty()) {
+        if (icon == null) {
             return;
         }
         if (action == null) {
@@ -61,7 +61,27 @@ public class RadialMenusNJS {
         }
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
-                new ItemIcon(icon),
+                icon,
+                action,
+                Optional.ofNullable(text),
+                Optional.ofNullable(highlightColor)
+        );
+        RadialMenuExtraSlotRegistry.addSlot(slot);
+    }
+
+    public static void addSlotItem(String name, ItemIcon icon, Action action, Component text, String highlightColor) {
+        if (name == null || name.isEmpty()) {
+            return;
+        }
+        if (icon == null) {
+            return;
+        }
+        if (action == null) {
+            return;
+        }
+        RadialMenuData.Slot slot = new RadialMenuData.Slot(
+                name,
+                icon,
                 action,
                 Optional.ofNullable(text),
                 Optional.ofNullable(highlightColor)
@@ -81,7 +101,7 @@ public class RadialMenusNJS {
      *
      * @param menuId         base menu id (Identifier string)
      * @param name           slot name
-     * @param iconId         icon texture location (Identifier string)
+     * @param iconId         icon texture id (Identifier string)
      * @param action         slot action
      * @param text           optional label
      * @param highlightColor optional highlight color (argb hex)
@@ -103,7 +123,7 @@ public class RadialMenusNJS {
         Identifier targetMenuId = Identifier.parse(menuId);
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
-                new TextureIcon(Identifier.parse(iconId)),
+                new TextureIcon(Identifier.parse(iconId), 1.0f),
                 action,
                 Optional.ofNullable(text),
                 Optional.ofNullable(highlightColor)
@@ -111,14 +131,14 @@ public class RadialMenusNJS {
         RadialMenuExtraSlotRegistry.addSlotForMenu(targetMenuId, slot);
     }
 
-    public static void addSlotItem(String menuId, String name, ItemStack icon, Action action, Component text, String highlightColor) {
+    public static void addSlotWithIcon(String menuId, String name, TextureIcon icon, Action action, Component text, String highlightColor) {
         if (menuId == null || menuId.isEmpty()) {
             return;
         }
         if (name == null || name.isEmpty()) {
             return;
         }
-        if (icon == null || icon.isEmpty()) {
+        if (icon == null) {
             return;
         }
         if (action == null) {
@@ -128,7 +148,32 @@ public class RadialMenusNJS {
         Identifier targetMenuId = Identifier.parse(menuId);
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 name,
-                new ItemIcon(icon),
+                icon,
+                action,
+                Optional.ofNullable(text),
+                Optional.ofNullable(highlightColor)
+        );
+        RadialMenuExtraSlotRegistry.addSlotForMenu(targetMenuId, slot);
+    }
+
+    public static void addSlotItem(String menuId, String name, ItemIcon icon, Action action, Component text, String highlightColor) {
+        if (menuId == null || menuId.isEmpty()) {
+            return;
+        }
+        if (name == null || name.isEmpty()) {
+            return;
+        }
+        if (icon == null) {
+            return;
+        }
+        if (action == null) {
+            return;
+        }
+
+        Identifier targetMenuId = Identifier.parse(menuId);
+        RadialMenuData.Slot slot = new RadialMenuData.Slot(
+                name,
+                icon,
                 action,
                 Optional.ofNullable(text),
                 Optional.ofNullable(highlightColor)

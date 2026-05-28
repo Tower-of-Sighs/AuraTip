@@ -2,6 +2,7 @@ package cc.sighs.auratip.api.tip;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.TipData;
+import cc.sighs.auratip.util.ColorUtil;
 import cc.sighs.auratip.util.SerializationUtil;
 import cc.sighs.auratip.util.TextSerialization;
 import com.mojang.serialization.Dynamic;
@@ -40,6 +41,12 @@ public class TipBuilder {
     private float stripeLengthFactor = 1.0f;
 
     private String themeColor;
+
+    private int paddingTop = 12, paddingRight = 12, paddingBottom = 12, paddingLeft = 12;
+    private int elementSpacing = 4;
+    private boolean shadowEnabled;
+    private int shadowColor = 0x8C000000;
+    private int shadowOffsetX = 2, shadowOffsetY = 2, shadowSize = 4;
 
     private int width = 280;
     private int height = 180;
@@ -171,16 +178,23 @@ public class TipBuilder {
                 ? List.of("#E0F7FF", "#B3E5FC")
                 : new ArrayList<>(backgroundColors);
 
+        var sConfig = shadowEnabled || shadowColor != 0x8C000000 || shadowOffsetX != 2 || shadowOffsetY != 2 || shadowSize != 4
+                ? new TipData.VisualSettings.ShadowConfig(shadowEnabled, shadowColor, shadowOffsetX, shadowOffsetY, shadowSize)
+                : null;
+
         TipData.VisualSettings.Background bg = new TipData.VisualSettings.Background(
                 backgroundType,
                 colors,
                 backgroundRadius,
                 backgroundRounded,
-                Optional.ofNullable(backgroundImagePath)
+                Optional.ofNullable(backgroundImagePath),
+                Optional.ofNullable(sConfig)
         );
 
-        Map<String, Dynamic<?>> convertedAnimParams = SerializationUtil.convertMapToDynamic(animationParams);
-        Map<String, Dynamic<?>> convertedHoverParams = SerializationUtil.convertMapToDynamic(hoverAnimationParams);
+        var animParams = new TipData.AnimationParams(
+                SerializationUtil.convertMapToDynamic(animationParams),
+                SerializationUtil.convertMapToDynamic(hoverAnimationParams)
+        );
 
         TipData.VisualSettings visual = new TipData.VisualSettings(
                 animationStyle,
@@ -197,8 +211,11 @@ public class TipBuilder {
                 hoverOnlyOnHover,
                 stripeWidth,
                 stripeLengthFactor,
-                convertedAnimParams,
-                convertedHoverParams
+                animParams,
+                new TipData.LayoutConfig(
+                        new TipData.Padding(paddingTop, paddingRight, paddingBottom, paddingLeft),
+                        elementSpacing
+                )
         );
 
         TipData.Behavior behavior = new TipData.Behavior(
@@ -226,7 +243,8 @@ public class TipBuilder {
                     Optional.ofNullable(data.title),
                     Optional.ofNullable(data.subtitle),
                     Optional.ofNullable(data.content),
-                    Optional.ofNullable(data.image)
+                    Optional.ofNullable(data.image),
+                    Optional.ofNullable(data.badge)
             ));
         }
 
@@ -241,6 +259,7 @@ public class TipBuilder {
         TextSerialization.TextElement subtitle;
         TextSerialization.TextElement content;
         TipData.ImageElement image;
+        TipData.Badge badge;
     }
 
     /**
@@ -392,6 +411,46 @@ public class TipBuilder {
             data.image = new TipData.ImageElement(path, pos, new int[]{width, height}, scale);
             return this;
         }
+
+        public PageBuilder badge(Component text) {
+            return badge(text, 0.7f, 0, 0xCC000000, 4, "BOTTOM_RIGHT");
+        }
+
+        public PageBuilder badge(Component text, int bgColor, int radius, String position) {
+            data.badge = new TipData.Badge(
+                    new TextSerialization.TextElement(Objects.requireNonNull(text, "text"), 0.7f, 0, Optional.empty()),
+                    bgColor,
+                    radius,
+                    new TipData.Position(position, 0, 0, false)
+            );
+            return this;
+        }
+
+        public PageBuilder badge(Component text, String bgColor, int radius, String position) {
+            int argb = (bgColor != null && !bgColor.isBlank()) ? ColorUtil.parseArgb(bgColor) : 0xCC000000;
+            data.badge = new TipData.Badge(
+                    new TextSerialization.TextElement(Objects.requireNonNull(text, "text"), 0.7f, 0, Optional.empty()),
+                    argb,
+                    radius,
+                    new TipData.Position(position, 0, 0, false)
+            );
+            return this;
+        }
+
+        public PageBuilder badge(Component text, float scale, int lineSpacing, int bgColor, int radius, String position) {
+            data.badge = new TipData.Badge(
+                    new TextSerialization.TextElement(Objects.requireNonNull(text, "text"), scale, lineSpacing, Optional.empty()),
+                    bgColor,
+                    radius,
+                    new TipData.Position(position, 0, 0, false)
+            );
+            return this;
+        }
+
+        public PageBuilder badge(Component text, float scale, int lineSpacing, String bgColor, int radius, String position) {
+            int argb = (bgColor != null && !bgColor.isBlank()) ? ColorUtil.parseArgb(bgColor) : 0xCC000000;
+            return badge(text, scale, lineSpacing, argb, radius, position);
+        }
     }
 
     /**
@@ -454,6 +513,33 @@ public class TipBuilder {
          */
         public VisualBuilder stripeLengthFactor(float factor) {
             stripeLengthFactor = factor;
+            return this;
+        }
+
+        /**
+         * Sets the panel inner padding (uniform).
+         */
+        public VisualBuilder padding(int px) {
+            paddingTop = paddingRight = paddingBottom = paddingLeft = px;
+            return this;
+        }
+
+        /**
+         * Sets the panel inner padding (per-side).
+         */
+        public VisualBuilder padding(int top, int right, int bottom, int left) {
+            paddingTop = top;
+            paddingRight = right;
+            paddingBottom = bottom;
+            paddingLeft = left;
+            return this;
+        }
+
+        /**
+         * Sets the vertical spacing between content elements.
+         */
+        public VisualBuilder elementSpacing(int px) {
+            elementSpacing = px;
             return this;
         }
 
@@ -580,6 +666,33 @@ public class TipBuilder {
             backgroundColors = colors == null ? new ArrayList<>() : new ArrayList<>(colors);
             backgroundRadius = radius;
             return this;
+        }
+
+        /**
+         * Sets the panel shadow configuration.
+         */
+        public VisualBuilder shadow(boolean enabled) {
+            return shadow(enabled, 0x8C000000, 2, 2, 4);
+        }
+
+        /**
+         * Sets the panel shadow configuration (full, int color).
+         */
+        public VisualBuilder shadow(boolean enabled, int color, int offsetX, int offsetY, int size) {
+            shadowEnabled = enabled;
+            shadowColor = color;
+            shadowOffsetX = offsetX;
+            shadowOffsetY = offsetY;
+            shadowSize = size;
+            return this;
+        }
+
+        /**
+         * Sets the panel shadow configuration (string color).
+         */
+        public VisualBuilder shadow(boolean enabled, String color, int offsetX, int offsetY, int size) {
+            int argb = (color != null && !color.isBlank()) ? ColorUtil.parseArgb(color) : 0x8C000000;
+            return shadow(enabled, argb, offsetX, offsetY, size);
         }
 
         /**

@@ -15,6 +15,9 @@ import graal.graalvm.polyglot.Context;
 import graal.graalvm.polyglot.Value;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 
 import java.util.Comparator;
@@ -167,6 +170,13 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         payload.add("paramMeta", EditorParamIntrospection.buildInitParamPayload());
         payload.add("actionTypes", EditorParamIntrospection.listActionTypes());
         payload.add("schemas", EditorCodecSchemas.buildAll());
+
+        JsonArray componentTypes = new JsonArray();
+        Registry<DataComponentType<?>> reg = BuiltInRegistries.DATA_COMPONENT_TYPE;
+        for (Identifier id : reg.keySet()) {
+            componentTypes.add(id.toString());
+        }
+        payload.add("dataComponentTypes", componentTypes);
 
         init.add("payload", payload);
         send(ctx, init);

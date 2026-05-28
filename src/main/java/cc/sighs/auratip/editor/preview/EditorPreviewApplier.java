@@ -59,6 +59,7 @@ public final class EditorPreviewApplier {
                 List.of("#FFE0F7FF", "#FFB3E5FC"),
                 8,
                 true,
+                Optional.empty(),
                 Optional.empty()
         );
 
@@ -77,8 +78,8 @@ public final class EditorPreviewApplier {
                 false,
                 4,
                 1.0f,
-                Map.of(),
-                Map.of()
+                TipData.AnimationParams.EMPTY,
+                TipData.LayoutConfig.DEFAULT
         );
 
         TipData.Behavior behavior = new TipData.Behavior(
@@ -105,6 +106,7 @@ public final class EditorPreviewApplier {
                         1,
                         Optional.empty()
                 )),
+                Optional.empty(),
                 Optional.empty()
         );
 

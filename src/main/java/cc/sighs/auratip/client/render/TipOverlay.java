@@ -79,7 +79,7 @@ public class TipOverlay {
         this.currentPage = 0;
         this.maxDuration = data.behavior().defaultDuration();
         this.remainingTicks = this.maxDuration;
-        this.transitionAnimation = AnimationType.resolve(visualSettings.animationStyle(), visualSettings.animationParams());
+        this.transitionAnimation = AnimationType.resolve(visualSettings.animationStyle(), visualSettings.animationParams().params());
         float speed = visualSettings.animationSpeed();
         if (speed <= 0.0f) {
             speed = 1.0f;
@@ -103,7 +103,7 @@ public class TipOverlay {
             }
         }
 
-        this.hoverAnimation = AnimationType.resolveHover(visualSettings.hoverAnimationStyle(), visualSettings.hoverAnimationParams());
+        this.hoverAnimation = AnimationType.resolveHover(visualSettings.hoverAnimationStyle(), visualSettings.animationParams().hoverParams());
         float hoverSpeed = visualSettings.hoverAnimationSpeed();
         if (hoverSpeed <= 0.0f) {
             hoverSpeed = 1.0f;
@@ -240,40 +240,51 @@ public class TipOverlay {
         }
 
         TipData.Page page = pages.get(currentPage);
+        var layout = visualSettings.layout();
 
-        int contentX = drawX + 12;
-        int contentY = drawY + 12;
+        int paddingL = layout.padding().left();
+        int paddingR = layout.padding().right();
+        int paddingT = layout.padding().top();
+        int paddingB = layout.padding().bottom();
+        int spacing = layout.elementSpacing();
+
+        int contentX = drawX + paddingL;
+        int contentY = drawY + paddingT;
 
         if (page.title().isPresent()) {
             TextSerialization.TextElement title = page.title().get();
             contentY = drawTextElement(graphics, title, contentX, contentY);
             if (title.divider().isPresent()) {
-                contentY = drawDivider(graphics, title.divider().get(), contentX, drawX + w - 12, contentY);
+                contentY = drawDivider(graphics, title.divider().get(), contentX, drawX + w - paddingR, contentY);
             }
         }
         if (page.subtitle().isPresent()) {
             TextSerialization.TextElement subtitle = page.subtitle().get();
-            contentY = drawTextElement(graphics, subtitle, contentX, contentY + 4);
+            contentY = drawTextElement(graphics, subtitle, contentX, contentY + spacing);
             if (page.title().isEmpty() && subtitle.divider().isPresent()) {
-                contentY = drawDivider(graphics, subtitle.divider().get(), contentX, drawX + w - 12, contentY);
+                contentY = drawDivider(graphics, subtitle.divider().get(), contentX, drawX + w - paddingR, contentY);
             }
         }
         if (page.content().isPresent()) {
-            contentY = drawTextElement(graphics, page.content().get(), contentX, contentY + 8);
+            contentY = drawTextElement(graphics, page.content().get(), contentX, contentY + spacing * 2);
         }
 
         if (page.image().isPresent()) {
             drawImage(graphics, page.image().get(), drawX, drawY, w);
         }
 
+        if (page.badge().isPresent()) {
+            drawBadge(graphics, page.badge().get(), drawX, drawY, w, h);
+        }
+
         if (tip.behavior().showCloseButton()) {
             int closeSize = 10;
-            int closeX = drawX + w - closeSize - 4;
-            int closeY = drawY + 4;
+            int closeX = drawX + w - closeSize - paddingR;
+            int closeY = drawY + paddingT;
             graphics.text(Minecraft.getInstance().font, "X", closeX, closeY, 0xFFFFFFFF);
         }
 
-        int indicatorY = drawY + h - 12;
+        int indicatorY = drawY + h - paddingB;
 
         if (tip.behavior().showPageIndicator()) {
             String pageInfo = (currentPage + 1) + "/" + pages.size();
@@ -284,8 +295,8 @@ public class TipOverlay {
         if (tip.behavior().showPageIndicator() && tip.behavior().allowPaging() && pages.size() > 1) {
             String left = "<";
             String right = ">";
-            graphics.text(Minecraft.getInstance().font, left, drawX + 8, indicatorY, 0xFFFFFFFF);
-            graphics.text(Minecraft.getInstance().font, right, drawX + w - 8 - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
+            graphics.text(Minecraft.getInstance().font, left, drawX + paddingL, indicatorY, 0xFFFFFFFF);
+            graphics.text(Minecraft.getInstance().font, right, drawX + w - paddingR - Minecraft.getInstance().font.width(right), indicatorY, 0xFFFFFFFF);
         }
 
         hoveringInteractiveArea = cursorVisible && mouseX >= drawX && mouseX <= drawX + w && mouseY >= drawY && mouseY <= drawY + h;
@@ -350,10 +361,16 @@ public class TipOverlay {
         int y = panelY + offsetY + hoverOffsetY;
         int w = panelWidth;
 
+        var layout = visualSettings.layout();
+        int paddingR = layout.padding().right();
+        int paddingT = layout.padding().top();
+        int paddingB = layout.padding().bottom();
+        int paddingL = layout.padding().left();
+
         if (tip.behavior().showCloseButton()) {
             int closeSize = 10;
-            int closeX = x + w - closeSize - 4;
-            int closeY = y + 4;
+            int closeX = x + w - closeSize - paddingR;
+            int closeY = y + paddingT;
             if (mouseX >= closeX && mouseX <= closeX + closeSize * 2 && mouseY >= closeY && mouseY <= closeY + closeSize * 2) {
                 startClosing();
                 return true;
@@ -361,13 +378,13 @@ public class TipOverlay {
         }
 
         if (tip.behavior().showPageIndicator() && tip.behavior().allowPaging() && pages.size() > 1) {
-            int indicatorY = y + panelHeight - 12;
+            int indicatorY = y + panelHeight - paddingB;
             String left = "<";
             String right = ">";
             int leftWidth = Minecraft.getInstance().font.width(left);
             int rightWidth = Minecraft.getInstance().font.width(right);
-            int leftX = x + 8;
-            int rightX = x + w - 8 - rightWidth;
+            int leftX = x + paddingL;
+            int rightX = x + w - paddingR - rightWidth;
 
             if (mouseY >= indicatorY && mouseY <= indicatorY + Minecraft.getInstance().font.lineHeight) {
                 if (mouseX >= leftX && mouseX <= leftX + leftWidth) {
@@ -458,12 +475,35 @@ public class TipOverlay {
     }
 
     private void renderPanelShadow(GuiGraphicsExtractor graphics, int x, int y, int w, int h, float eased) {
-        int alpha = (int) (eased * 140.0f);
-        if (alpha <= 0) {
+        int radius = background != null ? Math.max(0, background.borderRadius()) : 0;
+        boolean rounded = background == null || background.rounded();
+        float radiusPixels = rounded ? radius : 0.0f;
+
+        Optional<TipData.VisualSettings.ShadowConfig> shadowOpt = background != null ? background.shadow() : Optional.empty();
+        TipData.VisualSettings.ShadowConfig cfg = shadowOpt.orElse(null);
+        if (cfg == null) {
             return;
         }
-        int shadowColor = (alpha << 24);
-//        graphics.fill(x + 2, y + 2, x + w + 2, y + h + 2, shadowColor);
+        if (shadowOpt.isPresent() && !cfg.enabled()) {
+            return;
+        }
+
+        float alpha = eased * ((cfg.color() >>> 24) & 0xFF) / 255f;
+        if (alpha <= 0) return;
+        int color = 0xFF000000 | (cfg.color() & 0x00FFFFFF);
+
+        int sx = x + cfg.offsetX();
+        int sy = y + cfg.offsetY();
+
+        if (cfg.size() > 0) {
+            for (int i = 0; i < cfg.size(); i++) {
+                float p = (float) i / cfg.size();
+                float lAlpha = Mth.clamp(alpha * (1.0f - p * 0.5f), 0, 1);
+                PanelRenderer.drawRoundedPanel(graphics, sx - i, sy - i, w + i * 2, h + i * 2, color, color, radiusPixels, 2.0f, lAlpha);
+            }
+        } else {
+            PanelRenderer.drawRoundedPanel(graphics, sx, sy, w, h, color, color, radiusPixels, 2.0f, alpha);
+        }
     }
 
     private void renderPanelBackground(GuiGraphicsExtractor graphics, int x, int y, int w, int h, float eased) {
@@ -673,6 +713,52 @@ public class TipOverlay {
         }
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x, y, 0.0f, 0.0f, imgW, imgH, imgW, imgH);
+    }
+
+    private void drawBadge(GuiGraphicsExtractor graphics, TipData.Badge badge, int panelX, int panelY, int panelW, int panelH) {
+        var el = badge.text();
+        var font = Minecraft.getInstance().font;
+        var text = ResolveUtil.resolveVariables(el.text(), this.variables);
+        float scale = Math.max(0.1f, el.scale());
+        var lines = font.split(text, Integer.MAX_VALUE);
+        if (lines.isEmpty()) return;
+        int baseLineHeight = font.lineHeight + el.lineSpacing();
+        int textW = 0;
+        for (var line : lines) {
+            int w = font.width(line);
+            if (w > textW) textW = w;
+        }
+        int scaledW = (int) (textW * scale);
+        int scaledH = (int) (lines.size() * baseLineHeight * scale);
+        int padX = 6, padY = 3;
+        int bgW = scaledW + padX * 2;
+        int bgH = scaledH + padY * 2;
+        int radius = Math.max(0, badge.radius());
+
+        int bx, by;
+        var pos = badge.position();
+        if (pos != null && pos.absolute()) {
+            bx = panelX + pos.x();
+            by = panelY + pos.y();
+        } else {
+            String preset = pos != null && pos.preset() != null ? pos.preset() : "BOTTOM_RIGHT";
+            switch (preset.toUpperCase(Locale.ROOT)) {
+                case "TOP_LEFT" -> { bx = panelX; by = panelY; }
+                case "TOP_CENTER" -> { bx = panelX + (panelW - bgW) / 2; by = panelY; }
+                case "TOP_RIGHT" -> { bx = panelX + panelW - bgW; by = panelY; }
+                case "LEFT_CENTER" -> { bx = panelX; by = panelY + (panelH - bgH) / 2; }
+                case "CENTER", "MIDDLE" -> { bx = panelX + (panelW - bgW) / 2; by = panelY + (panelH - bgH) / 2; }
+                case "RIGHT_CENTER" -> { bx = panelX + panelW - bgW; by = panelY + (panelH - bgH) / 2; }
+                case "BOTTOM_LEFT" -> { bx = panelX; by = panelY + panelH - bgH; }
+                case "BOTTOM_CENTER" -> { bx = panelX + (panelW - bgW) / 2; by = panelY + panelH - bgH; }
+                default -> { bx = panelX + panelW - bgW; by = panelY + panelH - bgH; }
+            }
+        }
+
+        int bgColor = badge.backgroundColor();
+        float bgAlpha = ((bgColor >>> 24) & 0xFF) / 255f;
+        PanelRenderer.drawRoundedPanel(graphics, bx, by, bgW, bgH, bgColor, bgColor, radius, 1.0f, bgAlpha);
+        drawTextElement(graphics, el, bx + padX, by + padY);
     }
 
     private void startClosing() {

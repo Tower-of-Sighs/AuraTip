@@ -1,6 +1,8 @@
 package cc.sighs.auratip.compat.nekojs;
 
 import cc.sighs.auratip.api.action.ActionHandlers;
+import cc.sighs.auratip.api.radiamenu.icon.ItemIcon;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.compat.nekojs.radiamenu.RadialMenuRegistrationEvent;
 import cc.sighs.auratip.compat.nekojs.radiamenu.RadialMenuScriptRegistry;
 import cc.sighs.auratip.compat.nekojs.radiamenu.action.ActionsNJS;
@@ -9,6 +11,7 @@ import cc.sighs.auratip.compat.nekojs.radiamenu.slot.RadialMenusNJS;
 import cc.sighs.auratip.compat.nekojs.tip.*;
 import cc.sighs.auratip.compat.nekojs.tip.animation.TipAnimations;
 import cc.sighs.auratip.data.animation.AnimationType;
+import cc.sighs.auratip.util.ItemStackTemplateUtil;
 import com.tkisor.nekojs.NekoJS;
 import com.tkisor.nekojs.api.NekoJSPlugin;
 import com.tkisor.nekojs.api.annotation.RegisterNekoJSPlugin;
@@ -42,6 +45,9 @@ public class NJSAuraTipPlugin implements NekoJSPlugin {
         registry.register(Binding.of("TipAnimations", TipAnimations.class));
         registry.register(Binding.of("Actions", ActionsNJS.class));
         registry.register(Binding.of("RadialMenus", RadialMenusNJS.class));
+        registry.register(Binding.of("ItemIcon", ItemIcon.class));
+        registry.register(Binding.of("TextureIcon", TextureIcon.class));
+        registry.register(Binding.of("ItemStackTemplateUtil", ItemStackTemplateUtil.class));
     }
     
     public static void refreshClientRegistries() {

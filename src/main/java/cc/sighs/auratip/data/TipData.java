@@ -2,9 +2,9 @@ package cc.sighs.auratip.data;
 
 import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.data.validator.TipDataValidator;
+import cc.sighs.auratip.util.CodecUtil;
 import cc.sighs.auratip.util.TextSerialization;
 import cc.sighs.oelib.data.api.DataDriven;
-import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -45,27 +45,67 @@ public record TipData(
     public static final StreamCodec<ByteBuf, TipData> STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
 
     public record Position(String preset, int x, int y, boolean absolute) {
-        public static final Codec<Position> CODEC = Codec.either(
-                Codec.STRING,
-                Codec.INT.listOf()
-        ).xmap(
-                either -> {
-                    if (either.left().isPresent()) {
-                        String p = either.left().get();
-                        return new Position(p, 0, 0, false);
-                    }
-                    var list = either.right().orElse(List.of());
-                    int px = !list.isEmpty() ? list.get(0) : 0;
-                    int py = list.size() > 1 ? list.get(1) : 0;
-                    return new Position(null, px, py, true);
-                },
-                position -> {
-                    if (!position.absolute && position.preset != null) {
-                        return Either.left(position.preset);
-                    }
-                    return Either.right(List.of(position.x, position.y));
-                }
+        public static final Codec<Position> CODEC = CodecUtil.stringOrIntList(
+                p -> new Position(p, 0, 0, false),
+                list -> new Position(null, list.isEmpty() ? 0 : list.getFirst(), list.size() > 1 ? list.get(1) : 0, true),
+                pos -> pos.absolute ? null : pos.preset,
+                pos -> List.of(pos.x, pos.y)
         );
+    }
+
+    public record Padding(int top, int right, int bottom, int left) {
+        public static final Padding DEFAULT = new Padding(12, 12, 12, 12);
+
+        private static final Codec<Padding> OBJECT_CODEC = RecordCodecBuilder.create(inst ->
+                inst.group(
+                        Codec.INT.optionalFieldOf("top", 12).forGetter(Padding::top),
+                        Codec.INT.optionalFieldOf("right", 12).forGetter(Padding::right),
+                        Codec.INT.optionalFieldOf("bottom", 12).forGetter(Padding::bottom),
+                        Codec.INT.optionalFieldOf("left", 12).forGetter(Padding::left)
+                ).apply(inst, Padding::new)
+        );
+
+        public static final Codec<Padding> CODEC = CodecUtil.intOrListOrObject(
+                v -> new Padding(v, v, v, v),
+                list -> new Padding(
+                        !list.isEmpty() ? list.getFirst() : 12,
+                        list.size() > 1 ? list.get(1) : 12,
+                        list.size() > 2 ? list.get(2) : 12,
+                        list.size() > 3 ? list.get(3) : 12
+                ),
+                padding -> (padding.top == padding.right && padding.top == padding.bottom && padding.top == padding.left) ? padding.top : 0,
+                padding -> List.of(padding.top, padding.right, padding.bottom, padding.left),
+                OBJECT_CODEC
+        );
+    }
+
+    public record LayoutConfig(Padding padding, int elementSpacing) {
+        public static final LayoutConfig DEFAULT = new LayoutConfig(Padding.DEFAULT, 4);
+
+        public static final Codec<LayoutConfig> CODEC = RecordCodecBuilder.create(inst ->
+                inst.group(
+                        Padding.CODEC.optionalFieldOf("padding", Padding.DEFAULT).forGetter(LayoutConfig::padding),
+                        Codec.INT.optionalFieldOf("element_spacing", 4).forGetter(LayoutConfig::elementSpacing)
+                ).apply(inst, LayoutConfig::new)
+        );
+    }
+
+    public record AnimationParams(
+            Map<String, Dynamic<?>> params,
+            Map<String, Dynamic<?>> hoverParams
+    ) {
+        public static final Codec<AnimationParams> CODEC = RecordCodecBuilder.create(inst ->
+                inst.group(
+                        Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
+                                .optionalFieldOf("params", Map.of())
+                                .forGetter(AnimationParams::params),
+                        Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
+                                .optionalFieldOf("hover_params", Map.of())
+                                .forGetter(AnimationParams::hoverParams)
+                ).apply(inst, AnimationParams::new)
+        );
+
+        public static final AnimationParams EMPTY = new AnimationParams(Map.of(), Map.of());
     }
 
     public record Trigger(Identifier type, Mode mode, int cooldown) {
@@ -81,10 +121,7 @@ public record TipData(
             ONCE,
             REPEATABLE;
 
-            public static final Codec<Mode> CODEC = Codec.STRING.xmap(
-                    value -> Mode.valueOf(value.toUpperCase(Locale.ROOT)),
-                    mode -> mode.name().toLowerCase(Locale.ROOT)
-            );
+            public static final Codec<Mode> CODEC = CodecUtil.enumCodec(Mode.class);
         }
     }
 
@@ -103,14 +140,14 @@ public record TipData(
             boolean hoverOnlyOnHover,
             int stripeWidth,
             float stripeLengthFactor,
-            Map<String, Dynamic<?>> animationParams,
-            Map<String, Dynamic<?>> hoverAnimationParams
+            AnimationParams animationParams,
+            LayoutConfig layout
     ) {
         public static final Codec<VisualSettings> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
                         Identifier.CODEC.optionalFieldOf("animation_style", AuraTip.id("fade_and_slide"))
                                 .forGetter(VisualSettings::animationStyle),
-                        Background.CODEC.optionalFieldOf("background", new Background(BackgroundType.GRADIENT, List.of("#FFE0F7FF", "#FFB3E5FC"), 8, true, Optional.empty()))
+                        Background.CODEC.optionalFieldOf("background", new Background(BackgroundType.GRADIENT, List.of("#FFE0F7FF", "#FFB3E5FC"), 8, true, Optional.empty(), Optional.empty()))
                                 .forGetter(VisualSettings::background),
                         Codec.STRING.optionalFieldOf("theme_color")
                                 .forGetter(VisualSettings::themeColor),
@@ -136,12 +173,10 @@ public record TipData(
                                 .forGetter(VisualSettings::stripeWidth),
                         Codec.FLOAT.optionalFieldOf("stripe_length_factor", 1.0f)
                                 .forGetter(VisualSettings::stripeLengthFactor),
-                        Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
-                                .optionalFieldOf("animation_params", Map.of())
+                        AnimationParams.CODEC.optionalFieldOf("animation_params", AnimationParams.EMPTY)
                                 .forGetter(VisualSettings::animationParams),
-                        Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
-                                .optionalFieldOf("hover_animation_params", Map.of())
-                                .forGetter(VisualSettings::hoverAnimationParams)
+                        LayoutConfig.CODEC.optionalFieldOf("layout", LayoutConfig.DEFAULT)
+                                .forGetter(VisualSettings::layout)
                 ).apply(inst, VisualSettings::new)
         );
 
@@ -150,10 +185,7 @@ public record TipData(
             SOLID,
             IMAGE;
 
-            public static final Codec<BackgroundType> CODEC = Codec.STRING.xmap(
-                    value -> BackgroundType.valueOf(value.toUpperCase(Locale.ROOT)),
-                    type -> type.name().toLowerCase(Locale.ROOT)
-            );
+            public static final Codec<BackgroundType> CODEC = CodecUtil.enumCodec(BackgroundType.class);
         }
 
         public record Background(
@@ -161,7 +193,8 @@ public record TipData(
                 List<String> colors,
                 int borderRadius,
                 boolean rounded,
-                Optional<String> imagePath
+                Optional<String> imagePath,
+                Optional<ShadowConfig> shadow
         ) {
             public static final Codec<Background> CODEC = RecordCodecBuilder.create(inst ->
                     inst.group(
@@ -169,8 +202,21 @@ public record TipData(
                             Codec.STRING.listOf().optionalFieldOf("colors", List.of("#FFE0F7FF", "#FFB3E5FC")).forGetter(Background::colors),
                             Codec.INT.optionalFieldOf("border_radius", 8).forGetter(Background::borderRadius),
                             Codec.BOOL.optionalFieldOf("rounded", true).forGetter(Background::rounded),
-                            Codec.STRING.optionalFieldOf("image_path").forGetter(Background::imagePath)
+                            Codec.STRING.optionalFieldOf("image_path").forGetter(Background::imagePath),
+                            ShadowConfig.CODEC.optionalFieldOf("shadow").forGetter(Background::shadow)
                     ).apply(inst, Background::new)
+            );
+        }
+
+        public record ShadowConfig(boolean enabled, int color, int offsetX, int offsetY, int size) {
+            public static final Codec<ShadowConfig> CODEC = RecordCodecBuilder.create(inst ->
+                    inst.group(
+                            Codec.BOOL.optionalFieldOf("enabled", false).forGetter(ShadowConfig::enabled),
+                            CodecUtil.argbOrInt().optionalFieldOf("color", 0x8C000000).forGetter(ShadowConfig::color),
+                            Codec.INT.optionalFieldOf("offset_x", 2).forGetter(ShadowConfig::offsetX),
+                            Codec.INT.optionalFieldOf("offset_y", 2).forGetter(ShadowConfig::offsetY),
+                            Codec.INT.optionalFieldOf("size", 4).forGetter(ShadowConfig::size)
+                    ).apply(inst, ShadowConfig::new)
             );
         }
     }
@@ -206,7 +252,8 @@ public record TipData(
             Optional<TextSerialization.TextElement> title,
             Optional<TextSerialization.TextElement> subtitle,
             Optional<TextSerialization.TextElement> content,
-            Optional<ImageElement> image
+            Optional<ImageElement> image,
+            Optional<Badge> badge
     ) {
         public static final Codec<Page> CODEC = RecordCodecBuilder.create(inst ->
                 inst.group(
@@ -214,8 +261,25 @@ public record TipData(
                         TextSerialization.TextElement.CODEC.optionalFieldOf("title").forGetter(Page::title),
                         TextSerialization.TextElement.CODEC.optionalFieldOf("subtitle").forGetter(Page::subtitle),
                         TextSerialization.TextElement.CODEC.optionalFieldOf("content").forGetter(Page::content),
-                        ImageElement.CODEC.optionalFieldOf("image").forGetter(Page::image)
+                        ImageElement.CODEC.optionalFieldOf("image").forGetter(Page::image),
+                        Badge.CODEC.optionalFieldOf("badge").forGetter(Page::badge)
                 ).apply(inst, Page::new)
+        );
+    }
+
+    public record Badge(
+            TextSerialization.TextElement text,
+            int backgroundColor,
+            int radius,
+            Position position
+    ) {
+        public static final Codec<Badge> CODEC = RecordCodecBuilder.create(inst ->
+                inst.group(
+                        TextSerialization.TextElement.CODEC.fieldOf("text").forGetter(Badge::text),
+                        CodecUtil.argbOrInt().optionalFieldOf("background_color", 0xCC000000).forGetter(Badge::backgroundColor),
+                        Codec.INT.optionalFieldOf("radius", 4).forGetter(Badge::radius),
+                        Position.CODEC.optionalFieldOf("position", new Position("BOTTOM_RIGHT", 0, 0, false)).forGetter(Badge::position)
+                ).apply(inst, Badge::new)
         );
     }
 
