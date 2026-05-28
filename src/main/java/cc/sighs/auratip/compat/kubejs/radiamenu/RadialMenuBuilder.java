@@ -67,19 +67,29 @@ public final class RadialMenuBuilder {
             @Nullable String highlightColor
     ) {
         Objects.requireNonNull(iconId, "iconId");
-        delegate.slot(name, new TextureIcon(ResourceLocation.parse(iconId)), action, text, highlightColor);
+        delegate.slot(name, new TextureIcon(ResourceLocation.parse(iconId), 1.0f), action, text, highlightColor);
+        return this;
+    }
+
+    public RadialMenuBuilder slotWithIcon(
+            String name,
+            TextureIcon icon,
+            Action action,
+            @Nullable Component text,
+            @Nullable String highlightColor
+    ) {
+        delegate.slot(name, icon, action, text, highlightColor);
         return this;
     }
 
     public RadialMenuBuilder slotItem(
             String name,
-            ItemStack icon,
+            ItemIcon icon,
             Action action,
             @Nullable Component text,
             @Nullable String highlightColor
     ) {
-        Objects.requireNonNull(icon, "icon");
-        delegate.slot(name, new ItemIcon(icon), action, text, highlightColor);
+        delegate.slot(name, icon, action, text, highlightColor);
         return this;
     }
 

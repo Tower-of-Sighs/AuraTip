@@ -4,17 +4,22 @@ import cc.sighs.auratip.AuraTip;
 import cc.sighs.auratip.compat.kubejs.tip.animation.JsHoverAnimation;
 import cc.sighs.auratip.compat.kubejs.tip.animation.JsTransitionAnimation;
 import cc.sighs.auratip.data.RadialMenuData;
+import cc.sighs.auratip.data.TipData;
 import cc.sighs.auratip.data.animation.AnimationType;
 import cc.sighs.auratip.editor.preview.EditorPreviewApplier;
 import cc.sighs.auratip.editor.preview.EditorRadialPreviewApplier;
 import cc.sighs.auratip.editor.schema.EditorCodecSchemas;
 import com.google.gson.*;
+import com.mojang.serialization.JsonOps;
 import dev.latvian.mods.rhino.Context;
 import dev.latvian.mods.rhino.ContextFactory;
 import dev.latvian.mods.rhino.Function;
 import dev.latvian.mods.rhino.Scriptable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Comparator;
@@ -169,6 +174,13 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         payload.add("actionTypes", EditorParamIntrospection.listActionTypes());
         payload.add("schemas", EditorCodecSchemas.buildAll());
 
+        JsonArray componentTypes = new JsonArray();
+        Registry<DataComponentType<?>> reg = BuiltInRegistries.DATA_COMPONENT_TYPE;
+        for (ResourceLocation id : reg.keySet()) {
+            componentTypes.add(id.toString());
+        }
+        payload.add("dataComponentTypes", componentTypes);
+
         init.add("payload", payload);
         send(ctx, init);
     }
@@ -311,14 +323,14 @@ final class EditorWsHandler extends SimpleChannelInboundHandler<String> {
         private EditorPreviewCodec() {
         }
 
-        static JsonElement encodeTip(cc.sighs.auratip.data.TipData tip) {
-            var encoded = cc.sighs.auratip.data.TipData.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, tip);
+        static JsonElement encodeTip(TipData tip) {
+            var encoded = TipData.CODEC.encodeStart(JsonOps.INSTANCE, tip);
             return encoded.resultOrPartial(msg -> AuraTip.LOGGER.warn("Editor tip encode error: {}", msg))
                     .orElseGet(() -> GSON.toJsonTree(Map.of()));
         }
 
         static JsonElement encodeRadial(RadialMenuData menu) {
-            var encoded = RadialMenuData.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, menu);
+            var encoded = RadialMenuData.CODEC.encodeStart(JsonOps.INSTANCE, menu);
             return encoded.resultOrPartial(msg -> AuraTip.LOGGER.warn("Editor radial encode error: {}", msg))
                     .orElseGet(() -> GSON.toJsonTree(Map.of()));
         }

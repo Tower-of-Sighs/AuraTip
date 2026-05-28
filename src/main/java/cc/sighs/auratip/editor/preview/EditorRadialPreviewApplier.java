@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 public final class EditorRadialPreviewApplier {
-    private static final ResourceLocation PREVIEW_ID = ResourceLocation.fromNamespaceAndPath(AuraTip.MOD_ID, "editor_preview_menu");
+    private static final ResourceLocation PREVIEW_ID = AuraTip.id("editor_preview_menu");
 
     private EditorRadialPreviewApplier() {
     }
@@ -34,7 +34,7 @@ public final class EditorRadialPreviewApplier {
 
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 "Preview",
-                new TextureIcon(ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/paper.png")),
+                new TextureIcon(ResourceLocation.fromNamespaceAndPath("minecraft", "textures/item/paper.png"), 1.0f),
                 new Action.RunCommand("/say AuraTip Editor Preview"),
                 Optional.of(Component.literal("Preview")),
                 Optional.of("#77FFFFFF")

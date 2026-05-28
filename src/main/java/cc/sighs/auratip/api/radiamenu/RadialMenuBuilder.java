@@ -1,13 +1,10 @@
 package cc.sighs.auratip.api.radiamenu;
 
 import cc.sighs.auratip.api.radiamenu.icon.IRadialIcon;
-import cc.sighs.auratip.api.radiamenu.icon.ItemIcon;
-import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.data.RadialMenuData;
 import cc.sighs.auratip.data.action.Action;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -72,7 +69,7 @@ public class RadialMenuBuilder {
     /**
      * Sets the center icon.
      *
-     * @param icon icon texture location; pass null to clear
+     * @param icon icon texture id; pass null to clear
      */
     public RadialMenuBuilder centerIcon(@Nullable ResourceLocation icon) {
         this.centerIcon = icon;
@@ -134,50 +131,6 @@ public class RadialMenuBuilder {
         );
         this.slots.add(slot);
         return this;
-    }
-
-    /**
-     * Adds a slot with a texture icon (shorthand for {@link TextureIcon}).
-     *
-     * @param name           slot name (must be non-empty)
-     * @param icon           icon texture location
-     * @param action         slot action
-     * @param text           optional label text
-     * @param highlightColor optional hover highlight color (argb hex)
-     */
-    public RadialMenuBuilder slot(
-            String name,
-            ResourceLocation icon,
-            Action action,
-            @Nullable Component text,
-            @Nullable String highlightColor
-    ) {
-        if (icon == null) {
-            return this;
-        }
-        return slot(name, new TextureIcon(icon), action, text, highlightColor);
-    }
-
-    /**
-     * Adds a slot with an item icon (shorthand for {@link ItemIcon}).
-     *
-     * @param name           slot name (must be non-empty)
-     * @param icon           the item stack to render
-     * @param action         slot action
-     * @param text           optional label text
-     * @param highlightColor optional hover highlight color (argb hex)
-     */
-    public RadialMenuBuilder slot(
-            String name,
-            ItemStack icon,
-            Action action,
-            @Nullable Component text,
-            @Nullable String highlightColor
-    ) {
-        if (icon == null || icon.isEmpty()) {
-            return this;
-        }
-        return slot(name, new ItemIcon(icon), action, text, highlightColor);
     }
 
     /**

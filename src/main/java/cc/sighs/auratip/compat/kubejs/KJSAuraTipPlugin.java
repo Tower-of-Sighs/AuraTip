@@ -1,5 +1,7 @@
 package cc.sighs.auratip.compat.kubejs;
 
+import cc.sighs.auratip.api.radiamenu.icon.ItemIcon;
+import cc.sighs.auratip.api.radiamenu.icon.TextureIcon;
 import cc.sighs.auratip.compat.kubejs.radiamenu.RadialMenuRegistrationEvent;
 import cc.sighs.auratip.compat.kubejs.radiamenu.RadialMenuScriptRegistry;
 import cc.sighs.auratip.compat.kubejs.radiamenu.action.ActionsKJS;
@@ -7,6 +9,7 @@ import cc.sighs.auratip.compat.kubejs.radiamenu.slot.RadialMenuExtraSlotRegistry
 import cc.sighs.auratip.compat.kubejs.radiamenu.slot.RadialMenusKJS;
 import cc.sighs.auratip.compat.kubejs.tip.*;
 import cc.sighs.auratip.compat.kubejs.tip.animation.TipAnimations;
+import cc.sighs.auratip.util.ItemStackUtil;
 import dev.latvian.mods.kubejs.event.EventGroup;
 import dev.latvian.mods.kubejs.event.EventGroupRegistry;
 import dev.latvian.mods.kubejs.event.EventHandler;
@@ -38,6 +41,9 @@ public class KJSAuraTipPlugin implements KubeJSPlugin {
         event.add("TipAnimations", TipAnimations.class);
         event.add("Actions", ActionsKJS.class);
         event.add("RadialMenus", RadialMenusKJS.class);
+        event.add("ItemIcon", ItemIcon.class);
+        event.add("TextureIcon", TextureIcon.class);
+        event.add("ItemStackUtil", ItemStackUtil.class);
     }
 
     @Override

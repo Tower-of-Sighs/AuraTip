@@ -25,9 +25,9 @@ RadialMenuEvents.register(event => {
     menu.radii(55, 100);
     menu.ringColors(['#1A0B1526', '#D92B5A9E']);
 
-    menu.slot(
+    menu.slotItem(
         'ShowTip',
-        'minecraft:textures/item/paper.png',
+        new ItemIcon(ItemStackUtil.fromJson("{\"id\":\"minecraft:potion\",\"count\":1,\"components\":{\"minecraft:potion_contents\":{\"potion\":\"minecraft:fire_resistance\"}}}"), 1.4),
         Actions.of('run_command', {command: '/showtip'}),
         TipText.of('/showtip').colorHex("#55FFFF").bold().underlined().build(),
         '#77FFFFFF'

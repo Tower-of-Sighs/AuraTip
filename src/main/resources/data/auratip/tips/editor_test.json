@@ -1,0 +1,64 @@
+{
+  "id": "auratip:editor_test",
+  "trigger": {
+    "type": "auratip:editor",
+    "mode": "repeatable",
+    "cooldown": 0
+  },
+  "visual_settings": {
+    "width": 300,
+    "height": 200,
+    "position": "CENTER",
+    "layout": {
+      "padding": {"top": 16, "right": 16, "bottom": 16, "left": 16},
+      "element_spacing": 6
+    },
+    "background": {
+      "type": "gradient",
+      "colors": ["#FFE0F7FF", "#FFB3E5FC"],
+      "border_radius": 12,
+      "rounded": true,
+      "shadow": {
+        "enabled": true,
+        "color": "#8C000000",
+        "offset_x": 3,
+        "offset_y": 3,
+        "size": 6
+      }
+    },
+    "animation_style": "auratip:fade_and_slide",
+    "animation_speed": 1.0,
+    "theme_color": "#FF3388FF"
+  },
+  "behavior": {
+    "default_duration": -1,
+    "show_close_button": true,
+    "show_page_indicator": true,
+    "allow_paging": true
+  },
+  "pages": [
+    {
+      "page_index": 0,
+      "title": {
+        "text": {"text": "Layout Test"},
+        "scale": 1.0,
+        "divider": {"thickness": 1, "margin_top": 4, "margin_bottom": 4, "length": 1.0}
+      },
+      "subtitle": {
+        "text": {"text": "Padding + Shadow + Badge"},
+        "scale": 0.8
+      },
+      "content": {
+        "text": {"text": "16px padding, 6px spacing, shadow enabled. Badge at bottom-right."},
+        "scale": 0.7,
+        "line_spacing": 2
+      },
+      "badge": {
+        "text": {"text": "[Delete]", "color": "#FF8888"},
+        "background_color": "#CC111111",
+        "radius": 4,
+        "position": "BOTTOM_RIGHT"
+      }
+    }
+  ]
+}

@@ -173,6 +173,31 @@ public final class TipBuilder {
             delegate.backgroundImage(path);
             return this;
         }
+
+        public VisualBuilder padding(int px) {
+            delegate.padding(px);
+            return this;
+        }
+
+        public VisualBuilder padding(int top, int right, int bottom, int left) {
+            delegate.padding(top, right, bottom, left);
+            return this;
+        }
+
+        public VisualBuilder elementSpacing(int px) {
+            delegate.elementSpacing(px);
+            return this;
+        }
+
+        public VisualBuilder shadow(boolean enabled) {
+            delegate.shadow(enabled);
+            return this;
+        }
+
+        public VisualBuilder shadow(boolean enabled, String color, int offsetX, int offsetY, int size) {
+            delegate.shadow(enabled, color, offsetX, offsetY, size);
+            return this;
+        }
     }
 
     private static ResourceLocation normalizeId(String id) {
