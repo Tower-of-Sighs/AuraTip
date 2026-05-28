@@ -67,7 +67,7 @@ public interface IRadialIcon {
             var stringResult = ops.getStringValue(input);
             if (stringResult.result().isPresent()) {
                 return ResourceLocation.CODEC.decode(ops, input)
-                        .map(p -> p.mapFirst(TextureIcon::new));
+                        .map(p -> p.mapFirst(loc -> new TextureIcon(loc, 1.0f)));
             }
             var typeVal = ops.get(input, "type");
             if (typeVal.result().isEmpty()) {
@@ -91,8 +91,11 @@ public interface IRadialIcon {
 
         @Override
         public <T> DataResult<T> encode(IRadialIcon input, DynamicOps<T> ops, T prefix) {
-            if (input instanceof TextureIcon icon) {
-                return ResourceLocation.CODEC.encode(icon.location(), ops, prefix);
+            if (input instanceof TextureIcon ti) {
+                if (ti.scale() == 1.0f) {
+                    return ResourceLocation.CODEC.encode(ti.id(), ops, prefix);
+                }
+                return ((Codec) TextureIcon.CODEC).encode(ti, ops, prefix);
             }
             ResourceLocation typeId = input.type();
             Codec<? extends IRadialIcon> codec = BY_ID.get(typeId);

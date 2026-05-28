@@ -74,7 +74,8 @@ public final class EditorCodecSchemas {
                 f("stripe_length_factor", number(), true, num(1.0), "tip.visual.stripe_length_factor", "tip.visual.stripe_length_factor.desc"),
                 f("width", number(), true, num(280), "tip.visual.width", "tip.visual.width.desc"),
                 f("height", number(), true, num(180), "tip.visual.height", "tip.visual.height.desc"),
-                f("position", position(), true, str("BOTTOM_CENTER"), "tip.visual.position", "tip.visual.position.desc")
+                f("position", position(), true, str("BOTTOM_CENTER"), "tip.visual.position", "tip.visual.position.desc"),
+                f("layout", tipLayout(), true, layoutDefault(), "tip.visual.layout", "tip.visual.layout.desc")
         );
     }
 
@@ -84,7 +85,8 @@ public final class EditorCodecSchemas {
                 f("colors", array(string()), true, listStr("#FFE0F7FF", "#FFB3E5FC"), "tip.visual.background.colors", "tip.visual.background.colors.desc"),
                 f("border_radius", number(), true, num(8), "tip.visual.background.border_radius", "tip.visual.background.border_radius.desc"),
                 f("rounded", bool(), true, boolVal(true), "tip.visual.background.rounded", "tip.visual.background.rounded.desc"),
-                f("image_path", string(), true, str("minecraft:textures/block/stone.png"), "tip.visual.background.image_path", "tip.visual.background.image_path.desc")
+                f("image_path", string(), true, str("minecraft:textures/block/stone.png"), "tip.visual.background.image_path", "tip.visual.background.image_path.desc"),
+                f("shadow", tipShadowConfig(), true, new JsonObject(), "tip.visual.background.shadow", "tip.visual.background.shadow.desc")
         );
     }
 
@@ -107,7 +109,8 @@ public final class EditorCodecSchemas {
                 f("title", textElement(), true, defaultTextElement("Title"), "tip.page.title", "tip.page.title.desc"),
                 f("subtitle", textElement(), true, defaultTextElement("Subtitle"), "tip.page.subtitle", "tip.page.subtitle.desc"),
                 f("content", textElement(), true, defaultTextElement("Content"), "tip.page.content", "tip.page.content.desc"),
-                f("image", tipImage(), true, defaultImage(), "tip.page.image", "tip.page.image.desc")
+                f("image", tipImage(), true, defaultImage(), "tip.page.image", "tip.page.image.desc"),
+                f("badge", tipBadge(), true, badgeDefault(), "tip.page.badge", "tip.page.badge.desc")
         ).deepCopy();
     }
 
@@ -128,7 +131,11 @@ public final class EditorCodecSchemas {
         // TipData.Position codec is Either<String, List<Int>>; we expose both variants.
         JsonObject preset = new JsonObject();
         preset.addProperty("label", "preset");
-        preset.add("type", string());
+        preset.add("type", enumOf(
+                "TOP_LEFT", "TOP_CENTER", "TOP_RIGHT",
+                "LEFT_CENTER", "CENTER", "RIGHT_CENTER",
+                "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"
+        ));
         JsonObject abs = new JsonObject();
         abs.addProperty("label", "absolute");
         abs.add("type", fixedIntArray2());
@@ -192,12 +199,13 @@ public final class EditorCodecSchemas {
     }
 
     private static JsonObject radialIcon() {
-        // Variant 1: plain Identifier → TextureIcon
+        // Variant 1: texture icon (id + optional scale)
         JsonObject texture = new JsonObject();
         texture.addProperty("label", "texture");
-        texture.add("type", rl());
+        texture.add("type", textureIconType());
+        texture.add("default", textureIconDefault());
 
-        // Variant 2: object with type/id/count/components → ItemIcon
+        // Variant 2: item icon (stack + optional scale)
         JsonObject item = new JsonObject();
         item.addProperty("label", "item");
         item.add("type", itemIconType());
@@ -213,29 +221,46 @@ public final class EditorCodecSchemas {
         return out;
     }
 
-    private static JsonObject itemIconType() {
+    private static JsonObject textureIconType() {
         return obj(
-                f("type", enumOf(AuraTip.MOD_ID + ":item"), false, str(AuraTip.MOD_ID + ":item"), "radial.slot.icon.item.type", "radial.slot.icon.item.type.desc"),
-                f("stack", itemStackType(), false, null, "radial.slot.icon.item.stack", "radial.slot.icon.item.stack.desc")
+                f("type", enumOf(AuraTip.MOD_ID + ":texture"), false, str(AuraTip.MOD_ID + ":texture"), "radial.slot.icon.texture.type", "radial.slot.icon.texture.type.desc"),
+                f("id", rl(), false, rlVal("minecraft:textures/item/paper.png"), "radial.slot.icon.texture.id", "radial.slot.icon.texture.id.desc"),
+                f("scale", number(), true, num(1.0), "radial.slot.icon.texture.scale", "radial.slot.icon.texture.scale.desc")
         );
     }
 
-    private static JsonObject itemStackType() {
+    private static JsonObject textureIconDefault() {
+        JsonObject o = new JsonObject();
+        o.addProperty("type", AuraTip.MOD_ID + ":texture");
+        o.addProperty("id", "minecraft:textures/item/paper.png");
+        o.addProperty("scale", 1.0);
+        return o;
+    }
+
+    private static JsonObject itemIconType() {
         return obj(
-                f("id", rl(), false, rlVal("minecraft:chest"), "radial.slot.icon.item.stack.id", "radial.slot.icon.item.stack.id.desc"),
-                f("count", number(), true, num(1), "radial.slot.icon.item.stack.count", "radial.slot.icon.item.stack.count.desc"),
-                f("components", dynamicMap(), true, new JsonObject(), "radial.slot.icon.item.stack.components", "radial.slot.icon.item.stack.components.desc")
+                f("type", enumOf(AuraTip.MOD_ID + ":item"), false, str(AuraTip.MOD_ID + ":item"), "radial.slot.icon.item.type", "radial.slot.icon.item.type.desc"),
+                f("stack", itemStackFields(), false, null, "radial.slot.icon.item.stack", "radial.slot.icon.item.stack.desc"),
+                f("scale", number(), true, num(1.0), "radial.slot.icon.item.scale", "radial.slot.icon.item.scale.desc")
+        );
+    }
+
+    private static JsonObject itemStackFields() {
+        return obj(
+                f("id", rl(), false, rlVal("minecraft:chest"), "radial.slot.icon.item.id", "radial.slot.icon.item.id.desc"),
+                f("Count", number(), true, num(1), "radial.slot.icon.item.Count", "radial.slot.icon.item.Count.desc"),
+                f("tag", dynamicMap(), true, new JsonObject(), "radial.slot.icon.item.tag", "radial.slot.icon.item.tag.desc")
         );
     }
 
     private static JsonObject itemIconDefault() {
         JsonObject o = new JsonObject();
-        o.addProperty("type", AuraTip.MOD_ID + ":item");
         JsonObject st = new JsonObject();
         st.addProperty("id", "minecraft:chest");
-        st.addProperty("count", 1);
-        st.add("components", new JsonObject());
-        o.add("stack", st);
+        st.addProperty("Count", 1);
+        st.add("tag", new JsonObject());
+        o.add("template", st);
+        o.addProperty("scale", 1.0);
         return o;
     }
 
@@ -401,6 +426,68 @@ public final class EditorCodecSchemas {
         JsonObject o = new JsonObject();
         o.addProperty("type", AuraTip.MOD_ID + ":run_command");
         o.addProperty("command", "/say hello");
+        return o;
+    }
+
+    // ---- new schema helpers ----
+
+    private static JsonObject tipLayout() {
+        return obj(
+                f("padding", padding(), true, paddingDefault(), "tip.visual.layout.padding", "tip.visual.layout.padding.desc"),
+                f("element_spacing", number(), true, num(4), "tip.visual.layout.element_spacing", "tip.visual.layout.element_spacing.desc")
+        );
+    }
+
+    private static JsonObject padding() {
+        return obj(
+                f("top", number(), false, num(12), "tip.visual.layout.padding.top", "tip.visual.layout.padding.top.desc"),
+                f("right", number(), false, num(12), "tip.visual.layout.padding.right", "tip.visual.layout.padding.right.desc"),
+                f("bottom", number(), false, num(12), "tip.visual.layout.padding.bottom", "tip.visual.layout.padding.bottom.desc"),
+                f("left", number(), false, num(12), "tip.visual.layout.padding.left", "tip.visual.layout.padding.left.desc")
+        );
+    }
+
+    private static JsonObject tipShadowConfig() {
+        return obj(
+                f("enabled", bool(), false, boolVal(false), "tip.visual.background.shadow.enabled", "tip.visual.background.shadow.enabled.desc"),
+                f("color", string(), true, str("#8C000000"), "tip.visual.background.shadow.color", "tip.visual.background.shadow.color.desc"),
+                f("offset_x", number(), true, num(2), "tip.visual.background.shadow.offset_x", "tip.visual.background.shadow.offset_x.desc"),
+                f("offset_y", number(), true, num(2), "tip.visual.background.shadow.offset_y", "tip.visual.background.shadow.offset_y.desc"),
+                f("size", number(), true, num(4), "tip.visual.background.shadow.size", "tip.visual.background.shadow.size.desc")
+        );
+    }
+
+    private static JsonObject tipBadge() {
+        return obj(
+                f("text", textElement(), false, defaultTextElement("Badge"), "tip.page.badge.text", "tip.page.badge.text.desc"),
+                f("background_color", string(), true, str("#CC000000"), "tip.page.badge.background_color", "tip.page.badge.background_color.desc"),
+                f("radius", number(), true, num(4), "tip.page.badge.radius", "tip.page.badge.radius.desc"),
+                f("position", position(), true, str("BOTTOM_RIGHT"), "tip.page.badge.position", "tip.page.badge.position.desc")
+        );
+    }
+
+    private static JsonObject paddingDefault() {
+        JsonObject o = new JsonObject();
+        o.addProperty("top", 12);
+        o.addProperty("right", 12);
+        o.addProperty("bottom", 12);
+        o.addProperty("left", 12);
+        return o;
+    }
+
+    private static JsonObject badgeDefault() {
+        JsonObject o = new JsonObject();
+        o.add("text", componentLiteral("Badge"));
+        o.addProperty("background_color", "#CC000000");
+        o.addProperty("radius", 4);
+        o.addProperty("position", "BOTTOM_RIGHT");
+        return o;
+    }
+
+    private static JsonObject layoutDefault() {
+        JsonObject o = new JsonObject();
+        o.add("padding", paddingDefault());
+        o.addProperty("element_spacing", 4);
         return o;
     }
 }

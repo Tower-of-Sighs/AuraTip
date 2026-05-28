@@ -34,7 +34,7 @@ public final class EditorRadialPreviewApplier {
 
         RadialMenuData.Slot slot = new RadialMenuData.Slot(
                 "Preview",
-                new TextureIcon(new ResourceLocation("minecraft", "textures/item/paper.png")),
+                new TextureIcon(new ResourceLocation("minecraft", "textures/item/paper.png"), 1.0f),
                 new Action.RunCommand("/say AuraTip Editor Preview"),
                 Optional.of(Component.literal("Preview")),
                 Optional.of("#77FFFFFF")
@@ -55,7 +55,7 @@ public final class EditorRadialPreviewApplier {
     }
 
     public static void closePreview() {
-        Minecraft.getInstance().execute(RadialMenuOverlay.INSTANCE::close);
+        Minecraft.getInstance().execute(() -> RadialMenuOverlay.INSTANCE.close());
     }
 
     public static void applyMenuJson(JsonElement menuJson) {

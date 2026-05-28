@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -p build/moddev/artifacts/neoforge-21.1.215-sources.jar net/minecraft/util/ExtraCodecs.java)",
+      "Bash(unzip -p build/moddev/artifacts/minecraft-patched-26.1.2.10-beta-sources.jar net/minecraft/client/gui/GuiGraphicsExtractor.java)"
+    ]
+  }
+}

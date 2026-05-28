@@ -48,25 +48,31 @@ TipEvents.register(event => {
             p.imageScaled("auratip:textures/gui/img.png", "BOTTOM_CENTER", 253, 95, 0.6);
         });
 
-    event.create('showtip_demo_kjs')
+    event.create("showtip_demo_kjs")
         .trigger('auratip:showtip_command', 'repeatable', 0)
         .visual(v => {
             v.animationStyle('auratip:slide_in_left')
             v.animationSpeed(1.0)
             v.size(200, 55)
             v.position(12, 180)
-            v.background('gradient', ['#EE1A1A2E', '#DD12121F'], 6)
-            v.backgroundRounded(true)
+            v.padding(16, 16, 16, 16);
+            v.elementSpacing(8);
+            v.background("gradient", ["#6BE188", "#6E77F7"], 8);
+            v.backgroundRounded(true);
+            v.shadow(true, "#2BA570F5", 22, 22, 10);
             v.hoverAnimationStyle('auratip:hover_float')
             v.hoverParam('amplitude', 4.0)
             v.hoverParam('ramp_duration', 0.2)
         })
         .behavior(b => {
-            b.duration(160)
-            b.pauseOnHover(true)
+            b.duration(160);
+            b.pauseOnHover(true);
+            b.showCloseButton(false);
         })
-        .page(0, p => {
-            p.title(TipText.of("KJS Tip").colorHex("#55FFFF").bold().build(), 0.8, 0)
-            p.content(TipText.of("由 KubeJS 注册，/showtip 会触发我 \n 玩家: ${player}").colorHex("#DDDDDD").build(), 0.65, 1)
+        .page(0, pg => {
+            pg.title(TipText.of("KJS Tip").build(), 0.85, 0);
+            pg.titleDivider(1, 12, 1, 0.394, "#C9DAFD");
+            pg.content(TipText.of("由 KubeJS 注册，/showtip 会触发我 \n 玩家: ${player}").italic().build(), 0.7, 7);
+            pg.badge(TipText.of("Badge").build(), "#CC63E240", 4, "CENTER");
         });
 });

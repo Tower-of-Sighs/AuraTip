@@ -8,7 +8,7 @@ public final class DevEnvironment {
     }
 
     public static boolean isDev() {
-        return !FMLEnvironment.production;
+        return FMLEnvironment.production;
     }
 }
 

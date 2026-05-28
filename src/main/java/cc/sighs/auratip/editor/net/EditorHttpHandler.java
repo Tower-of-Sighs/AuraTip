@@ -62,6 +62,17 @@ final class EditorHttpHandler extends SimpleChannelInboundHandler<EditorHttpRequ
             return;
         }
 
+        // Serve static web files (.js, etc.) from the web root
+        if (path.startsWith("/") && !path.contains("..") && path.length() > 1) {
+            String mime = "application/octet-stream";
+            if (path.endsWith(".js")) mime = "text/javascript; charset=utf-8";
+            else if (path.endsWith(".json")) mime = "application/json; charset=utf-8";
+            else if (path.endsWith(".html")) mime = "text/html; charset=utf-8";
+            else if (path.endsWith(".css")) mime = "text/css; charset=utf-8";
+            sendWebResource(ctx, path, mime);
+            return;
+        }
+
         sendStatus(ctx, 404, "Not Found");
     }
 
